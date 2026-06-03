@@ -1,2 +1,5 @@
 rule
 CONTINUITY.md
+
+node_modules
+backend/.env

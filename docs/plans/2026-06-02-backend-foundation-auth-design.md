@@ -22,6 +22,7 @@ This is a design document only. It does not include implementation code.
 - Shared error handling.
 - Shared authentication and authorization middleware.
 - Shared logging conventions.
+- Health check endpoint.
 - Auth module.
 - Admin-created user accounts.
 - Email-based login.
@@ -29,6 +30,7 @@ This is a design document only. It does not include implementation code.
 - Logout endpoint.
 - First-login password change requirement.
 - User forgot-password flow with email OTP.
+- OTP verification state for forgot-password reset.
 - Fixed/system-managed admin account recovery outside the normal UI flow.
 
 ### 2.2 Out Of Scope
@@ -163,6 +165,8 @@ Rules:
 - A successful login returns a JWT access token and user context.
 - The response includes `mustChangePassword`.
 - If `mustChangePassword = true`, frontend allows login but blocks normal app usage until password is changed.
+- Backend must also block normal protected APIs while `mustChangePassword = true`.
+- Allowed endpoints while password change is required are `GET /api/auth/me`, `PUT /api/auth/change-password`, and `POST /api/auth/logout`.
 
 ### 5.3 First Login Change Password
 
@@ -185,7 +189,8 @@ Flow:
 - Backend creates an OTP with an expiry time.
 - Backend sends OTP by email.
 - User verifies OTP.
-- User resets password with the valid OTP.
+- Backend marks the OTP as verified.
+- User resets password only after the OTP has been verified.
 - OTP is marked used after a successful reset.
 
 Rules:
@@ -194,6 +199,8 @@ Rules:
 - The forgot-password response must not reveal whether an email exists.
 - OTP must expire.
 - OTP must not be reusable.
+- OTP verification state must expire with the OTP.
+- Only a verified, unused, and unexpired OTP can reset a password.
 
 ### 5.5 Logout
 
@@ -255,9 +262,10 @@ Fields:
 Rules:
 
 - `email` is unique.
-- `employee_id` is unique for employee users.
+- `employee_id` is nullable because a fixed/system-managed `ADMIN` may not link to an employee.
+- `employee_id` is unique for employee users so one employee cannot have multiple login accounts.
 - `role` is `ADMIN` or `USER`.
-- `USER` accounts should link to an employee.
+- `USER` accounts must link to an employee by business rule.
 - `ADMIN` can be a fixed/system-managed account and does not have to depend on an employee record.
 
 ### 6.3 `password_reset_otps`
@@ -271,20 +279,25 @@ Fields:
 - `otp_code_hash`
 - `expires_at`
 - `used_at`
+- `verified_at`
 - `attempt_count`
 - `created_at`
+- `updated_at`
 
 Rules:
 
 - Store OTP as a hash when feasible.
 - OTP expires after a short duration.
+- OTP is marked verified only after a successful verify step.
 - OTP is invalid after use.
+- `attempt_count` increases when a user submits an invalid OTP.
 - Older active OTPs for the same user should be invalidated when a new successful reset happens.
 
 ## 7. Auth API Contract
 
 ### 7.1 Endpoints
 
+- `GET /api/health`
 - `POST /api/auth/login`
 - `POST /api/auth/logout`
 - `GET /api/auth/me`
@@ -417,7 +430,10 @@ Response:
 ```json
 {
   "success": true,
-  "message": "OTP verified successfully"
+  "message": "OTP verified successfully",
+  "data": {
+    "verified": true
+  }
 }
 ```
 
@@ -510,6 +526,8 @@ Minimum auth error codes:
 - `AUTH_PASSWORD_MISMATCH`
 - `AUTH_INVALID_OTP`
 - `AUTH_OTP_EXPIRED`
+- `AUTH_OTP_NOT_VERIFIED`
+- `AUTH_PASSWORD_CHANGE_REQUIRED`
 - `AUTH_USER_ALREADY_EXISTS`
 - `AUTH_USER_NOT_FOUND`
 - `VALIDATION_ERROR`
@@ -539,12 +557,16 @@ Minimum auth error codes:
 - `authorize` validates role.
 - Admin-only endpoints require `ADMIN`.
 - Authenticated user endpoints require a valid token.
+- Normal protected endpoints must reject users with `mustChangePassword = true`.
+- The password-change-required guard should allow only `GET /api/auth/me`, `PUT /api/auth/change-password`, and `POST /api/auth/logout` until the password is changed.
 - Role checks should live in middleware, not inside controllers.
 
 ### 8.4 OTP Security
 
 - OTP expires after a short duration.
+- OTP has a verified state after the verify endpoint succeeds.
 - OTP is invalid after use.
+- Reset password requires a verified, unused, and unexpired OTP.
 - OTP raw value must not be logged.
 - Forgot-password response must not reveal account existence.
 - Basic resend and failed-attempt limits should be considered for the MVP.
@@ -561,7 +583,28 @@ Validate:
 - `employeeId` when admin creates an account.
 - `isActive` boolean when admin updates account status.
 
-### 8.6 Error Handling
+### 8.6 Environment Configuration
+
+`.env.example` should document the minimum required keys:
+
+- `PORT`
+- `NODE_ENV`
+- `DB_HOST`
+- `DB_PORT`
+- `DB_USER`
+- `DB_PASSWORD`
+- `DB_NAME`
+- `JWT_SECRET`
+- `JWT_EXPIRES_IN`
+- `DEFAULT_USER_PASSWORD`
+- `OTP_EXPIRES_MINUTES`
+- `MAIL_HOST`
+- `MAIL_PORT`
+- `MAIL_USER`
+- `MAIL_PASSWORD`
+- `MAIL_FROM`
+
+### 8.7 Error Handling
 
 The foundation should provide:
 
@@ -572,7 +615,7 @@ The foundation should provide:
 - controlled client messages
 - backend-only stack traces
 
-### 8.7 Logging
+### 8.8 Logging
 
 Recommended log levels:
 
@@ -596,6 +639,40 @@ Auth event logs should only include safe metadata such as:
 - `timestamp`
 - `status`
 
+### 8.9 Observability And Operations
+
+For the MVP, observability should stay lightweight but consistent enough for local debugging, demo, and AWS deployment checks.
+
+Required foundation behavior:
+
+- Add a request ID to each incoming request, either from `X-Request-Id` or generated by the backend.
+- Include the request ID in logs and error responses when appropriate.
+- Log request method, path, status code, duration, and safe user metadata when authenticated.
+- Log server startup success with port and environment.
+- Log database connection success or failure during startup.
+- Log mail configuration or OTP email send failures without exposing secrets or raw OTP values.
+- Keep `GET /api/health` as the basic operational readiness check.
+
+Recommended auth operation events:
+
+- Login success and failure.
+- Logout.
+- Admin-created user account.
+- User status change.
+- Password change success.
+- Forgot-password OTP requested.
+- OTP verification success or failure.
+- Password reset success.
+- Password-change-required API rejection.
+
+Out of scope for Person 1:
+
+- Distributed tracing.
+- Metrics dashboard.
+- Alerting system.
+- Centralized log aggregation.
+- Enterprise audit log storage.
+
 ## 9. Testing And Handoff
 
 ### 9.1 Foundation Tests
@@ -610,6 +687,8 @@ Person 1 should verify:
 - `validateRequest` rejects invalid input.
 - `authenticate` rejects missing or invalid JWT.
 - `authorize` rejects insufficient roles.
+- Request ID is available in logs for handled requests.
+- Startup logs clearly show server and database connection status.
 
 ### 9.2 Auth Tests
 
@@ -620,11 +699,13 @@ Person 1 should verify:
 - New `USER` account has `mustChangePassword = true`.
 - `USER` can log in with default password.
 - Login response contains `mustChangePassword`.
+- Backend blocks normal protected APIs while `mustChangePassword = true`.
 - `USER` can change password.
 - `mustChangePassword` becomes `false` after password change.
 - `USER` can log in with the new password.
 - `USER` can start forgot-password flow.
-- Valid OTP allows password reset.
+- Valid OTP can be verified.
+- Password reset requires a verified OTP.
 - Invalid, expired, or used OTP is rejected.
 - `USER` can log out.
 - Inactive account cannot log in.
@@ -678,12 +759,15 @@ Backend members need:
 Person 1 is done when:
 
 - Backend can run locally.
+- `GET /api/health` works.
 - MySQL/XAMPP connection works.
 - Shared foundation is in place.
 - Auth APIs work.
 - Auth middleware works.
+- Backend blocks normal protected APIs until first-login password change is completed.
 - Error and response format are consistent.
 - Basic logging exists.
+- Lightweight observability and operational logs exist.
 - The team has a short backend integration guide.
 - Frontend can log in, read token, read `mustChangePassword`, and call protected APIs.
 

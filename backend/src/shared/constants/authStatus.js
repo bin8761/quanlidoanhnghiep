@@ -1,0 +1,5 @@
+module.exports = Object.freeze({
+  ACTIVE: "ACTIVE",
+  INACTIVE: "INACTIVE",
+  PASSWORD_CHANGE_REQUIRED: "PASSWORD_CHANGE_REQUIRED",
+});

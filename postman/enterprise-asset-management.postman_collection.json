@@ -1,0 +1,498 @@
+{
+  "info": {
+    "_postman_id": "0c4975f5-82ec-4f94-b3b0-4d61b6b2d4f7",
+    "name": "Enterprise Asset Management Backend",
+    "description": "Import-ready Postman collection for the local backend at {{baseUrl}}.\n\nNotes:\n- This collection uses Postman Collection v2.1 JSON format for file import.\n- The current database was empty when this collection was prepared, so auth and admin requests require seed data before they can succeed.\n- Login requests save tokens into environment variables when the response contains data.accessToken.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Safe JSON parse",
+          "let json = {};",
+          "try { json = pm.response.json(); } catch (e) { json = {}; }",
+          "",
+          "const data = json?.data || {};",
+          "const nestedUser = data?.user || {};",
+          "const directUser = (data && typeof data === 'object' && data.id) ? data : {};",
+          "const user = nestedUser.id ? nestedUser : directUser;",
+          "",
+          "// Tokens",
+          "if (data?.accessToken) pm.environment.set('accessToken', data.accessToken);",
+          "",
+          "// Save role-specific token after login when user exists",
+          "if (data?.accessToken && user?.role === 'ADMIN') {",
+          "  pm.environment.set('adminToken', data.accessToken);",
+          "}",
+          "if (data?.accessToken && user?.role === 'USER') {",
+          "  pm.environment.set('userToken', data.accessToken);",
+          "}",
+          "",
+          "// User fields from either login.data.user or direct data object",
+          "if (user?.id) {",
+          "  pm.environment.set('userId', String(user.id));",
+          "  pm.environment.set('id', String(user.id));",
+          "  pm.environment.set('targetUserId', String(user.id));",
+          "}",
+          "if (user?.id && pm.info.requestName === 'POST Create Employee User') {",
+          "  pm.environment.set('createdUserId', String(user.id));",
+          "  pm.environment.set('targetUserId', String(user.id));",
+          "}",
+          "if (user?.email) pm.environment.set('savedUserEmail', user.email);",
+          "if (user?.employeeId) pm.environment.set('employeeId', String(user.employeeId));",
+          "if (typeof user?.mustChangePassword === 'boolean') {",
+          "  pm.environment.set('mustChangePassword', String(user.mustChangePassword));",
+          "}",
+          "if (typeof user?.isActive === 'boolean') {",
+          "  pm.environment.set('isActive', String(user.isActive));",
+          "}",
+          "if (user?.role) pm.environment.set('role', user.role);",
+          "",
+          "// Generic flags returned by forgot-password / OTP APIs",
+          "if (typeof data?.verified === 'boolean') {",
+          "  pm.environment.set('otpVerified', String(data.verified));",
+          "}",
+          "if (typeof data?.requested === 'boolean') {",
+          "  pm.environment.set('otpRequested', String(data.requested));",
+          "}",
+          "",
+          "// Useful metadata",
+          "if (json?.requestId) pm.environment.set('requestId', json.requestId);",
+          "if (json?.errorCode) pm.environment.set('lastErrorCode', json.errorCode);",
+          "if (json?.message) pm.environment.set('lastMessage', json.message);",
+          "",
+          "// Optional success assertion only for 2xx responses",
+          "if (pm.response.code >= 200 && pm.response.code < 300) {",
+          "  pm.test('Status code 2xx', function () {",
+          "    pm.expect(pm.response.code).to.be.within(200, 299);",
+          "  });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            },
+            "description": "Health check endpoint. This should work immediately if the backend is up."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has success=true', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.success).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth Public",
+      "item": [
+        {
+          "name": "POST Login Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Logs in with the admin account. Requires a seeded ADMIN user."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = {};",
+                  "try { json = pm.response.json(); } catch (e) {}",
+                  "if (json && json.data && json.data.accessToken) {",
+                  "  pm.environment.set('adminToken', json.data.accessToken);",
+                  "  pm.environment.set('accessToken', json.data.accessToken);",
+                  "}",
+                  "pm.test('Login response parsed', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST Login User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Logs in with a normal USER account. Requires seeded user data."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = {};",
+                  "try { json = pm.response.json(); } catch (e) {}",
+                  "if (json && json.data && json.data.accessToken) {",
+                  "  pm.environment.set('userToken', json.data.accessToken);",
+                  "  pm.environment.set('accessToken', json.data.accessToken);",
+                  "}",
+                  "pm.test('Login response parsed', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{forgotPasswordEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/forgot-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "forgot-password"
+              ]
+            },
+            "description": "Requests an OTP for a normal active user."
+          }
+        },
+        {
+          "name": "POST Verify Forgot Password OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{forgotPasswordEmail}}\",\n  \"otp\": \"{{otpCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/verify-forgot-password-otp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "verify-forgot-password-otp"
+              ]
+            },
+            "description": "Verifies a six-digit OTP received by email."
+          }
+        },
+        {
+          "name": "POST Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{forgotPasswordEmail}}\",\n  \"otp\": \"{{otpCode}}\",\n  \"newPassword\": \"{{resetPassword}}\",\n  \"confirmNewPassword\": \"{{resetPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/reset-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "reset-password"
+              ]
+            },
+            "description": "Completes the forgot-password reset flow after OTP verification."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth Protected",
+      "item": [
+        {
+          "name": "GET Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Returns the currently authenticated user."
+          }
+        },
+        {
+          "name": "POST Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "MVP logout. The server returns success, but JWT revocation is out of scope."
+          }
+        },
+        {
+          "name": "PUT Change Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"{{currentPassword}}\",\n  \"newPassword\": \"{{newPassword}}\",\n  \"confirmNewPassword\": \"{{newPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/change-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "change-password"
+              ]
+            },
+            "description": "Changes the password for the authenticated user."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "POST Create Employee User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"{{employeeIdToCreate}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "users"
+              ]
+            },
+            "description": "Creates a USER account for an existing employee who does not already have an account."
+          }
+        },
+        {
+          "name": "PATCH Update User Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": {{targetUserActive}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/users/{{targetUserId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "users",
+                "{{targetUserId}}",
+                "status"
+              ]
+            },
+            "description": "Updates a target user's active status. ADMIN only."
+          }
+        }
+      ]
+    }
+  ]
+}
