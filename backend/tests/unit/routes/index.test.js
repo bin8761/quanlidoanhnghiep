@@ -25,6 +25,10 @@ describe('routes/index', () => {
     jest.doMock('../../../src/modules/auth/auth.constants', () => ({
       AUTH_ROUTE_PREFIX: '/auth',
     }));
+    jest.doMock('../../../src/modules/departments/departments.route', () => ({ mocked: 'departmentsRouter' }));
+    jest.doMock('../../../src/modules/categories/categories.route', () => ({ mocked: 'categoriesRouter' }));
+    jest.doMock('../../../src/modules/employees/employees.route', () => ({ mocked: 'employeesRouter' }));
+    jest.doMock('../../../src/modules/assets/assets.route', () => ({ mocked: 'assetsRouter' }));
 
     return {
       routesIndex: require('../../../src/routes/index'),
