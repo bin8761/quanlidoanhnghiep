@@ -73,6 +73,15 @@ function createAssetsRepository(prismaClient) {
         };
       }
 
+      if (typeof filters.employeeId !== "undefined" && filters.employeeId !== null && filters.employeeId !== "") {
+        where.assignments = {
+          some: {
+            status: "ACTIVE",
+            employeeId: filters.employeeId,
+          },
+        };
+      }
+
       if (typeof filters.keyword !== "undefined" && filters.keyword !== "") {
         where.OR = [
           { name: { contains: filters.keyword } },

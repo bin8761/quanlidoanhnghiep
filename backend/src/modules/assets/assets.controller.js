@@ -4,12 +4,13 @@ const { sendSuccess } = require("../../shared/response/apiResponse");
 const assetsController = {
   async listAssets(req, res, next) {
     try {
-      const { keyword, status, categoryId, departmentId } = req.query;
+      const { keyword, status, categoryId, departmentId, employeeId } = req.query;
       const assets = await assetsService.getAllAssets({
         keyword,
         status,
         categoryId: categoryId ? Number(categoryId) : undefined,
         departmentId: departmentId ? Number(departmentId) : undefined,
+        employeeId,
       });
 
       return sendSuccess(res, {
