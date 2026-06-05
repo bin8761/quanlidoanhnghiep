@@ -4,7 +4,19 @@ export const categoryApi = Object.freeze({
   async list(search = '') {
     const query = search ? `?search=${encodeURIComponent(search)}` : ''
     const response = await apiClient.get(`/categories${query}`)
-    return response.data
+    const categories = response.data.map((category) => ({
+      ...category,
+      status: category.status || 'ACTIVE',
+    }))
+
+    if (!search.trim()) {
+      return categories
+    }
+
+    const normalizedSearch = search.trim().toLowerCase()
+    return categories.filter((category) =>
+      `${category.name} ${category.description || ''}`.toLowerCase().includes(normalizedSearch),
+    )
   },
 
   async create(payload) {

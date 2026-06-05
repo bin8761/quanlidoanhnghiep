@@ -250,11 +250,9 @@ async function main() {
       },
       update: {
         description: category.description,
-        status: "ACTIVE",
       },
       create: {
         ...category,
-        status: "ACTIVE",
       },
     });
   }

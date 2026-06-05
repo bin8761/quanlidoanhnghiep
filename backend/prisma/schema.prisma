@@ -13,16 +13,19 @@ enum UserRole {
 }
 
 model Employee {
-  id           String   @id @default(uuid()) @db.Char(36)
-  employeeCode String   @unique @map("employee_code")
-  fullName     String   @map("full_name")
-  email        String   @unique
-  departmentId Int?     @map("department_id")
-  status       String   @default("ACTIVE")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id                  String               @id @default(uuid()) @db.Char(36)
+  employeeCode        String               @unique @map("employee_code")
+  fullName            String               @map("full_name")
+  email               String               @unique
+  departmentId        Int?                 @map("department_id")
+  status              String               @default("ACTIVE")
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
 
-  user User?
+  user                User?
+  department          Department?          @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  assignments         AssetAssignment[]
+  maintenanceRequests MaintenanceRequest[]
 
   @@map("employees")
 }
@@ -62,13 +65,141 @@ model PasswordResetOtp {
   @@map("password_reset_otps")
 }
 
+model Department {
+  id                Int                @id @default(autoincrement())
+  name              String             @unique
+  description       String?            @db.Text
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  employees         Employee[]
+  inventorySessions InventorySession[]
+
+  @@map("departments")
+}
+
 model AssetCategory {
-  id          String   @id @default(uuid()) @db.Char(36)
+  id          Int      @id @default(autoincrement())
   name        String   @unique
-  description String?  @db.VarChar(500)
-  status      String   @default("ACTIVE")
+  description String?  @db.Text
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
+  assets      Asset[]
 
   @@map("asset_categories")
+}
+
+enum AssetStatus {
+  AVAILABLE
+  ASSIGNED
+  MAINTENANCE
+  BROKEN
+  LOST
+  DISPOSED
+}
+
+model Asset {
+  id                  String               @id @default(uuid()) @db.Char(36)
+  assetCode           String               @unique @map("asset_code")
+  name                String
+  categoryId          Int                  @map("category_id")
+  serialNumber        String?              @map("serial_number")
+  purchaseDate        DateTime?            @map("purchase_date")
+  value               Decimal?             @db.Decimal(15, 2)
+  status              AssetStatus          @default(AVAILABLE)
+  imageUrl            String?              @map("image_url") @db.Text
+  notes               String?              @db.Text
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+  category            AssetCategory        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  assignments         AssetAssignment[]
+  maintenanceRequests MaintenanceRequest[]
+  inventoryItems      InventoryItem[]
+
+  @@map("assets")
+}
+
+enum AssignmentStatus {
+  ACTIVE
+  RETURNED
+  TRANSFERRED
+}
+
+model AssetAssignment {
+  id         String           @id @default(uuid()) @db.Char(36)
+  assetId    String           @map("asset_id") @db.Char(36)
+  employeeId String           @map("employee_id") @db.Char(36)
+  assignedAt DateTime         @default(now()) @map("assigned_at")
+  returnedAt DateTime?        @map("returned_at")
+  status     AssignmentStatus @default(ACTIVE)
+  notes      String?          @db.Text
+  createdAt  DateTime         @default(now()) @map("created_at")
+  updatedAt  DateTime         @updatedAt @map("updated_at")
+  asset      Asset            @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  employee   Employee         @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+
+  @@map("asset_assignments")
+}
+
+enum MaintenanceStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model MaintenanceRequest {
+  id          String            @id @default(uuid()) @db.Char(36)
+  assetId     String            @map("asset_id") @db.Char(36)
+  requesterId String            @map("requester_id") @db.Char(36)
+  description String            @db.Text
+  status      MaintenanceStatus @default(PENDING)
+  repairCost  Decimal?          @map("repair_cost") @db.Decimal(15, 2)
+  notes       String?           @db.Text
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+  asset       Asset             @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  requester   Employee          @relation(fields: [requesterId], references: [id], onDelete: Restrict)
+
+  @@map("maintenance_requests")
+}
+
+enum InventorySessionStatus {
+  DRAFT
+  IN_PROGRESS
+  COMPLETED
+}
+
+model InventorySession {
+  id           String                 @id @default(uuid()) @db.Char(36)
+  name         String
+  departmentId Int                    @map("department_id")
+  startDate    DateTime               @map("start_date")
+  endDate      DateTime?              @map("end_date")
+  status       InventorySessionStatus @default(DRAFT)
+  createdAt    DateTime               @default(now()) @map("created_at")
+  updatedAt    DateTime               @updatedAt @map("updated_at")
+  department   Department             @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  items        InventoryItem[]
+
+  @@map("inventory_sessions")
+}
+
+enum InventoryResult {
+  OK
+  MISSING
+  DAMAGED
+}
+
+model InventoryItem {
+  id        String          @id @default(uuid()) @db.Char(36)
+  sessionId String          @map("session_id") @db.Char(36)
+  assetId   String          @map("asset_id") @db.Char(36)
+  result    InventoryResult @default(OK)
+  notes     String?         @db.Text
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
+  session   InventorySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  asset     Asset            @relation(fields: [assetId], references: [id], onDelete: Restrict)
+
+  @@map("inventory_items")
 }
