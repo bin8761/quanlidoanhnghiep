@@ -3,3 +3,6 @@ CONTINUITY.md
 
 node_modules
 backend/.env
+
+# macOS
+.DS_Store

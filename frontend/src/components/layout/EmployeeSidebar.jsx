@@ -7,6 +7,8 @@ import {
   LogOut,
   ShieldCheck,
   X,
+  LockKeyhole,
+  History,
 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../auth/auth-context'
@@ -16,6 +18,8 @@ const navItems = [
   { to: '/employee/assets', label: 'Tài sản của tôi', icon: Boxes },
   { to: '/employee/requests', label: 'Yêu cầu hỗ trợ', icon: Headphones },
   { to: '/employee/profile', label: 'Hồ sơ cá nhân', icon: CircleUserRound },
+  { to: '/employee/change-password', label: 'Đổi mật khẩu', icon: LockKeyhole },
+  { to: '/employee/history', label: 'Lịch sử', icon: History },
 ]
 
 export default function EmployeeSidebar({ open, onClose }) {
