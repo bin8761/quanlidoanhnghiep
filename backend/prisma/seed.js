@@ -224,6 +224,39 @@ async function main() {
     },
   });
 
+  const categorySeeds = [
+    {
+      name: "Laptop",
+      description: "Máy tính xách tay dành cho nhân viên",
+    },
+    {
+      name: "Máy in",
+      description: "Máy in và thiết bị phục vụ in ấn",
+    },
+    {
+      name: "Máy chiếu",
+      description: "Thiết bị trình chiếu cho phòng họp",
+    },
+    {
+      name: "Màn hình",
+      description: "Màn hình máy tính và thiết bị hiển thị",
+    },
+  ];
+
+  for (const category of categorySeeds) {
+    await prisma.assetCategory.upsert({
+      where: {
+        name: category.name,
+      },
+      update: {
+        description: category.description,
+      },
+      create: {
+        ...category,
+      },
+    });
+  }
+
   console.log(
     JSON.stringify(
       {
@@ -257,6 +290,7 @@ async function main() {
           firstLoginUserId: firstLoginUser.id,
           activeUserId: activeUser.id,
         },
+        assetCategories: categorySeeds.map((category) => category.name),
       },
       null,
       2,

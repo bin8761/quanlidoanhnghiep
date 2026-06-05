@@ -18,6 +18,37 @@ describe('auth.validator', () => {
     });
   });
 
+  test('register validator accepts matching employee registration payload', async () => {
+    const validators = loadAuthValidators();
+
+    await expect(
+      validators.register.body.parseAsync({
+        employeeCode: 'EMP001',
+        email: 'user@example.com',
+        password: 'Password123',
+        confirmPassword: 'Password123',
+      }),
+    ).resolves.toEqual({
+      employeeCode: 'EMP001',
+      email: 'user@example.com',
+      password: 'Password123',
+      confirmPassword: 'Password123',
+    });
+  });
+
+  test('register validator rejects mismatched confirmation', async () => {
+    const validators = loadAuthValidators();
+
+    await expect(
+      validators.register.body.parseAsync({
+        employeeCode: 'EMP001',
+        email: 'user@example.com',
+        password: 'Password123',
+        confirmPassword: 'Password456',
+      }),
+    ).rejects.toBeTruthy();
+  });
+
   test('changePassword validator rejects missing confirm password', async () => {
     const validators = loadAuthValidators();
 

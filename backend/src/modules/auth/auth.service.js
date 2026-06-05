@@ -56,6 +56,14 @@ function createEmployeeNotFoundError() {
   });
 }
 
+function createEmployeeEmailMismatchError() {
+  return new AppError({
+    message: AUTH_ERROR_MESSAGES.EMPLOYEE_EMAIL_MISMATCH,
+    statusCode: 400,
+    errorCode: ERROR_CODES.AUTH_EMPLOYEE_EMAIL_MISMATCH,
+  });
+}
+
 function createUserAlreadyExistsError() {
   return new AppError({
     message: AUTH_ERROR_MESSAGES.USER_ALREADY_EXISTS,
@@ -177,6 +185,54 @@ function createAuthService({
   defaultUserPassword = env.defaultUserPassword,
 } = {}) {
   return Object.freeze({
+    async register(payload = {}) {
+      const {
+        employeeCode,
+        email,
+        password,
+        confirmPassword,
+      } = payload;
+
+      if (password !== confirmPassword) {
+        throw createPasswordMismatchError();
+      }
+
+      if (!passwordMeetsPolicy(password)) {
+        throw createPasswordPolicyError();
+      }
+
+      const employeeRecord = await repository.findEmployeeByCode(employeeCode);
+
+      if (!employeeRecord) {
+        throw createEmployeeNotFoundError();
+      }
+
+      if (employeeRecord.email.toLowerCase() !== email.toLowerCase()) {
+        throw createEmployeeEmailMismatchError();
+      }
+
+      const [duplicateEmployeeAccount, duplicateEmailAccount] = await Promise.all([
+        repository.hasUserForEmployee(employeeRecord.id),
+        repository.hasUserWithEmail(employeeRecord.email),
+      ]);
+
+      if (duplicateEmployeeAccount || duplicateEmailAccount) {
+        throw createUserAlreadyExistsError();
+      }
+
+      const passwordHash = await passwordUtility.hashPassword(password);
+      const createdUser = await repository.createUser({
+        employeeId: employeeRecord.id,
+        email: employeeRecord.email,
+        passwordHash,
+        role: ROLES.USER,
+        isActive: true,
+        mustChangePassword: false,
+      });
+
+      return mapUserToSafeAuthResponse(createdUser);
+    },
+
     async login(email, password) {
       const userRecord = await repository.findUserByEmail(email);
 
@@ -885,6 +941,7 @@ module.exports = Object.freeze({
   createUnauthorizedError,
   createUserNotFoundError,
   createEmployeeNotFoundError,
+  createEmployeeEmailMismatchError,
   createUserAlreadyExistsError,
   createPasswordMismatchError,
   createPasswordPolicyError,
