@@ -192,3 +192,17 @@ test('admin can create, update and delete a category through the real API', asyn
   await expect(page.getByText('Không tìm thấy dữ liệu')).toBeVisible()
   expect(errors).toEqual([])
 })
+
+test('employee can view asset detail and history pages', async ({ page }) => {
+  const errors = collectConsoleErrors(page)
+  await loginAsEmployee(page)
+
+  await page.getByRole('link', { name: 'Tài sản của tôi' }).click()
+  await page.getByText('LT-0248').first().click() // hoặc click card
+  await expect(page.getByRole('heading', { level: 2 })).toContainText('Dell Latitude')
+
+  await page.goto('/employee/history')
+  await expect(page.getByText('Lịch sử bàn giao')).toBeVisible()
+
+  expect(errors).toEqual([])
+})

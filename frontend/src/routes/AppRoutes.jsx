@@ -12,6 +12,9 @@ import EmployeeAssetsPage from '../pages/employee/EmployeeAssetsPage'
 import EmployeeDashboardPage from '../pages/employee/EmployeeDashboardPage'
 import EmployeeProfilePage from '../pages/employee/EmployeeProfilePage'
 import EmployeeRequestsPage from '../pages/employee/EmployeeRequestsPage'
+import EmployeeChangePasswordPage from '../pages/employee/EmployeeChangePasswordPage'
+import EmployeeHistoryPage from '../pages/employee/EmployeeHistoryPage'
+import EmployeeAssetDetailPage from '../pages/employee/EmployeeAssetDetailPage'
 
 function ProtectedAdminRoute() {
   const { user, isBootstrapping } = useAuth()
@@ -89,6 +92,9 @@ export default function AppRoutes() {
         <Route path="assets" element={<EmployeeAssetsPage />} />
         <Route path="requests" element={<EmployeeRequestsPage />} />
         <Route path="profile" element={<EmployeeProfilePage />} />
+        <Route path="change-password" element={<EmployeeChangePasswordPage />} />
+        <Route path="history" element={<EmployeeHistoryPage />} />
+        <Route path="assets/:code" element={<EmployeeAssetDetailPage />} />  {/* Demo nên đang dùng: assets/:code |  Có thể thay sang: assets/:id */}
       </Route>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
