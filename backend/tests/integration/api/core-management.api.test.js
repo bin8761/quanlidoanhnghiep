@@ -155,7 +155,7 @@ describe("API integration: core management APIs (Person 2)", () => {
     test("GET /api/employees/:id allows self owner and ADMIN", async () => {
       const activeEmployeeId = harness.seeds.ids.activeUserEmployeeId;
       const otherEmployeeId = harness.seeds.ids.existingUserEmployeeId;
-      
+
       const activeUser = harness.getUserById(harness.seeds.ids.activeUserId);
       const activeUserToken = harness.signTokenForUser(activeUser);
 
