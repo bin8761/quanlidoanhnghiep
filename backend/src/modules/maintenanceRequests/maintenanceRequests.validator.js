@@ -16,7 +16,7 @@ module.exports = Object.freeze({
   create: Object.freeze({
     body: z.object({
       assetId: uuid("Asset ID"),
-      requesterId: uuid("Requester ID"),
+      requesterId: uuid("Requester ID").optional(),
       description: z.string({ required_error: "Description is required" }).trim().min(1).max(2000),
       notes: z.string().trim().max(1000).optional().nullable(),
     }),

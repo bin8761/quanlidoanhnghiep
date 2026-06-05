@@ -4,7 +4,7 @@ const { sendSuccess } = require("../../shared/response/apiResponse");
 module.exports = Object.freeze({
   async list(req, res, next) {
     try {
-      const requests = await service.getAll(req.query);
+      const requests = await service.getAll(req.query, { authenticatedUser: req.user });
       return sendSuccess(res, { message: "Maintenance requests retrieved successfully", data: requests });
     } catch (error) {
       return next(error);
@@ -13,7 +13,7 @@ module.exports = Object.freeze({
 
   async create(req, res, next) {
     try {
-      const request = await service.create(req.body);
+      const request = await service.create(req.body, { authenticatedUser: req.user });
       return sendSuccess(res, { statusCode: 201, message: "Maintenance request created successfully", data: request });
     } catch (error) {
       return next(error);
@@ -22,7 +22,7 @@ module.exports = Object.freeze({
 
   async getById(req, res, next) {
     try {
-      const request = await service.getById(req.params.id);
+      const request = await service.getById(req.params.id, { authenticatedUser: req.user });
       return sendSuccess(res, { message: "Maintenance request retrieved successfully", data: request });
     } catch (error) {
       return next(error);

@@ -75,6 +75,31 @@ function createMaintenanceRequestsRepository(prismaClient = defaultPrisma) {
     async findEmployeeById(id) {
       return prismaClient.employee.findUnique({ where: { id }, select: { id: true, status: true } });
     },
+
+    async findEmployeeByUserId(userId) {
+      const user = await prismaClient.user.findUnique({
+        where: { id: userId },
+        select: {
+          employee: {
+            select: { id: true, status: true },
+          },
+        },
+      });
+
+      return user?.employee ?? null;
+    },
+
+    async hasActiveAssignment(assetId, employeeId) {
+      const count = await prismaClient.assetAssignment.count({
+        where: {
+          assetId,
+          employeeId,
+          status: "ACTIVE",
+        },
+      });
+
+      return count > 0;
+    },
   });
 }
 
