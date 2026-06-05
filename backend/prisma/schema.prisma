@@ -61,3 +61,14 @@ model PasswordResetOtp {
   @@index([userId, expiresAt])
   @@map("password_reset_otps")
 }
+
+model AssetCategory {
+  id          String   @id @default(uuid()) @db.Char(36)
+  name        String   @unique
+  description String?  @db.VarChar(500)
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("asset_categories")
+}

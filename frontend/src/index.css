@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --color-brand-50: #effaf5;
+  --color-brand-100: #d9f2e5;
+  --color-brand-200: #b5e4ce;
+  --color-brand-300: #84cfad;
+  --color-brand-400: #4fb486;
+  --color-brand-500: #249466;
+  --color-brand-600: #197852;
+  --color-brand-700: #165f44;
+  --color-brand-800: #154c38;
+  --color-brand-900: #123f30;
+  --color-brand-950: #08241b;
+  --shadow-soft: 0 12px 35px rgba(15, 36, 27, 0.07);
+  --shadow-premium: 0 24px 70px rgba(10, 31, 22, 0.14);
+}
+
+:root {
+  font-family: var(--font-sans);
+  color: #18231e;
+  background: #f3f7f5;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  min-height: 100%;
+  background: #f3f7f5;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  color: #08241b;
+  background: #b5e4ce;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: #bdc9c2;
+  background-clip: padding-box;
+}
+
+.login-visual {
+  background:
+    linear-gradient(180deg, rgba(6, 24, 17, 0.08) 0%, rgba(6, 24, 17, 0.84) 100%),
+    url("./assets/admin-login.png") center / cover;
+}
+
+.ambient-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 42px 42px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-spin-soft {
+  animation: spin 0.75s linear infinite;
+}
+
+.animate-fade-up {
+  animation: fade-up 0.35s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

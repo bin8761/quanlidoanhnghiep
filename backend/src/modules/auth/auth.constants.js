@@ -27,10 +27,12 @@ const AUTH_ERROR_MESSAGES = Object.freeze({
   USER_ALREADY_EXISTS: "User account already exists",
   USER_NOT_FOUND: "User account not found",
   EMPLOYEE_NOT_FOUND: "Employee not found",
+  EMPLOYEE_EMAIL_MISMATCH: "Employee code and email do not match",
 });
 
 const AUTH_RESPONSE_MESSAGES = Object.freeze({
   LOGIN_SUCCESS: "Login successful",
+  REGISTER_SUCCESS: "Registration successful",
   LOGOUT_SUCCESS: "Logout successful",
   CURRENT_USER_SUCCESS: "Current user retrieved successfully",
   PASSWORD_CHANGED_SUCCESS: "Password changed successfully",

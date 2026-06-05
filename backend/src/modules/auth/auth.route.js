@@ -15,6 +15,13 @@ const authRouter = express.Router();
 const tokenBucketRateLimit = createTokenBucketRateLimit();
 
 authRouter.post(
+  "/register",
+  tokenBucketRateLimit,
+  validateRequest(authValidators.register),
+  authController.register,
+);
+
+authRouter.post(
   "/login",
   tokenBucketRateLimit,
   validateRequest(authValidators.login),

@@ -27,6 +27,10 @@ describe('auth.service', () => {
       incrementOtpAttemptCount: jest.fn(),
       markOtpAsVerified: jest.fn(),
       markOtpAsUsed: jest.fn(),
+      findEmployeeByCode: jest.fn(),
+      hasUserForEmployee: jest.fn(),
+      hasUserWithEmail: jest.fn(),
+      createUser: jest.fn(),
       ...repositoryOverrides,
     };
 
@@ -90,6 +94,74 @@ describe('auth.service', () => {
       logger,
     };
   }
+
+  test('register creates a linked active USER account', async () => {
+    const createdUser = {
+      id: USER_ID,
+      employeeId: EMPLOYEE_ID,
+      email: 'employee@example.com',
+      role: 'USER',
+      isActive: true,
+      mustChangePassword: false,
+    };
+    const { authService, repository, passwordUtility } = loadAuthService({
+      repositoryOverrides: {
+        findEmployeeByCode: jest.fn().mockResolvedValue({
+          id: EMPLOYEE_ID,
+          employeeCode: 'EMP001',
+          email: 'employee@example.com',
+        }),
+        hasUserForEmployee: jest.fn().mockResolvedValue(false),
+        hasUserWithEmail: jest.fn().mockResolvedValue(false),
+        createUser: jest.fn().mockResolvedValue(createdUser),
+      },
+      passwordUtilOverrides: {
+        hashPassword: jest.fn().mockResolvedValue('password-hash'),
+      },
+    });
+
+    await expect(
+      authService.register({
+        employeeCode: 'EMP001',
+        email: 'employee@example.com',
+        password: 'Password123',
+        confirmPassword: 'Password123',
+      }),
+    ).resolves.toEqual(createdUser);
+    expect(passwordUtility.hashPassword).toHaveBeenCalledWith('Password123');
+    expect(repository.createUser).toHaveBeenCalledWith({
+      employeeId: EMPLOYEE_ID,
+      email: 'employee@example.com',
+      passwordHash: 'password-hash',
+      role: 'USER',
+      isActive: true,
+      mustChangePassword: false,
+    });
+  });
+
+  test('register rejects an employee email mismatch', async () => {
+    const { authService } = loadAuthService({
+      repositoryOverrides: {
+        findEmployeeByCode: jest.fn().mockResolvedValue({
+          id: EMPLOYEE_ID,
+          employeeCode: 'EMP001',
+          email: 'employee@example.com',
+        }),
+      },
+    });
+
+    await expect(
+      authService.register({
+        employeeCode: 'EMP001',
+        email: 'other@example.com',
+        password: 'Password123',
+        confirmPassword: 'Password123',
+      }),
+    ).rejects.toMatchObject({
+      statusCode: 400,
+      errorCode: 'AUTH_EMPLOYEE_EMAIL_MISMATCH',
+    });
+  });
 
   test('login returns safe auth payload for a valid active user', async () => {
     const foundUser = {

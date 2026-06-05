@@ -22,6 +22,9 @@ describe('routes/index', () => {
     }));
 
     jest.doMock('../../../src/modules/auth/auth.route', () => ({ mocked: 'authRouter' }));
+    jest.doMock('../../../src/modules/categories/category.route', () => ({
+      mocked: 'categoryRouter',
+    }));
     jest.doMock('../../../src/modules/auth/auth.constants', () => ({
       AUTH_ROUTE_PREFIX: '/auth',
     }));
@@ -41,6 +44,7 @@ describe('routes/index', () => {
     expect(Router).toHaveBeenCalledTimes(2);
     expect(apiRouter.get).toHaveBeenCalledWith('/health', expect.any(Function));
     expect(apiRouter.use).toHaveBeenCalledWith('/auth', expect.anything());
+    expect(apiRouter.use).toHaveBeenCalledWith('/categories', expect.anything());
     expect(rootRouter.use).toHaveBeenCalledWith(
       '/api',
       expect.objectContaining({

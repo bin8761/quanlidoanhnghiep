@@ -217,6 +217,18 @@ function createAuthRepository(prismaClient) {
       return mapEmployeeForAuth(employeeRecord);
     },
 
+    async findEmployeeByCode(employeeCode) {
+      const activePrismaClient = resolvePrismaClient(prismaClient);
+      const employeeRecord = await activePrismaClient.employee.findUnique({
+        where: {
+          employeeCode,
+        },
+        select: EMPLOYEE_AUTH_SELECT,
+      });
+
+      return mapEmployeeForAuth(employeeRecord);
+    },
+
     async createUser(userData) {
       const activePrismaClient = resolvePrismaClient(prismaClient);
       const userRecord = await activePrismaClient.user.create({

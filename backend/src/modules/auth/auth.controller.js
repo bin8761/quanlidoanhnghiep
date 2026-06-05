@@ -3,6 +3,20 @@ const { sendSuccess } = require("../../shared/response/apiResponse");
 const { AUTH_RESPONSE_MESSAGES } = require("./auth.constants");
 
 const authController = {
+  async register(req, res, next) {
+    try {
+      const registeredUser = await authService.register(req.body);
+
+      return sendSuccess(res, {
+        statusCode: 201,
+        message: AUTH_RESPONSE_MESSAGES.REGISTER_SUCCESS,
+        data: registeredUser,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  },
+
   async login(req, res, next) {
     try {
       const { email, password } = req.body;

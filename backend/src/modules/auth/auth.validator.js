@@ -60,7 +60,30 @@ const resetPasswordBodySchema = z
     }
   });
 
+const registerBodySchema = z
+  .object({
+    employeeCode: trimmedRequiredString("Employee code").max(
+      50,
+      "Employee code must not exceed 50 characters",
+    ),
+    email: emailSchema,
+    password: passwordSchema,
+    confirmPassword: trimmedRequiredString("Confirm password"),
+  })
+  .superRefine((payload, context) => {
+    if (payload.password !== payload.confirmPassword) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["confirmPassword"],
+        message: AUTH_ERROR_MESSAGES.PASSWORD_MISMATCH,
+      });
+    }
+  });
+
 const authValidators = Object.freeze({
+  register: Object.freeze({
+    body: registerBodySchema,
+  }),
   login: Object.freeze({
     body: z.object({
       email: emailSchema,

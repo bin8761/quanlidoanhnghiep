@@ -3,6 +3,7 @@ describe('auth.controller', () => {
     jest.resetModules();
 
     const mockedService = {
+      register: jest.fn(),
       login: jest.fn(),
       getCurrentUser: jest.fn(),
       logout: jest.fn(),
@@ -22,6 +23,42 @@ describe('auth.controller', () => {
       mockedService,
     };
   }
+
+  test('register delegates payload and returns created user', async () => {
+    const registeredUser = {
+      id: 'user-1',
+      email: 'user@example.com',
+      role: 'USER',
+      employeeId: 'employee-1',
+      isActive: true,
+      mustChangePassword: false,
+    };
+    const { authController, mockedService } = loadAuthController({
+      register: jest.fn().mockResolvedValue(registeredUser),
+    });
+    const { createMockRequest, createMockResponse, createNext } = require('../../../helpers/mockExpress');
+    const request = createMockRequest({
+      body: {
+        employeeCode: 'EMP001',
+        email: 'user@example.com',
+        password: 'Password123',
+        confirmPassword: 'Password123',
+      },
+    });
+    const response = createMockResponse();
+    const next = createNext();
+
+    await authController.register(request, response, next);
+
+    expect(mockedService.register).toHaveBeenCalledWith(request.body);
+    expect(response.status).toHaveBeenCalledWith(201);
+    expect(response.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success: true,
+        data: registeredUser,
+      }),
+    );
+  });
 
   test('forgotPassword delegates to service and returns standard envelope', async () => {
     const { authController, mockedService } = loadAuthController({

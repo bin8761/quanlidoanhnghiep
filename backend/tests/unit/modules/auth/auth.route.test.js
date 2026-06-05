@@ -16,6 +16,7 @@ describe('auth.route', () => {
     }));
 
     jest.doMock('../../../../src/modules/auth/auth.controller', () => ({
+      register: jest.fn(),
       login: jest.fn(),
       me: jest.fn(),
       logout: jest.fn(),
@@ -28,6 +29,7 @@ describe('auth.route', () => {
     }));
 
     jest.doMock('../../../../src/modules/auth/auth.validator', () => ({
+      register: {},
       login: {},
       changePassword: {},
       forgotPassword: {},
@@ -70,6 +72,7 @@ describe('auth.route', () => {
 
     expect(postPaths).toEqual(
       expect.arrayContaining([
+        '/register',
         '/login',
         '/logout',
         '/forgot-password',
