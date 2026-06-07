@@ -295,3 +295,53 @@ test('employee can view asset detail and history pages', async ({ page }) => {
 
   expect(errors).toEqual([])
 })
+
+test('admin can assign, transfer and return an asset through the real APIs', async ({ page }) => {
+  const errors = collectConsoleErrors(page)
+
+  await page.setViewportSize({ width: 1440, height: 960 })
+  await loginAsAdmin(page)
+  await page.getByRole('link', { name: 'Bàn giao' }).click()
+
+  await expect(page.getByRole('heading', { level: 2, name: 'Quản lý bàn giao' })).toBeVisible()
+  await page.screenshot({ path: 'test-results/week3-assignment-desktop.png', fullPage: true })
+  await page.getByRole('button', { name: 'Tạo bàn giao' }).click()
+
+  const assignDialog = page.getByRole('dialog', { name: 'Tạo bàn giao tài sản' })
+  await assignDialog.getByLabel('Tài sản').selectOption({ label: 'LT-123 - Julez' })
+  await assignDialog.getByLabel('Nhân viên nhận').selectOption({ label: 'EMP001 - Nhân viên 1' })
+  await assignDialog.getByLabel('Ghi chú').fill('Bàn giao từ kiểm thử giao diện tuần 3')
+  await assignDialog.getByRole('button', { name: 'Xác nhận bàn giao' }).click()
+  await expect(page.getByText('Bàn giao tài sản thành công.')).toBeVisible()
+
+  await page.getByTitle('Chuyển giao LT-123').click()
+  const transferDialog = page.getByRole('dialog', { name: 'Chuyển giao LT-123' })
+  await transferDialog
+    .getByLabel('Nhân viên nhận mới')
+    .selectOption({ label: 'EMP002 - Inactive User Employee' })
+  await transferDialog.getByLabel('Ghi chú chuyển giao').fill('Chuyển giao để kiểm thử lịch sử')
+  await transferDialog.getByRole('button', { name: 'Xác nhận chuyển giao' }).click()
+  await expect(page.getByText('Chuyển giao tài sản thành công.')).toBeVisible()
+
+  await page.getByTitle('Thu hồi LT-123').click()
+  const returnDialog = page.getByRole('dialog', { name: 'Thu hồi LT-123' })
+  await returnDialog.getByLabel('Tình trạng sau thu hồi').selectOption('AVAILABLE')
+  await returnDialog.getByLabel('Biên bản / ghi chú').fill('Tài sản hoạt động bình thường')
+  await returnDialog.getByRole('button', { name: 'Xác nhận thu hồi' }).click()
+  await expect(page.getByText('Thu hồi tài sản thành công.')).toBeVisible()
+
+  await page.getByLabel('Trạng thái').selectOption('RETURNED')
+  await expect(page.getByRole('table').getByText('Đã thu hồi').first()).toBeVisible()
+  await page.getByLabel('Trạng thái').selectOption('TRANSFERRED')
+  await expect(page.getByRole('table').getByText('Đã chuyển giao').first()).toBeVisible()
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.waitForTimeout(500)
+  await page.screenshot({ path: 'test-results/week3-assignment-mobile.png', fullPage: true })
+  const hasHorizontalOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  )
+
+  expect(hasHorizontalOverflow).toBe(false)
+  expect(errors).toEqual([])
+})

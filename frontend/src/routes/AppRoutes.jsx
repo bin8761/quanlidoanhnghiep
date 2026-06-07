@@ -6,6 +6,7 @@ import LoginPage from '../pages/LoginPage'
 import RegisterPage from '../pages/RegisterPage'
 import DashboardPage from '../pages/admin/DashboardPage'
 import AssetsPage from '../pages/admin/AssetsPage'
+import AssignmentsPage from '../pages/admin/AssignmentsPage'
 import CategoriesPage from '../pages/admin/CategoriesPage'
 import DepartmentsPage from '../pages/admin/DepartmentsPage'
 import EmployeesPage from '../pages/admin/EmployeesPage'
@@ -86,8 +87,9 @@ export default function AppRoutes() {
         <Route path="categories" element={<CategoriesPage />} />
         <Route path="employees" element={<EmployeesPage />} />
         <Route path="departments" element={<DepartmentsPage />} />
+        <Route path="assignments" element={<AssignmentsPage />} />
         {Object.entries(managementPages)
-          .filter(([path]) => !['assets', 'categories', 'employees', 'departments'].includes(path))
+          .filter(([path]) => !['assets', 'categories', 'employees', 'departments', 'assignments'].includes(path))
           .map(([path, config]) => (
           <Route key={path} path={path} element={<ManagementPage config={config} />} />
           ))}
