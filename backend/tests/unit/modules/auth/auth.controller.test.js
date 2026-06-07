@@ -201,7 +201,7 @@ describe('auth.controller', () => {
 
   test('changePassword forwards service errors to next', async () => {
     const serviceError = new Error('Current password is incorrect');
-    const { authController, mockedService } = loadAuthController({
+    const { authController } = loadAuthController({
       changePassword: jest.fn().mockRejectedValue(serviceError),
     });
     const { createMockRequest, createMockResponse, createNext } = require('../../../helpers/mockExpress');
@@ -299,7 +299,7 @@ describe('auth.controller', () => {
 
   test('forgotPassword forwards service errors to next', async () => {
     const serviceError = new Error('Mail delivery failed');
-    const { authController, mockedService } = loadAuthController({
+    const { authController } = loadAuthController({
       requestForgotPasswordOtp: jest.fn().mockRejectedValue(serviceError),
     });
     const { createMockRequest, createMockResponse, createNext } = require('../../../helpers/mockExpress');
@@ -318,7 +318,7 @@ describe('auth.controller', () => {
 
   test('resetPassword forwards service errors to next', async () => {
     const serviceError = new Error('OTP expired');
-    const { authController, mockedService } = loadAuthController({
+    const { authController } = loadAuthController({
       resetPassword: jest.fn().mockRejectedValue(serviceError),
     });
     const { createMockRequest, createMockResponse, createNext } = require('../../../helpers/mockExpress');
@@ -342,7 +342,7 @@ describe('auth.controller', () => {
 
   test('createUser forwards service errors to next', async () => {
     const serviceError = new Error('Employee not found');
-    const { authController, mockedService } = loadAuthController({
+    const { authController } = loadAuthController({
       createEmployeeUser: jest.fn().mockRejectedValue(serviceError),
     });
     const { createMockRequest, createMockResponse, createNext } = require('../../../helpers/mockExpress');
@@ -362,7 +362,7 @@ describe('auth.controller', () => {
 
   test('updateUserStatus forwards service errors to next', async () => {
     const serviceError = new Error('User not found');
-    const { authController, mockedService } = loadAuthController({
+    const { authController } = loadAuthController({
       updateUserStatus: jest.fn().mockRejectedValue(serviceError),
     });
     const { createMockRequest, createMockResponse, createNext } = require('../../../helpers/mockExpress');

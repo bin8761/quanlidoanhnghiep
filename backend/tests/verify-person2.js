@@ -1,8 +1,6 @@
 /**
  * Script to verify Person 2 - Backend Core Management APIs against a running local MySQL instance.
  */
-const { exec } = require("child_process");
-
 const BASE_URL = "http://localhost:5000/api";
 let adminToken = "";
 
@@ -25,7 +23,7 @@ async function request(path, options = {}) {
   let json;
   try {
     json = JSON.parse(text);
-  } catch (e) {
+  } catch {
     json = { rawText: text };
   }
 

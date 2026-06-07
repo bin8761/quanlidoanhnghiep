@@ -201,5 +201,6 @@ model InventoryItem {
   session   InventorySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   asset     Asset            @relation(fields: [assetId], references: [id], onDelete: Restrict)
 
+  @@unique([sessionId, assetId])
   @@map("inventory_items")
 }

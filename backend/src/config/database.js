@@ -6,7 +6,7 @@ const globalForPrisma = globalThis;
 function loadPrismaClient() {
   try {
     return require("@prisma/client").PrismaClient;
-  } catch (error) {
+  } catch {
     throw new Error(
       'Prisma Client is not available yet. Run the user-managed Prisma commands, including "npx prisma generate", before using src/config/database.js.',
     );
