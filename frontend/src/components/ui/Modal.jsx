@@ -1,6 +1,11 @@
 import { X } from 'lucide-react'
 
-export default function Modal({ title, description, children, onClose }) {
+const sizes = {
+  md: 'max-w-[560px]',
+  lg: 'max-w-[820px]',
+}
+
+export default function Modal({ title, description, children, onClose, size = 'md' }) {
   return (
     <div
       className="fixed inset-0 z-50 grid place-items-center bg-slate-950/55 p-4 backdrop-blur-sm sm:p-6"
@@ -8,7 +13,7 @@ export default function Modal({ title, description, children, onClose }) {
       onMouseDown={onClose}
     >
       <section
-        className="animate-fade-up max-h-[calc(100vh-32px)] w-full max-w-[560px] overflow-auto rounded-3xl border border-white/50 bg-white shadow-premium"
+        className={`animate-fade-up max-h-[calc(100vh-32px)] w-full overflow-auto rounded-3xl border border-white/50 bg-white shadow-premium ${sizes[size] || sizes.md}`}
         role="dialog"
         aria-modal="true"
         aria-label={title}

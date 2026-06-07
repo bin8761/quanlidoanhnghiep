@@ -8,6 +8,7 @@ export default function DataTable({
   onSearchChange,
   searchPlaceholder = 'Tìm kiếm...',
   actions,
+  onFilterClick,
 }) {
   return (
     <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-soft">
@@ -26,10 +27,12 @@ export default function DataTable({
           />
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="secondary" size="md" type="button">
-            <SlidersHorizontal size={16} />
-            <span className="hidden sm:inline">Bộ lọc</span>
-          </Button>
+          {onFilterClick && (
+            <Button variant="secondary" size="md" type="button" onClick={onFilterClick}>
+              <SlidersHorizontal size={16} />
+              <span className="hidden sm:inline">Bộ lọc</span>
+            </Button>
+          )}
           {actions}
         </div>
       </div>

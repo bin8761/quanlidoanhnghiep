@@ -85,7 +85,7 @@ test('management table, empty state and modal work without console errors', asyn
   await page.getByRole('link', { name: 'Tài sản' }).click()
 
   await expect(page.getByRole('heading', { level: 2, name: 'Quản lý tài sản' })).toBeVisible()
-  const search = page.getByPlaceholder('Tìm theo mã hoặc tên tài sản...')
+  const search = page.getByPlaceholder('Tìm theo mã, tên hoặc serial...')
   await search.fill('không tồn tại')
   await expect(page.getByText('Không tìm thấy dữ liệu')).toBeVisible()
   await search.fill('')
@@ -193,6 +193,95 @@ test('admin can create, update and delete a category through the real API', asyn
   expect(errors).toEqual([])
 })
 
+test('admin can manage departments, employees and assets through the real APIs', async ({ page }) => {
+  const errors = collectConsoleErrors(page)
+  const suffix = Date.now()
+  const departmentName = `QA Department ${suffix}`
+  const updatedDepartmentName = `${departmentName} Updated`
+  const employeeCode = `QA${String(suffix).slice(-6)}`
+  const employeeName = `QA Employee ${suffix}`
+  const updatedEmployeeName = `${employeeName} Updated`
+  const employeeEmail = `qa.employee.${suffix}@company.local`
+  const assetCode = `QA-${String(suffix).slice(-6)}`
+  const assetName = `QA Laptop ${suffix}`
+  const updatedAssetName = `${assetName} Updated`
+
+  await page.setViewportSize({ width: 1440, height: 960 })
+  await loginAsAdmin(page)
+
+  await page.getByRole('link', { name: 'Phòng ban' }).click()
+  await page.getByRole('button', { name: 'Thêm phòng ban' }).click()
+  await page.getByLabel('Tên phòng ban').fill(departmentName)
+  await page.getByLabel('Mô tả').fill('Phòng ban được tạo bởi kiểm thử UI')
+  await page
+    .getByRole('dialog', { name: 'Thêm phòng ban' })
+    .getByRole('button', { name: 'Thêm phòng ban', exact: true })
+    .click()
+  await expect(page.getByText('Thêm phòng ban thành công.')).toBeVisible()
+  await page.getByTitle(`Sửa ${departmentName}`).click()
+  await page.getByLabel('Tên phòng ban').fill(updatedDepartmentName)
+  await page.getByRole('button', { name: 'Lưu thay đổi' }).click()
+  await expect(page.getByText('Cập nhật phòng ban thành công.')).toBeVisible()
+
+  await page.getByRole('link', { name: 'Nhân viên' }).click()
+  await page.getByRole('button', { name: 'Thêm nhân viên' }).click()
+  await page.getByLabel('Mã nhân viên').fill(employeeCode)
+  await page.getByLabel('Họ và tên').fill(employeeName)
+  await page.getByLabel('Email công ty').fill(employeeEmail)
+  const employeeDialog = page.getByRole('dialog', { name: 'Thêm nhân viên' })
+  await employeeDialog.getByLabel('Phòng ban', { exact: true }).selectOption({ label: updatedDepartmentName })
+  await employeeDialog
+    .getByRole('button', { name: 'Thêm nhân viên', exact: true })
+    .click()
+  await expect(page.getByText('Thêm nhân viên thành công.')).toBeVisible()
+  await page.getByTitle(`Sửa ${employeeName}`).click()
+  await page.getByLabel('Họ và tên').fill(updatedEmployeeName)
+  await page.getByRole('button', { name: 'Lưu thay đổi' }).click()
+  await expect(page.getByText('Cập nhật nhân viên thành công.')).toBeVisible()
+
+  await page.getByRole('link', { name: 'Tài sản' }).click()
+  await page.getByRole('button', { name: 'Thêm tài sản' }).click()
+  await page.getByLabel('Mã tài sản').fill(assetCode)
+  await page.getByLabel('Tên tài sản').fill(assetName)
+  const assetDialog = page.getByRole('dialog', { name: 'Thêm tài sản' })
+  await assetDialog.getByLabel('Danh mục', { exact: true }).selectOption({ label: 'Laptop' })
+  await page.getByLabel('Số serial').fill(`SN-${suffix}`)
+  await page.getByLabel('Giá trị (VND)').fill('25000000')
+  await page
+    .getByRole('dialog', { name: 'Thêm tài sản' })
+    .getByRole('button', { name: 'Thêm tài sản', exact: true })
+    .click()
+  await expect(page.getByText('Thêm tài sản thành công.')).toBeVisible()
+  await page.getByTitle(`Sửa ${assetName}`).click()
+  await page.getByLabel('Tên tài sản').fill(updatedAssetName)
+  await page.getByRole('button', { name: 'Lưu thay đổi' }).click()
+  await expect(page.getByText('Cập nhật tài sản thành công.')).toBeVisible()
+  await page.getByTitle(`Xóa ${updatedAssetName}`).click()
+  await page
+    .getByRole('dialog', { name: `Xóa tài sản "${updatedAssetName}"?` })
+    .getByRole('button', { name: 'Xóa tài sản' })
+    .click()
+  await expect(page.getByText('Xóa tài sản thành công.')).toBeVisible()
+
+  await page.getByRole('link', { name: 'Nhân viên' }).click()
+  await page.getByTitle(`Xóa ${updatedEmployeeName}`).click()
+  await page
+    .getByRole('dialog', { name: `Xóa nhân viên "${updatedEmployeeName}"?` })
+    .getByRole('button', { name: 'Xóa nhân viên' })
+    .click()
+  await expect(page.getByText('Xóa nhân viên thành công.')).toBeVisible()
+
+  await page.getByRole('link', { name: 'Phòng ban' }).click()
+  await page.getByTitle(`Xóa ${updatedDepartmentName}`).click()
+  await page
+    .getByRole('dialog', { name: `Xóa phòng ban "${updatedDepartmentName}"?` })
+    .getByRole('button', { name: 'Xóa phòng ban' })
+    .click()
+  await expect(page.getByText('Xóa phòng ban thành công.')).toBeVisible()
+
+  expect(errors).toEqual([])
+})
+
 test('employee can view asset detail and history pages', async ({ page }) => {
   const errors = collectConsoleErrors(page)
   await loginAsEmployee(page)
@@ -202,7 +291,7 @@ test('employee can view asset detail and history pages', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 2 })).toContainText('Dell Latitude')
 
   await page.goto('/employee/history')
-  await expect(page.getByText('Lịch sử bàn giao')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Lịch sử bàn giao' })).toBeVisible()
 
   expect(errors).toEqual([])
 })

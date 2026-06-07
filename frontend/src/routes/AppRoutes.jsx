@@ -5,7 +5,10 @@ import EmployeeLayout from '../layouts/EmployeeLayout'
 import LoginPage from '../pages/LoginPage'
 import RegisterPage from '../pages/RegisterPage'
 import DashboardPage from '../pages/admin/DashboardPage'
+import AssetsPage from '../pages/admin/AssetsPage'
 import CategoriesPage from '../pages/admin/CategoriesPage'
+import DepartmentsPage from '../pages/admin/DepartmentsPage'
+import EmployeesPage from '../pages/admin/EmployeesPage'
 import ManagementPage from '../pages/admin/ManagementPage'
 import { managementPages } from '../pages/admin/managementData'
 import EmployeeAssetsPage from '../pages/employee/EmployeeAssetsPage'
@@ -79,9 +82,12 @@ export default function AppRoutes() {
       <Route path="/admin" element={<ProtectedAdminRoute />}>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="assets" element={<AssetsPage />} />
         <Route path="categories" element={<CategoriesPage />} />
+        <Route path="employees" element={<EmployeesPage />} />
+        <Route path="departments" element={<DepartmentsPage />} />
         {Object.entries(managementPages)
-          .filter(([path]) => path !== 'categories')
+          .filter(([path]) => !['assets', 'categories', 'employees', 'departments'].includes(path))
           .map(([path, config]) => (
           <Route key={path} path={path} element={<ManagementPage config={config} />} />
           ))}
