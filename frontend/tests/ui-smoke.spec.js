@@ -1,4 +1,27 @@
 import { expect, test } from '@playwright/test'
+import { createRequire } from 'node:module'
+
+const require = createRequire(import.meta.url)
+const { PrismaClient } = require('../../backend/node_modules/@prisma/client')
+const workflowAssetCodes = new Set()
+
+test.afterEach(async () => {
+  if (!workflowAssetCodes.size) return
+
+  const prisma = new PrismaClient()
+  try {
+    const assets = await prisma.asset.findMany({
+      where: { assetCode: { in: [...workflowAssetCodes] } },
+      select: { id: true },
+    })
+    const assetIds = assets.map((asset) => asset.id)
+    await prisma.assetAssignment.deleteMany({ where: { assetId: { in: assetIds } } })
+    await prisma.asset.deleteMany({ where: { id: { in: assetIds } } })
+  } finally {
+    workflowAssetCodes.clear()
+    await prisma.$disconnect()
+  }
+})
 
 function collectConsoleErrors(page) {
   const errors = []
@@ -298,9 +321,23 @@ test('employee can view asset detail and history pages', async ({ page }) => {
 
 test('admin can assign, transfer and return an asset through the real APIs', async ({ page }) => {
   const errors = collectConsoleErrors(page)
+  const suffix = Date.now()
+  const assetCode = `WF-${String(suffix).slice(-6)}`
+  const assetName = `Workflow Asset ${suffix}`
+  workflowAssetCodes.add(assetCode)
 
   await page.setViewportSize({ width: 1440, height: 960 })
   await loginAsAdmin(page)
+
+  await page.getByRole('link', { name: 'Tài sản' }).click()
+  await page.getByRole('button', { name: 'Thêm tài sản' }).click()
+  const assetDialog = page.getByRole('dialog', { name: 'Thêm tài sản' })
+  await assetDialog.getByLabel('Mã tài sản').fill(assetCode)
+  await assetDialog.getByLabel('Tên tài sản').fill(assetName)
+  await assetDialog.getByLabel('Danh mục').selectOption({ label: 'Laptop' })
+  await assetDialog.getByRole('button', { name: 'Thêm tài sản', exact: true }).click()
+  await expect(page.getByText('Thêm tài sản thành công.')).toBeVisible()
+
   await page.getByRole('link', { name: 'Bàn giao' }).click()
 
   await expect(page.getByRole('heading', { level: 2, name: 'Quản lý bàn giao' })).toBeVisible()
@@ -308,14 +345,14 @@ test('admin can assign, transfer and return an asset through the real APIs', asy
   await page.getByRole('button', { name: 'Tạo bàn giao' }).click()
 
   const assignDialog = page.getByRole('dialog', { name: 'Tạo bàn giao tài sản' })
-  await assignDialog.getByLabel('Tài sản').selectOption({ label: 'LT-123 - Julez' })
+  await assignDialog.getByLabel('Tài sản').selectOption({ label: `${assetCode} - ${assetName}` })
   await assignDialog.getByLabel('Nhân viên nhận').selectOption({ label: 'EMP001 - Nhân viên 1' })
   await assignDialog.getByLabel('Ghi chú').fill('Bàn giao từ kiểm thử giao diện tuần 3')
   await assignDialog.getByRole('button', { name: 'Xác nhận bàn giao' }).click()
   await expect(page.getByText('Bàn giao tài sản thành công.')).toBeVisible()
 
-  await page.getByTitle('Chuyển giao LT-123').click()
-  const transferDialog = page.getByRole('dialog', { name: 'Chuyển giao LT-123' })
+  await page.getByTitle(`Chuyển giao ${assetCode}`).click()
+  const transferDialog = page.getByRole('dialog', { name: `Chuyển giao ${assetCode}` })
   await transferDialog
     .getByLabel('Nhân viên nhận mới')
     .selectOption({ label: 'EMP002 - Inactive User Employee' })
@@ -323,8 +360,8 @@ test('admin can assign, transfer and return an asset through the real APIs', asy
   await transferDialog.getByRole('button', { name: 'Xác nhận chuyển giao' }).click()
   await expect(page.getByText('Chuyển giao tài sản thành công.')).toBeVisible()
 
-  await page.getByTitle('Thu hồi LT-123').click()
-  const returnDialog = page.getByRole('dialog', { name: 'Thu hồi LT-123' })
+  await page.getByTitle(`Thu hồi ${assetCode}`).click()
+  const returnDialog = page.getByRole('dialog', { name: `Thu hồi ${assetCode}` })
   await returnDialog.getByLabel('Tình trạng sau thu hồi').selectOption('AVAILABLE')
   await returnDialog.getByLabel('Biên bản / ghi chú').fill('Tài sản hoạt động bình thường')
   await returnDialog.getByRole('button', { name: 'Xác nhận thu hồi' }).click()
@@ -338,6 +375,43 @@ test('admin can assign, transfer and return an asset through the real APIs', asy
   await page.setViewportSize({ width: 390, height: 844 })
   await page.waitForTimeout(500)
   await page.screenshot({ path: 'test-results/week3-assignment-mobile.png', fullPage: true })
+  const hasHorizontalOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  )
+
+  expect(hasHorizontalOverflow).toBe(false)
+  expect(errors).toEqual([])
+})
+
+test('admin can open maintenance, inventory and report workflows', async ({ page }) => {
+  const errors = collectConsoleErrors(page)
+
+  await page.setViewportSize({ width: 1440, height: 960 })
+  await loginAsAdmin(page)
+
+  await page.getByRole('link', { name: 'Bảo trì' }).click()
+  await expect(page.getByRole('heading', { level: 2, name: 'Yêu cầu bảo trì' })).toBeVisible()
+  await page.getByRole('button', { name: 'Tạo yêu cầu' }).click()
+  const maintenanceDialog = page.getByRole('dialog', { name: 'Tạo yêu cầu bảo trì' })
+  await expect(maintenanceDialog).toBeVisible()
+  await maintenanceDialog.getByRole('button', { name: 'Đóng' }).click()
+
+  await page.getByRole('link', { name: 'Kiểm kê' }).click()
+  await expect(page.getByRole('heading', { level: 2, name: 'Phiên kiểm kê' })).toBeVisible()
+  await page.getByRole('button', { name: 'Tạo phiên kiểm kê' }).click()
+  const inventoryDialog = page.getByRole('dialog', { name: 'Tạo phiên kiểm kê' })
+  await expect(inventoryDialog).toBeVisible()
+  await inventoryDialog.getByRole('button', { name: 'Đóng' }).click()
+
+  await page.getByRole('link', { name: 'Báo cáo' }).click()
+  await expect(page.getByRole('heading', { level: 2, name: 'Báo cáo tài sản' })).toBeVisible()
+  await expect(page.getByText('Tổng tài sản')).toBeVisible()
+  await expect(page.getByText('Tài sản theo danh mục')).toBeVisible()
+  await page.screenshot({ path: 'test-results/week4-reports-desktop.png', fullPage: true })
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.waitForTimeout(500)
+  await page.screenshot({ path: 'test-results/week4-reports-mobile.png', fullPage: true })
   const hasHorizontalOverflow = await page.evaluate(
     () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
   )
