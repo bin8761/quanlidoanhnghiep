@@ -4,6 +4,12 @@ import { Link } from 'react-router-dom'
 import PageHeader from '../../components/ui/PageHeader'
 import { getMyAssets } from '../../services/employee.service'
 
+const statusLabel = {
+  ASSIGNED: 'Đang sử dụng',
+  MAINTENANCE: 'Đang bảo trì',
+  AVAILABLE: 'Sẵn dùng',
+}
+
 export default function EmployeeAssetsPage() {
   const [query, setQuery] = useState('')
   const [assets, setAssets] = useState([])
@@ -16,8 +22,8 @@ export default function EmployeeAssetsPage() {
 
   const filteredAssets = useMemo(
     () =>
-      assets.filter((asset) =>
-        `${asset.assetCode} ${asset.name} ${asset.category?.name || ''}`
+      assets.filter((assignment) =>
+        `${assignment.asset?.assetCode || ''} ${assignment.asset?.name || ''} ${assignment.asset?.category?.name || ''}`
           .toLowerCase()
           .includes(query.toLowerCase()),
       ),
@@ -45,10 +51,10 @@ export default function EmployeeAssetsPage() {
 
       {filteredAssets.length ? (
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filteredAssets.map((asset) => (
+          {filteredAssets.map((item) => (
             <Link
-              key={asset.code}
-              to={`/employee/assets/${asset.code}`}
+              key={item.id}
+              to={`/employee/assets/${item.asset?.assetCode}`}
               className="metric-card block overflow-hidden"
             >
               <div className="flex items-start justify-between border-b border-slate-100 bg-slate-50/70 p-5">
@@ -57,29 +63,29 @@ export default function EmployeeAssetsPage() {
                 </span>
 
                 <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-extrabold text-emerald-700">
-                  {asset.status}
+                  {statusLabel[item.asset?.status] || item.asset?.status}
                 </span>
               </div>
 
               <div className="p-5">
-                <h3 className="text-base font-extrabold text-slate-900">{asset.name}</h3>
+                <h3 className="text-base font-extrabold text-slate-900">{item.asset?.name}</h3>
 
-                <p className="mt-1 text-xs font-semibold text-brand-700">{asset.code}</p>
+                <p className="mt-1 text-xs font-semibold text-brand-700">{item.asset?.assetCode}</p>
 
                 <dl className="mt-5 grid gap-3 text-xs">
                   <div className="flex items-center gap-3 text-slate-500">
                     <Tag size={15} />
-                    <dd>{asset.category}</dd>
+                    <dd>{item.asset?.category?.name || 'Chưa phân loại'}</dd>
                   </div>
 
                   <div className="flex items-center gap-3 text-slate-500">
                     <Hash size={15} />
-                    <dd>{asset.serial}</dd>
+                    <dd>{item.asset?.serialNumber || '—'}</dd>
                   </div>
 
                   <div className="flex items-center gap-3 text-slate-500">
                     <CalendarDays size={15} />
-                    <dd>Nhận ngày {asset.assignedAt}</dd>
+                    <dd>Nhận ngày {new Date(item.assignedAt).toLocaleDateString('vi-VN')}</dd>
                   </div>
                 </dl>
               </div>

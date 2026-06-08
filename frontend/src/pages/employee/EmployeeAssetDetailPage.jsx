@@ -10,16 +10,42 @@ import {
 } from 'lucide-react'
 import { Link, useParams, Navigate } from 'react-router-dom'
 import StatusBadge from '../../components/ui/StatusBadge'
-import { employeeAssets } from './employeeData'
 import { useEffect, useState } from 'react'
-import { getMaintenanceByAsset } from '../../services/employee.service'
+import { getMaintenanceByAsset, getMyAssets } from '../../services/employee.service'
 
 const statusLabel = { IN_PROGRESS: 'Đang xử lý', COMPLETED: 'Hoàn thành', PENDING: 'Chờ tiếp nhận' }
 
 export default function EmployeeAssetDetailPage() {
   const { code } = useParams()
-  const asset = employeeAssets.find((a) => a.code === code)
+  const [asset, setAsset] = useState(null)
   const [history, setHistory] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    getMyAssets()
+      .then((assignments) => {
+        const found = assignments.find((item) => item.asset?.assetCode === code)
+        if (found) {
+          setAsset({
+            id: found.asset.id,
+            code: found.asset.assetCode,
+            name: found.asset.name,
+            status: found.asset.status,
+            category: found.asset.category?.name || 'Chưa phân loại',
+            serial: found.asset.serialNumber || '—',
+            assignedAt: new Date(found.assignedAt).toLocaleDateString('vi-VN'),
+            condition: found.notes || 'Tốt',
+          })
+        } else {
+          setAsset(null)
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load asset details:', err)
+        setAsset(null)
+      })
+      .finally(() => setIsLoading(false))
+  }, [code])
 
   useEffect(() => {
     if (asset?.id) {
@@ -28,6 +54,14 @@ export default function EmployeeAssetDetailPage() {
         .catch(() => setHistory([]))
     }
   }, [asset?.id])
+
+  if (isLoading) {
+    return (
+      <div className="grid min-h-72 place-items-center">
+        Đang tải chi tiết tài sản...
+      </div>
+    )
+  }
 
   if (!asset) return <Navigate to="/employee/assets" replace />
 

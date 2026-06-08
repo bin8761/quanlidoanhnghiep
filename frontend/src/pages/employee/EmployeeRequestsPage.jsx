@@ -6,9 +6,17 @@ import PageHeader from '../../components/ui/PageHeader'
 import { createRequest, getMyRequests, getMyAssets } from '../../services/employee.service'
 
 const statusTone = {
-  'Đang xử lý': 'border-blue-200 bg-blue-50 text-blue-700',
-  'Hoàn thành': 'border-emerald-200 bg-emerald-50 text-emerald-700',
-  'Chờ tiếp nhận': 'border-amber-200 bg-amber-50 text-amber-700',
+  PENDING: 'border-amber-200 bg-amber-50 text-amber-700',
+  IN_PROGRESS: 'border-blue-200 bg-blue-50 text-blue-700',
+  COMPLETED: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+  CANCELLED: 'border-slate-200 bg-slate-50 text-slate-500',
+}
+
+const statusLabel = {
+  PENDING: 'Chờ tiếp nhận',
+  IN_PROGRESS: 'Đang xử lý',
+  COMPLETED: 'Hoàn thành',
+  CANCELLED: 'Đã hủy',
 }
 
 export default function EmployeeRequestsPage() {
@@ -24,7 +32,7 @@ export default function EmployeeRequestsPage() {
       .then(([reqs, assetList]) => {
         setRequests(reqs)
         setMyAssets(assetList)
-        if (assetList.length) setForm((f) => ({ ...f, asset: assetList[0].assetCode }))
+        if (assetList.length) setForm((f) => ({ ...f, asset: assetList[0].asset?.assetCode }))
       })
       .catch((err) => {
         console.error('Failed to load requests and assets:', err)
@@ -47,7 +55,7 @@ export default function EmployeeRequestsPage() {
 
     try {
       await createRequest({
-        assetId: myAssets.find((a) => a.assetCode === form.asset)?.id,
+        assetId: myAssets.find((a) => a.asset?.assetCode === form.asset)?.asset?.id,
         description: form.issue.trim(),
         priority: form.priority,
       })
@@ -99,9 +107,9 @@ export default function EmployeeRequestsPage() {
               name="asset"
               as="select"
               value={form.asset}
-              options={myAssets.map((asset) => ({
-                value: asset.assetCode,
-                label: `${asset.assetCode} - ${asset.name}`,
+              options={myAssets.map((item) => ({
+                value: item.asset?.assetCode,
+                label: `${item.asset?.assetCode} - ${item.asset?.name}`,
               }))}
               onChange={(event) => setForm((current) => ({ ...current, asset: event.target.value }))}
             />
@@ -138,12 +146,12 @@ export default function EmployeeRequestsPage() {
         <div className="divide-y divide-slate-100">
           {requests.map((request) => (
             <article className="grid gap-3 px-5 py-4 md:grid-cols-[110px_110px_minmax(220px,1fr)_120px_120px] md:items-center md:gap-4" key={request.id}>
-              <strong className="text-xs text-brand-700">{request.code}</strong>
-              <span className="text-xs font-semibold text-slate-700">{request.asset}</span>
-              <span className="text-xs text-slate-600">{request.issue}</span>
-              <span className="text-[11px] text-slate-500">{request.createdAt}</span>
-              <span className={`w-fit rounded-full border px-2.5 py-1 text-[10px] font-bold ${statusTone[request.status]}`}>
-                {request.status}
+              <strong className="text-xs text-brand-700">MR-{request.id.slice(0, 8).toUpperCase()}</strong>
+              <span className="text-xs font-semibold text-slate-700">{request.asset?.assetCode || '—'}</span>
+              <span className="text-xs text-slate-600">{request.description}</span>
+              <span className="text-[11px] text-slate-500">{new Date(request.createdAt).toLocaleDateString('vi-VN')}</span>
+              <span className={`w-fit rounded-full border px-2.5 py-1 text-[10px] font-bold ${statusTone[request.status] || ''}`}>
+                {statusLabel[request.status] || request.status}
               </span>
             </article>
           ))}

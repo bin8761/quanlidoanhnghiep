@@ -317,8 +317,8 @@ test('employee can view asset detail and history pages', async ({ page }) => {
   await loginAsEmployee(page)
 
   await page.getByRole('link', { name: 'Tài sản của tôi' }).click()
-  await page.getByText('LT-0248').first().click() // hoặc click card
-  await expect(page.getByRole('heading', { level: 2 })).toContainText('Dell Latitude')
+  await page.getByText('LT-001').first().click() // hoặc click card
+  await expect(page.getByRole('heading', { level: 2 }).first()).toContainText('Dell Latitude')
 
   await page.goto('/employee/history')
   await expect(page.getByRole('button', { name: 'Lịch sử bàn giao' })).toBeVisible()
@@ -480,7 +480,7 @@ test('employee change password validates and submits correctly', async ({ page }
   await page.setViewportSize({ width: 1280, height: 900 })
   await loginAsEmployee(page)
   await page.goto('/employee/change-password')
-  await expect(page.getByRole('heading', { name: 'Đổi mật khẩu' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Đổi mật khẩu' }).first()).toBeVisible()
 
   // Submit trống → validate
   await page.getByRole('button', { name: 'Cập nhật mật khẩu' }).click()

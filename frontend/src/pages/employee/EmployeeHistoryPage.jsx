@@ -88,18 +88,18 @@ export default function EmployeeHistoryPage() {
                 key={item.id}
                 className="grid gap-2 px-5 py-4 sm:px-6 md:grid-cols-[120px_minmax(180px,1fr)_100px_110px_minmax(120px,1fr)_100px] md:items-center md:gap-4"
               >
-                <strong className="text-xs font-bold text-brand-700">{item.assetCode}</strong>
-                <span className="text-xs font-semibold text-slate-700">{item.assetName}</span>
+                <strong className="text-xs font-bold text-brand-700">{item.asset?.assetCode || '—'}</strong>
+                <span className="text-xs font-semibold text-slate-700">{item.asset?.name || '—'}</span>
                 <span className="flex items-center gap-1.5 text-xs text-slate-600">
                   <ArrowRightLeft size={13} className="text-slate-400" />
-                  {item.type}
+                  {item.status === 'ACTIVE' ? 'Nhận bàn giao' : item.status === 'RETURNED' ? 'Hoàn trả' : 'Chuyển giao'}
                 </span>
                 <span className="flex items-center gap-1.5 text-[11px] text-slate-500">
                   <CalendarDays size={13} />
-                  {item.date}
+                  {new Date(item.status === 'ACTIVE' ? item.assignedAt : item.returnedAt || item.assignedAt).toLocaleDateString('vi-VN')}
                 </span>
                 <span className="text-xs text-slate-500 italic">
-                  {item.note || '—'}
+                  {item.notes || '—'}
                 </span>
                 <span
                   className={`w-fit rounded-full border px-2.5 py-1 text-[10px] font-bold ${
@@ -138,11 +138,13 @@ export default function EmployeeHistoryPage() {
                 key={item.id}
                 className="grid gap-2 px-5 py-4 sm:px-6 md:grid-cols-[100px_120px_minmax(200px,1fr)_110px_110px_110px] md:items-center md:gap-4"
               >
-                <strong className="text-xs font-bold text-brand-700">{item.code}</strong>
-                <span className="text-xs font-semibold text-slate-700">{item.assetCode}</span>
-                <span className="text-xs text-slate-600">{item.issue}</span>
-                <span className="text-[11px] text-slate-500">{item.createdAt}</span>
-                <span className="text-[11px] text-slate-500">{item.resolvedAt || '—'}</span>
+                <strong className="text-xs font-bold text-brand-700">MR-{item.id.slice(0, 8).toUpperCase()}</strong>
+                <span className="text-xs font-semibold text-slate-700">{item.asset?.assetCode || '—'}</span>
+                <span className="text-xs text-slate-600">{item.description}</span>
+                <span className="text-[11px] text-slate-500">{new Date(item.createdAt).toLocaleDateString('vi-VN')}</span>
+                <span className="text-[11px] text-slate-500">
+                  {item.status === 'COMPLETED' ? new Date(item.updatedAt).toLocaleDateString('vi-VN') : '—'}
+                </span>
                 <span
                   className={`w-fit rounded-full border px-2.5 py-1 text-[10px] font-bold ${
                     maintenanceStatusTone[item.status] || 'border-slate-200 bg-slate-50 text-slate-600'
