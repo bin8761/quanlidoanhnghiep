@@ -75,8 +75,8 @@ export default function EmployeeChangePasswordPage() {
     setServerError('')
 
     try {
-      // TODO Week 2: connect to PUT /api/auth/change-password
-      await new Promise((resolve) => setTimeout(resolve, 800)) // demo delay
+      const { changePassword } = await import('../../services/auth.service')
+      await changePassword({ currentPassword: form.currentPassword, newPassword: form.newPassword })
       setIsSuccess(true)
       setForm(INITIAL_FORM)
     } catch (err) {

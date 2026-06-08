@@ -8,6 +8,20 @@ function workflowError(message, statusCode = 400) {
 
 function createAssignmentsService({ repository = assignmentsRepository } = {}) {
   return Object.freeze({
+    async getMyAssignments(authenticatedUser) {
+      if (!authenticatedUser) throw new Error("Unauthorized");
+      const employee = await repository.findEmployeeByUserId(authenticatedUser.userId);
+      if (!employee) throw new Error("Employee not found");
+      return repository.findMyAssignments(employee.id);
+    },
+
+    async getMyHistory(authenticatedUser) {
+      if (!authenticatedUser) throw new Error("Unauthorized");
+      const employee = await repository.findEmployeeByUserId(authenticatedUser.userId);
+      if (!employee) throw new Error("Employee not found");
+      return repository.findHistory({ employeeId: employee.id });
+    },
+
     async getHistory(filters = {}) {
       return repository.findHistory(filters);
     },

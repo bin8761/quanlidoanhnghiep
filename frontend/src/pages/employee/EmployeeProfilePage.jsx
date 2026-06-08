@@ -1,7 +1,8 @@
-import { Building2, CalendarDays, IdCard, Mail, Phone, UserRound } from 'lucide-react'
+import { KeyRound, Building2, CalendarDays, IdCard, Mail, Phone, UserRound } from 'lucide-react'
 import { useAuth } from '../../auth/auth-context'
 import PageHeader from '../../components/ui/PageHeader'
 import { employeeProfile } from './employeeData'
+import { Link } from 'react-router-dom'
 
 export default function EmployeeProfilePage() {
   const { user } = useAuth()
@@ -27,6 +28,13 @@ export default function EmployeeProfilePage() {
               <span className="mt-3 inline-flex rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[10px] font-bold text-emerald-300">
                 Tài khoản đang hoạt động
               </span>
+              <Link
+                to="/employee/change-password"
+                className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-white/60 transition hover:text-white"
+              >
+                <KeyRound size={13} />
+                Đổi mật khẩu
+              </Link>
             </div>
           </div>
         </div>

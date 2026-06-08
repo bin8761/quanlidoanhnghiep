@@ -1,9 +1,9 @@
 import { Headphones, Plus, Send, X } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Button from '../../components/ui/Button'
 import FormField from '../../components/ui/FormField'
 import PageHeader from '../../components/ui/PageHeader'
-import { employeeAssets, initialEmployeeRequests } from './employeeData'
+import { createRequest, getMyRequests, getMyAssets } from '../../services/employee.service'
 
 const statusTone = {
   'Đang xử lý': 'border-blue-200 bg-blue-50 text-blue-700',
@@ -12,30 +12,55 @@ const statusTone = {
 }
 
 export default function EmployeeRequestsPage() {
-  const [requests, setRequests] = useState(initialEmployeeRequests)
+  const [requests, setRequests] = useState([])
   const [formOpen, setFormOpen] = useState(false)
   const [success, setSuccess] = useState('')
-  const [form, setForm] = useState({ asset: employeeAssets[0].code, issue: '', priority: 'Trung bình' })
+  const [form, setForm] = useState({ asset: '', issue: '', priority: 'Trung bình' })
+  const [myAssets, setMyAssets] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  function submitRequest(event) {
+  useEffect(() => {
+    Promise.all([getMyRequests(), getMyAssets()])
+      .then(([reqs, assetList]) => {
+        setRequests(reqs)
+        setMyAssets(assetList)
+        if (assetList.length) setForm((f) => ({ ...f, asset: assetList[0].assetCode }))
+      })
+      .catch((err) => {
+        console.error('Failed to load requests and assets:', err)
+        // Nếu là lỗi 401, user đã được redirect về login
+      })
+      .finally(() => setIsLoading(false))
+  }, [])
+
+  if (isLoading) {
+    return (
+      <div className="grid min-h-72 place-items-center">
+        Đang tải...
+      </div>
+    )
+  }
+
+  async function submitRequest(event) {
     event.preventDefault()
     if (!form.issue.trim()) return
 
-    setRequests((current) => [
-      {
-        id: Date.now(),
-        code: `MR-${String(1033 + current.length).padStart(4, '0')}`,
-        asset: form.asset,
-        issue: form.issue.trim(),
-        createdAt: '05/06/2026',
-        status: 'Chờ tiếp nhận',
+    try {
+      await createRequest({
+        assetId: myAssets.find((a) => a.assetCode === form.asset)?.id,
+        description: form.issue.trim(),
         priority: form.priority,
-      },
-      ...current,
-    ])
-    setForm((current) => ({ ...current, issue: '' }))
-    setFormOpen(false)
-    setSuccess('Yêu cầu hỗ trợ đã được gửi thành công.')
+      })
+      const updated = await getMyRequests()
+      setRequests(updated)
+      setForm((f) => ({ ...f, issue: '' }))
+      setFormOpen(false)
+      setSuccess('Yêu cầu hỗ trợ đã được gửi thành công.')
+    } catch (err) {
+      console.error(err)
+      setSuccess('')
+      // hiện lỗi nếu cần
+    }
   }
 
   return (
@@ -74,9 +99,9 @@ export default function EmployeeRequestsPage() {
               name="asset"
               as="select"
               value={form.asset}
-              options={employeeAssets.map((asset) => ({
-                value: asset.code,
-                label: `${asset.code} - ${asset.name}`,
+              options={myAssets.map((asset) => ({
+                value: asset.assetCode,
+                label: `${asset.assetCode} - ${asset.name}`,
               }))}
               onChange={(event) => setForm((current) => ({ ...current, asset: event.target.value }))}
             />

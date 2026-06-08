@@ -11,26 +11,25 @@ import {
 import { Link, useParams, Navigate } from 'react-router-dom'
 import StatusBadge from '../../components/ui/StatusBadge'
 import { employeeAssets } from './employeeData'
-
-const maintenanceByAsset = {
-  'LT-0248': [
-    { id: 1, code: 'MR-1029', issue: 'Pin sạc chậm và nhanh hết', status: 'IN_PROGRESS', createdAt: '03/06/2026', resolvedAt: null },
-    { id: 2, code: 'MR-0812', issue: 'Quạt tản nhiệt kêu to', status: 'COMPLETED', createdAt: '10/03/2026', resolvedAt: '18/03/2026' },
-  ],
-  'MN-0131': [
-    { id: 3, code: 'MR-0987', issue: 'Màn hình chớp', status: 'COMPLETED', createdAt: '18/05/2026', resolvedAt: '25/05/2026' },
-  ],
-  'KB-0084': [],
-}
+import { useEffect, useState } from 'react'
+import { getMaintenanceByAsset } from '../../services/employee.service'
 
 const statusLabel = { IN_PROGRESS: 'Đang xử lý', COMPLETED: 'Hoàn thành', PENDING: 'Chờ tiếp nhận' }
 
 export default function EmployeeAssetDetailPage() {
   const { code } = useParams()
   const asset = employeeAssets.find((a) => a.code === code)
-  if (!asset) return <Navigate to="/employee/assets" replace />
+  const [history, setHistory] = useState([])
 
-  const history = maintenanceByAsset[code] || []
+  useEffect(() => {
+    if (asset?.id) {
+      getMaintenanceByAsset(asset.id)
+        .then(setHistory)
+        .catch(() => setHistory([]))
+    }
+  }, [asset?.id])
+
+  if (!asset) return <Navigate to="/employee/assets" replace />
 
   return (
     <div className="animate-fade-up">
