@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Menu, Search } from 'lucide-react'
+import { Menu, QrCode, Search } from 'lucide-react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import NotificationBell from '../components/layout/NotificationBell'
 import Sidebar from '../components/layout/Sidebar'
 import SyncStatusBadge from '../components/layout/SyncStatusBadge'
 import Modal from '../components/ui/Modal'
+import QrScannerModal from '../components/ui/QrScannerModal'
 import { useNotifications } from '../notifications/notifications-context'
 import { managementPages } from '../pages/admin/managementData'
 
@@ -18,6 +19,7 @@ const PAGE_TITLES = {
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [qrOpen, setQrOpen] = useState(false)
   const [keyword, setKeyword] = useState('')
   const location = useLocation()
   const navigate = useNavigate()
@@ -96,6 +98,14 @@ export default function AdminLayout() {
             </button>
             <SyncStatusBadge status={connectionStatus} systemLabel="Hệ thống hoạt động" />
             <NotificationBell />
+            <button
+              className="icon-button"
+              type="button"
+              title="Quét mã QR"
+              onClick={() => setQrOpen(true)}
+            >
+              <QrCode size={18} />
+            </button>
           </div>
         </header>
 
@@ -149,6 +159,7 @@ export default function AdminLayout() {
           </div>
         </Modal>
       )}
+      {qrOpen && <QrScannerModal onClose={() => setQrOpen(false)} />}
     </div>
   )
 }

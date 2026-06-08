@@ -1,9 +1,10 @@
-import { Menu } from 'lucide-react'
+import { Menu, QrCode } from 'lucide-react'
 import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import EmployeeSidebar from '../components/layout/EmployeeSidebar'
 import NotificationBell from '../components/layout/NotificationBell'
 import SyncStatusBadge from '../components/layout/SyncStatusBadge'
+import QrScannerModal from '../components/ui/QrScannerModal'
 import { useNotifications } from '../notifications/notifications-context'
 
 const PAGE_TITLES = {
@@ -17,6 +18,7 @@ const PAGE_TITLES = {
 
 export default function EmployeeLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [qrOpen, setQrOpen] = useState(false)
   const location = useLocation()
   const { connectionStatus } = useNotifications()
 
@@ -57,6 +59,14 @@ export default function EmployeeLayout() {
           <div className="flex items-center gap-2">
             <SyncStatusBadge status={connectionStatus} />
             <NotificationBell />
+            <button
+              className="icon-button"
+              type="button"
+              title="Quét mã QR"
+              onClick={() => setQrOpen(true)}
+            >
+              <QrCode size={18} />
+            </button>
           </div>
         </header>
 
@@ -64,6 +74,7 @@ export default function EmployeeLayout() {
           <Outlet />
         </div>
       </main>
+      {qrOpen && <QrScannerModal onClose={() => setQrOpen(false)} />}
     </div>
   )
 }

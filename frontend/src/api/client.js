@@ -54,6 +54,11 @@ async function request(path, options = {}) {
   const payload = await response.json().catch(() => null)
 
   if (!response.ok) {
+    if (response.status === 401) {
+      setAccessToken(null)
+      localStorage.removeItem('eam_current_user')
+      window.location.href = '/login'
+    }
     throw new ApiError(payload?.message || 'Yêu cầu không thành công', {
       status: response.status,
       errorCode: payload?.errorCode,
