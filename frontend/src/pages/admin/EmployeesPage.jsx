@@ -8,6 +8,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import DataTable from '../../components/ui/DataTable'
 import FormField from '../../components/ui/FormField'
 import Modal from '../../components/ui/Modal'
+import PageHeader from '../../components/ui/PageHeader'
 import StatusBadge from '../../components/ui/StatusBadge'
 import Toast from '../../components/ui/Toast'
 import useAutoDismiss from '../../hooks/useAutoDismiss'
@@ -197,21 +198,19 @@ export default function EmployeesPage() {
 
   return (
     <div className="animate-fade-up">
-      <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="mb-2 text-xs font-bold text-brand-700">Nhân sự sử dụng tài sản</p>
-          <h2 className="text-2xl font-extrabold text-slate-950 sm:text-3xl">Quản lý nhân viên</h2>
-          <p className="mt-2 text-sm text-slate-500">
-            Quản lý hồ sơ nhân viên và liên kết với phòng ban trong doanh nghiệp.
-          </p>
-        </div>
-        <Button className="w-full sm:w-auto" type="button" onClick={openCreateModal}>
-          <Plus size={17} />
-          Thêm nhân viên
-        </Button>
-      </header>
+      <PageHeader
+        eyebrow="Nhân sự sử dụng tài sản"
+        title="Quản lý nhân viên"
+        description="Quản lý hồ sơ nhân viên và liên kết với phòng ban trong doanh nghiệp."
+        actions={(
+          <Button className="w-full sm:w-auto" type="button" onClick={openCreateModal}>
+            <Plus size={17} />
+            Thêm nhân viên
+          </Button>
+        )}
+      />
 
-      <section className="mb-5 grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-3">
+      <section className="filter-panel sm:grid-cols-2 lg:grid-cols-3">
         <FormField
           as="select"
           label="Phòng ban"
@@ -314,7 +313,7 @@ export default function EmployeesPage() {
                 onChange={updateField}
               />
             </div>
-            <div className="flex flex-col-reverse gap-2 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+            <div className="form-actions">
               <Button type="button" variant="secondary" disabled={isSaving} onClick={closeFormModal}>
                 Hủy
               </Button>

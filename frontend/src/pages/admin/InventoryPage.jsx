@@ -8,6 +8,7 @@ import Button from '../../components/ui/Button'
 import DataTable from '../../components/ui/DataTable'
 import FormField from '../../components/ui/FormField'
 import Modal from '../../components/ui/Modal'
+import PageHeader from '../../components/ui/PageHeader'
 import StatusBadge from '../../components/ui/StatusBadge'
 import Toast from '../../components/ui/Toast'
 import useAutoDismiss from '../../hooks/useAutoDismiss'
@@ -46,7 +47,7 @@ function progressOf(session) {
 
 function Metric({ icon: Icon, label, value, tone }) {
   return (
-    <article className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <article className="metric-card flex items-center gap-4 p-4">
       <span className={`grid size-11 place-items-center rounded-xl ${tone}`}><Icon size={20} /></span>
       <div>
         <strong className="block text-2xl font-extrabold text-slate-950">{value}</strong>
@@ -241,16 +242,16 @@ export default function InventoryPage() {
 
   return (
     <div className="animate-fade-up">
-      <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="mb-2 text-xs font-bold text-brand-700">Đối soát tài sản thực tế</p>
-          <h2 className="text-2xl font-extrabold text-slate-950 sm:text-3xl">Phiên kiểm kê</h2>
-          <p className="mt-2 text-sm text-slate-500">Tạo đợt kiểm kê và ghi nhận tài sản đầy đủ, thiếu hoặc hư hỏng.</p>
-        </div>
-        <Button className="w-full sm:w-auto" type="button" onClick={openCreate}>
-          <Plus size={17} />Tạo phiên kiểm kê
-        </Button>
-      </header>
+      <PageHeader
+        eyebrow="Đối soát tài sản thực tế"
+        title="Phiên kiểm kê"
+        description="Tạo đợt kiểm kê và ghi nhận tài sản đầy đủ, thiếu hoặc hư hỏng."
+        actions={(
+          <Button className="w-full sm:w-auto" type="button" onClick={openCreate}>
+            <Plus size={17} />Tạo phiên kiểm kê
+          </Button>
+        )}
+      />
 
       <section className="mb-5 grid gap-3 sm:grid-cols-3">
         <Metric icon={ClipboardCheck} label="Phiên đang thực hiện" value={activeSessions} tone="bg-blue-50 text-blue-700" />
@@ -258,7 +259,7 @@ export default function InventoryPage() {
         <Metric icon={PackageSearch} label="Cần xử lý" value={issueItems} tone="bg-amber-50 text-amber-700" />
       </section>
 
-      <section className="mb-5 grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-3">
+      <section className="filter-panel sm:grid-cols-3">
         <FormField as="select" label="Trạng thái" name="statusFilter" value={filters.status} options={SESSION_STATUSES} onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value }))} />
         <FormField as="select" label="Phòng ban" name="departmentFilter" value={filters.departmentId} options={departmentOptions} onChange={(event) => setFilters((current) => ({ ...current, departmentId: event.target.value }))} />
         <div className="flex items-end"><Button className="w-full" variant="secondary" type="button" onClick={() => setFilters({ keyword: '', status: '', departmentId: '' })}>Xóa bộ lọc</Button></div>
@@ -336,7 +337,7 @@ export default function InventoryPage() {
 
 function Actions({ isSaving, label, onClose }) {
   return (
-    <div className="flex flex-col-reverse gap-2 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+    <div className="form-actions">
       <Button type="button" variant="secondary" disabled={isSaving} onClick={onClose}>Hủy</Button>
       <Button type="submit" disabled={isSaving}>
         {isSaving && <span className="size-4 animate-spin-soft rounded-full border-2 border-white/30 border-t-white" />}

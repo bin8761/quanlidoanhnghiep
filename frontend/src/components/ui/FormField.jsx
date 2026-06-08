@@ -9,10 +9,10 @@ export default function FormField({
   ...props
 }) {
   const controlClassName = [
-    'min-h-12 w-full rounded-xl border border-slate-200 bg-white px-4 py-3',
+    'min-h-11 w-full rounded-[10px] border border-slate-200 bg-white px-3.5 py-2.5',
     'text-sm text-slate-900 shadow-sm outline-none transition-all duration-200',
     'placeholder:text-slate-400 hover:border-slate-300',
-    'focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10',
+    'focus:border-brand-500 focus:ring-4 focus:ring-brand-500/12',
     'disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400',
     as === 'textarea' ? 'min-h-28 resize-y' : '',
     props.className || '',
@@ -46,15 +46,15 @@ export default function FormField({
   }
 
   return (
-    <div className="grid gap-2">
+    <div className="grid gap-1.5">
       <div className="flex items-center justify-between gap-3">
-        <label className="text-[13px] font-bold text-slate-700" htmlFor={name}>
+        <label className="text-xs font-bold text-slate-700" htmlFor={name}>
           {label}
         </label>
         {hint && <span className="text-[11px] text-slate-400">{hint}</span>}
       </div>
       {renderControl()}
-      {error && <span className="text-xs font-medium text-red-600">{error}</span>}
+      {error && <span className="text-xs font-medium text-red-600" role="alert">{error}</span>}
     </div>
   )
 }

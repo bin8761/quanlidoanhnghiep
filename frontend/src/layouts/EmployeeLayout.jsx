@@ -14,7 +14,7 @@ export default function EmployeeLayout() {
   const location = useLocation()
 
   return (
-    <div className="min-h-screen bg-[#f3f7f5] lg:grid lg:grid-cols-[272px_minmax(0,1fr)]">
+    <div className="app-shell lg:grid lg:grid-cols-[256px_minmax(0,1fr)]">
       <EmployeeSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       {sidebarOpen && (
         <button
@@ -26,18 +26,19 @@ export default function EmployeeLayout() {
       )}
 
       <main className="min-w-0 lg:col-start-2">
-        <header className="sticky top-0 z-20 flex h-[72px] items-center justify-between border-b border-slate-200/80 bg-white/85 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/88 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <button
-              className="grid size-10 shrink-0 place-items-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 lg:hidden"
+              className="icon-button lg:hidden"
               type="button"
+              aria-label="Mở menu"
               title="Mở menu"
               onClick={() => setSidebarOpen(true)}
             >
               <Menu size={19} />
             </button>
             <div className="min-w-0">
-              <p className="hidden text-[11px] font-semibold text-slate-400 sm:block">
+              <p className="hidden text-[10px] font-bold tracking-wide text-slate-400 uppercase sm:block">
                 Cổng thông tin nhân viên
               </p>
               <h1 className="truncate text-base font-bold text-slate-900 sm:text-lg">
@@ -52,7 +53,7 @@ export default function EmployeeLayout() {
               Đã đồng bộ
             </span>
             <button
-              className="relative grid size-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:text-slate-900"
+              className="icon-button relative"
               type="button"
               title="Thông báo"
             >
@@ -62,7 +63,7 @@ export default function EmployeeLayout() {
           </div>
         </header>
 
-        <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <div className="page-container max-w-[1440px]">
           <Outlet />
         </div>
       </main>

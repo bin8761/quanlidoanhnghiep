@@ -2,6 +2,7 @@ import { Eye, EyeOff, KeyRound, ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
 import Button from '../../components/ui/Button'
 import FormField from '../../components/ui/FormField'
+import PageHeader from '../../components/ui/PageHeader'
 
 const INITIAL_FORM = { currentPassword: '', newPassword: '', confirmPassword: '' }
 
@@ -90,15 +91,14 @@ export default function EmployeeChangePasswordPage() {
 
   return (
     <div className="animate-fade-up">
-      <header className="mb-6">
-        <h2 className="text-2xl font-extrabold text-slate-950">Đổi mật khẩu</h2>
-        <p className="mt-2 text-sm text-slate-500">
-          Cập nhật mật khẩu đăng nhập. Đảm bảo mật khẩu mới đủ mạnh và bảo mật.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="Bảo mật tài khoản"
+        title="Đổi mật khẩu"
+        description="Cập nhật mật khẩu đăng nhập. Đảm bảo mật khẩu mới đủ mạnh và bảo mật."
+      />
 
       <div className="mx-auto max-w-lg">
-        <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-soft">
+        <section className="surface overflow-hidden">
           <header className="flex items-center gap-3 border-b border-slate-100 bg-slate-50 px-5 py-4 sm:px-6">
             <span className="grid size-9 place-items-center rounded-xl bg-brand-50 text-brand-700">
               <ShieldCheck size={18} />

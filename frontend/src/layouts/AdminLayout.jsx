@@ -46,7 +46,7 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f3f7f5] lg:grid lg:grid-cols-[272px_minmax(0,1fr)]">
+    <div className="app-shell lg:grid lg:grid-cols-[256px_minmax(0,1fr)]">
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       {sidebarOpen && (
         <button
@@ -58,18 +58,19 @@ export default function AdminLayout() {
       )}
 
       <main className="min-w-0 lg:col-start-2">
-        <header className="sticky top-0 z-20 flex h-[72px] items-center justify-between border-b border-slate-200/80 bg-white/80 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/88 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <button
-              className="grid size-10 shrink-0 place-items-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-950 lg:hidden"
+              className="icon-button lg:hidden"
               type="button"
+              aria-label="Mở menu"
               title="Mở menu"
               onClick={() => setSidebarOpen(true)}
             >
               <Menu size={19} />
             </button>
             <div className="min-w-0">
-              <p className="hidden text-[11px] font-semibold text-slate-400 sm:block">
+              <p className="hidden text-[10px] font-bold tracking-wide text-slate-400 uppercase sm:block">
                 EAM Workspace
               </p>
               <h1 className="truncate text-base font-bold text-slate-900 sm:text-lg">{title}</h1>
@@ -78,7 +79,7 @@ export default function AdminLayout() {
 
           <div className="flex items-center gap-2">
             <button
-              className="hidden min-h-10 w-64 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 text-left text-xs text-slate-400 transition hover:border-slate-300 hover:bg-white md:flex"
+              className="hidden min-h-10 w-64 items-center gap-2 rounded-[10px] border border-slate-200 bg-slate-50 px-3 text-left text-xs text-slate-400 transition hover:border-slate-300 hover:bg-white md:flex"
               type="button"
               title="Tìm kiếm"
               onClick={() => setSearchOpen(true)}
@@ -94,7 +95,7 @@ export default function AdminLayout() {
               Hệ thống hoạt động
             </span>
             <button
-              className="relative grid size-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-slate-300 hover:text-slate-900"
+              className="icon-button relative"
               type="button"
               title="Không có thông báo mới"
             >
@@ -103,7 +104,7 @@ export default function AdminLayout() {
           </div>
         </header>
 
-        <div className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <div className="page-container">
           <Outlet />
         </div>
       </main>

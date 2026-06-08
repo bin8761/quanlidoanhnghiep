@@ -1,8 +1,8 @@
 const variants = {
   primary:
-    'border-brand-600 bg-brand-600 text-white shadow-sm hover:border-brand-700 hover:bg-brand-700 hover:shadow-md focus-visible:ring-brand-500/25',
+    'border-brand-700 bg-brand-700 text-white shadow-[0_6px_16px_rgba(25,120,82,0.18)] hover:border-brand-800 hover:bg-brand-800 hover:shadow-[0_8px_20px_rgba(25,120,82,0.24)] focus-visible:ring-brand-500/25',
   secondary:
-    'border-slate-200 bg-white text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50 focus-visible:ring-slate-400/20',
+    'border-slate-200 bg-white text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 focus-visible:ring-slate-400/20',
   ghost:
     'border-transparent bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus-visible:ring-slate-400/20',
   danger:
@@ -25,7 +25,7 @@ export default function Button({
 }) {
   return (
     <button
-      className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border font-semibold outline-none transition-all duration-200 focus-visible:ring-4 disabled:pointer-events-none disabled:opacity-55 ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-[10px] border font-semibold outline-none transition-all duration-200 hover:-translate-y-px focus-visible:ring-4 disabled:pointer-events-none disabled:translate-y-0 disabled:opacity-50 ${variants[variant]} ${sizes[size]} ${className}`}
       {...props}
     >
       {children}

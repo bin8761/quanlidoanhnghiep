@@ -1,5 +1,6 @@
 import { Building2, CalendarDays, IdCard, Mail, Phone, UserRound } from 'lucide-react'
 import { useAuth } from '../../auth/auth-context'
+import PageHeader from '../../components/ui/PageHeader'
 import { employeeProfile } from './employeeData'
 
 export default function EmployeeProfilePage() {
@@ -8,12 +9,13 @@ export default function EmployeeProfilePage() {
 
   return (
     <div className="animate-fade-up">
-      <header className="mb-6">
-        <h2 className="text-2xl font-extrabold text-slate-950">Hồ sơ cá nhân</h2>
-        <p className="mt-2 text-sm text-slate-500">Thông tin nhân sự đang được lưu trong hệ thống.</p>
-      </header>
+      <PageHeader
+        eyebrow="Thông tin tài khoản"
+        title="Hồ sơ cá nhân"
+        description="Thông tin nhân sự đang được lưu trong hệ thống."
+      />
 
-      <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-soft">
+      <section className="surface overflow-hidden">
         <div className="bg-slate-950 px-5 py-7 text-white sm:px-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             <span className="grid size-16 shrink-0 place-items-center rounded-2xl bg-brand-500 text-xl font-extrabold">

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../auth/auth-context'
+import PageHeader from '../../components/ui/PageHeader'
 import { employeeAssets, initialEmployeeRequests } from './employeeData'
 
 const tasks = [
@@ -23,18 +24,12 @@ export default function EmployeeDashboardPage() {
 
   return (
     <div className="animate-fade-up">
-      <header className="mb-7">
-        <div className="mb-2 flex items-center gap-2 text-xs font-bold text-brand-700">
-          <Sparkles size={14} />
-          Không gian làm việc cá nhân
-        </div>
-        <h2 className="text-2xl font-extrabold text-slate-950 sm:text-3xl">
-          Chào bạn, {user?.email?.split('@')[0]}
-        </h2>
-        <p className="mt-2 text-sm text-slate-500">
-          Theo dõi tài sản, công việc và các yêu cầu hỗ trợ của bạn tại một nơi.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="Không gian làm việc cá nhân"
+        title={`Chào bạn, ${user?.email?.split('@')[0]}`}
+        description="Theo dõi tài sản, công việc và các yêu cầu hỗ trợ của bạn tại một nơi."
+        icon={Sparkles}
+      />
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {[
@@ -43,7 +38,7 @@ export default function EmployeeDashboardPage() {
           { label: 'Công việc cần làm', value: tasks.length, icon: Clock3, tone: 'bg-violet-50 text-violet-700' },
         ].map(({ label, value, icon: Icon, tone }) => (
           <article
-            className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-soft transition hover:-translate-y-0.5 hover:shadow-lg"
+            className="metric-card p-4 sm:p-5"
             key={label}
           >
             <div className="flex items-start justify-between">
@@ -62,7 +57,7 @@ export default function EmployeeDashboardPage() {
       </section>
 
       <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(300px,0.7fr)]">
-        <article className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-soft">
+        <article className="surface overflow-hidden">
           <header className="flex items-center justify-between border-b border-slate-100 px-5 py-4 sm:px-6">
             <div>
               <h3 className="text-sm font-extrabold text-slate-900">Tài sản gần đây</h3>
@@ -90,7 +85,7 @@ export default function EmployeeDashboardPage() {
           </div>
         </article>
 
-        <article className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-soft sm:p-6">
+        <article className="surface p-5 sm:p-6">
           <h3 className="text-sm font-extrabold text-slate-900">Việc cần hoàn thành</h3>
           <p className="mt-1 text-xs text-slate-500">Các đầu việc liên quan đến tài sản</p>
           <div className="mt-5 grid gap-3">

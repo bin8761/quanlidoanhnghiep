@@ -53,7 +53,6 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen bg-slate-950 lg:grid lg:grid-cols-[minmax(420px,44%)_1fr]">
       <section className="relative z-10 flex min-h-screen flex-col justify-center overflow-hidden bg-[#f8fbf9] px-5 py-8 sm:px-10 lg:px-[clamp(48px,6vw,96px)]">
-        <div className="pointer-events-none absolute -top-32 -left-32 size-80 rounded-full bg-brand-100/60 blur-3xl" />
         <div className="relative mx-auto w-full max-w-[470px] animate-fade-up">
           <div className="mb-12 flex items-center gap-3 sm:mb-16">
             <span className="grid size-11 place-items-center rounded-2xl bg-brand-700 text-white shadow-lg shadow-brand-700/20">
