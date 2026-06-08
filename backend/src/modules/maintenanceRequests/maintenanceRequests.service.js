@@ -39,6 +39,8 @@ async function resolveRequester({ maintenanceRepository, authenticatedUser, requ
   return employee.id;
 }
 
+const typesRequiringAsset = ["INCIDENT", "MAINTENANCE", "EXCHANGE", "RECALL"];
+
 function createMaintenanceRequestsService({ maintenanceRepository = repository } = {}) {
   return Object.freeze({
     async getAll(filters = {}, context = {}) {
@@ -75,17 +77,24 @@ function createMaintenanceRequestsService({ maintenanceRepository = repository }
         requestedRequesterId: data.requesterId,
       });
 
-      const asset = await maintenanceRepository.findAssetById(data.assetId);
-      if (!asset) throw requestError("Asset not found", 404);
-      if (["LOST", "DISPOSED"].includes(asset.status)) throw requestError("Cannot create maintenance request for unavailable asset status");
-
       const requester = await maintenanceRepository.findEmployeeById(requesterId);
       if (!requester) throw requestError("Requester not found", 404);
       if (requester.status !== "ACTIVE") throw requestError("Requester is not active");
 
-      if (context.authenticatedUser?.role === USER) {
-        const assignedToRequester = await maintenanceRepository.hasActiveAssignment(data.assetId, requesterId);
-        if (!assignedToRequester) throw forbiddenError("Users can only request maintenance for assigned assets");
+      const isAssetRequired = typesRequiringAsset.includes(data.type);
+      if (isAssetRequired && !data.assetId) {
+        throw requestError(`Asset ID is required for request type ${data.type}`);
+      }
+
+      if (data.assetId) {
+        const asset = await maintenanceRepository.findAssetById(data.assetId);
+        if (!asset) throw requestError("Asset not found", 404);
+        if (["LOST", "DISPOSED"].includes(asset.status)) throw requestError("Cannot create maintenance request for unavailable asset status");
+
+        if (context.authenticatedUser?.role === USER) {
+          const assignedToRequester = await maintenanceRepository.hasActiveAssignment(data.assetId, requesterId);
+          if (!assignedToRequester) throw forbiddenError("Users can only request maintenance for assigned assets");
+        }
       }
 
       return maintenanceRepository.create({
@@ -100,11 +109,15 @@ function createMaintenanceRequestsService({ maintenanceRepository = repository }
       if (["COMPLETED", "CANCELLED"].includes(request.status)) throw requestError("Completed or cancelled maintenance requests cannot be updated");
 
       let nextAssetStatus = data.assetStatus ?? assetStatusForMaintenance(data.status);
-      if (["COMPLETED", "CANCELLED"].includes(data.status)) {
+      if (["COMPLETED", "CANCELLED"].includes(data.status) && request.assetId) {
         const activeAssignment = await maintenanceRepository.hasActiveAssignment(request.assetId, request.requesterId);
         if (activeAssignment && nextAssetStatus === "AVAILABLE") {
           nextAssetStatus = "ASSIGNED";
         }
+      }
+
+      if (!request.assetId) {
+        nextAssetStatus = undefined;
       }
 
       return maintenanceRepository.updateStatus(id, {

@@ -52,7 +52,15 @@ describe("API integration: core management APIs (Person 2)", () => {
     harness.prisma.employee.count = jest.fn();
 
     // Mock user findUnique as well
-    harness.prisma.user.findUnique = jest.fn().mockImplementation(async ({ where }) => {
+    harness.prisma.user.findUnique = jest.fn().mockImplementation(async ({ where, select }) => {
+      if (select && select.employee) {
+        return {
+          employee: {
+            id: harness.seeds.ids.activeUserEmployeeId || "active-employee-id",
+            status: "ACTIVE",
+          },
+        };
+      }
       if (where.id) {
         return { id: where.id, mustChangePassword: false };
       }
@@ -70,6 +78,14 @@ describe("API integration: core management APIs (Person 2)", () => {
     // Mock active assignments count query
     harness.prisma.assetAssignment = {
       count: jest.fn().mockResolvedValue(0),
+    };
+
+    // Mock maintenance requests query
+    harness.prisma.maintenanceRequest = {
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
     };
   });
 
@@ -238,6 +254,48 @@ describe("API integration: core management APIs (Person 2)", () => {
 
       expect(response.status).toBe(201);
       expect(response.body.data.assetCode).toBe("AST001");
+    });
+  });
+
+  describe("Maintenance Requests API", () => {
+    test("POST /api/maintenance-requests allows creation of NEW_ALLOCATION without assetId", async () => {
+      const user = harness.getUserById(harness.seeds.ids.activeUserId);
+      const token = harness.signTokenForUser(user);
+
+      harness.prisma.maintenanceRequest.create.mockResolvedValue({
+        id: "req-1-id",
+        type: "NEW_ALLOCATION",
+        assetId: null,
+        description: "Need secondary monitor",
+        status: "PENDING",
+      });
+
+      const response = await harness.request
+        .post("/api/maintenance-requests")
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          type: "NEW_ALLOCATION",
+          description: "Need secondary monitor",
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body.data.type).toBe("NEW_ALLOCATION");
+      expect(response.body.data.assetId).toBeNull();
+    });
+
+    test("POST /api/maintenance-requests rejects INCIDENT request without assetId", async () => {
+      const user = harness.getUserById(harness.seeds.ids.activeUserId);
+      const token = harness.signTokenForUser(user);
+
+      const response = await harness.request
+        .post("/api/maintenance-requests")
+        .set("Authorization", `Bearer ${token}`)
+        .send({
+          type: "INCIDENT",
+          description: "My laptop screen is broken",
+        });
+
+      expect(response.status).toBe(400);
     });
   });
 });

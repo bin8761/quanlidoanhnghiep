@@ -19,11 +19,24 @@ const statusLabel = {
   CANCELLED: 'Đã hủy',
 }
 
+const requestTypeLabels = {
+  INCIDENT: 'Báo hỏng tài sản (Sự cố)',
+  MAINTENANCE: 'Yêu cầu bảo trì',
+  NEW_ALLOCATION: 'Yêu cầu cấp phát mới',
+  EXCHANGE: 'Yêu cầu đổi tài sản',
+  RECALL: 'Yêu cầu thu hồi tài sản',
+  SOFTWARE_INSTALL: 'Yêu cầu cài đặt phần mềm',
+  ACCESS_GRANT: 'Yêu cầu cấp quyền truy cập',
+  OTHER: 'Yêu cầu hỗ trợ khác',
+}
+
+const typesRequiringAsset = ['INCIDENT', 'MAINTENANCE', 'EXCHANGE', 'RECALL']
+
 export default function EmployeeRequestsPage() {
   const [requests, setRequests] = useState([])
   const [formOpen, setFormOpen] = useState(false)
   const [success, setSuccess] = useState('')
-  const [form, setForm] = useState({ asset: '', issue: '', priority: 'Trung bình' })
+  const [form, setForm] = useState({ type: 'INCIDENT', asset: '', issue: '', priority: 'Trung bình' })
   const [myAssets, setMyAssets] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -53,9 +66,26 @@ export default function EmployeeRequestsPage() {
     event.preventDefault()
     if (!form.issue.trim()) return
 
+    const isAssetRequired = typesRequiringAsset.includes(form.type)
+    let assetId = null
+    if (isAssetRequired) {
+      const selectedAsset = myAssets.find((a) => a.asset?.assetCode === form.asset)
+      if (!selectedAsset) {
+        alert('Vui lòng chọn tài sản cho loại yêu cầu này.')
+        return
+      }
+      assetId = selectedAsset.asset?.id
+    } else if (form.asset) {
+      const selectedAsset = myAssets.find((a) => a.asset?.assetCode === form.asset)
+      if (selectedAsset) {
+        assetId = selectedAsset.asset?.id
+      }
+    }
+
     try {
       await createRequest({
-        assetId: myAssets.find((a) => a.asset?.assetCode === form.asset)?.asset?.id,
+        type: form.type,
+        assetId: assetId,
         description: form.issue.trim(),
         priority: form.priority,
       })
@@ -67,7 +97,6 @@ export default function EmployeeRequestsPage() {
     } catch (err) {
       console.error(err)
       setSuccess('')
-      // hiện lỗi nếu cần
     }
   }
 
@@ -103,16 +132,41 @@ export default function EmployeeRequestsPage() {
           </div>
           <form className="grid gap-4 sm:grid-cols-2" onSubmit={submitRequest}>
             <FormField
-              label="Tài sản"
-              name="asset"
+              label="Loại yêu cầu"
+              name="type"
               as="select"
-              value={form.asset}
-              options={myAssets.map((item) => ({
-                value: item.asset?.assetCode,
-                label: `${item.asset?.assetCode} - ${item.asset?.name}`,
-              }))}
-              onChange={(event) => setForm((current) => ({ ...current, asset: event.target.value }))}
+              value={form.type}
+              options={Object.entries(requestTypeLabels).map(([value, label]) => ({ value, label }))}
+              onChange={(event) => setForm((current) => ({ ...current, type: event.target.value }))}
             />
+            {typesRequiringAsset.includes(form.type) ? (
+              <FormField
+                label="Tài sản"
+                name="asset"
+                as="select"
+                value={form.asset}
+                options={myAssets.map((item) => ({
+                  value: item.asset?.assetCode,
+                  label: `${item.asset?.assetCode} - ${item.asset?.name}`,
+                }))}
+                onChange={(event) => setForm((current) => ({ ...current, asset: event.target.value }))}
+              />
+            ) : (
+              <FormField
+                label="Tài sản liên kết (tùy chọn)"
+                name="asset"
+                as="select"
+                value={form.asset}
+                options={[
+                  { value: '', label: 'Không liên kết tài sản' },
+                  ...myAssets.map((item) => ({
+                    value: item.asset?.assetCode,
+                    label: `${item.asset?.assetCode} - ${item.asset?.name}`,
+                  }))
+                ]}
+                onChange={(event) => setForm((current) => ({ ...current, asset: event.target.value }))}
+              />
+            )}
             <FormField
               label="Mức độ ưu tiên"
               name="priority"
@@ -126,7 +180,7 @@ export default function EmployeeRequestsPage() {
                 label="Mô tả sự cố"
                 name="issue"
                 as="textarea"
-                placeholder="Ví dụ: Máy không khởi động, màn hình hiển thị lỗi..."
+                placeholder={form.type === 'INCIDENT' ? "Ví dụ: Máy không khởi động, màn hình hiển thị lỗi..." : "Nhập chi tiết yêu cầu hỗ trợ..."}
                 value={form.issue}
                 required
                 onChange={(event) => setForm((current) => ({ ...current, issue: event.target.value }))}
@@ -140,14 +194,15 @@ export default function EmployeeRequestsPage() {
       )}
 
       <section className="surface overflow-hidden">
-        <div className="hidden grid-cols-[110px_110px_minmax(220px,1fr)_120px_120px] gap-4 border-b border-slate-100 bg-slate-50 px-5 py-3 text-[10px] font-extrabold text-slate-500 uppercase md:grid">
-          <span>Mã yêu cầu</span><span>Tài sản</span><span>Sự cố</span><span>Ngày tạo</span><span>Trạng thái</span>
+        <div className="hidden grid-cols-[110px_130px_110px_minmax(200px,1fr)_120px_120px] gap-4 border-b border-slate-100 bg-slate-50 px-5 py-3 text-[10px] font-extrabold text-slate-500 uppercase md:grid">
+          <span>Mã yêu cầu</span><span>Loại yêu cầu</span><span>Tài sản</span><span>Nội dung</span><span>Ngày tạo</span><span>Trạng thái</span>
         </div>
         <div className="divide-y divide-slate-100">
           {requests.map((request) => (
-            <article className="grid gap-3 px-5 py-4 md:grid-cols-[110px_110px_minmax(220px,1fr)_120px_120px] md:items-center md:gap-4" key={request.id}>
+            <article className="grid gap-3 px-5 py-4 md:grid-cols-[110px_130px_110px_minmax(200px,1fr)_120px_120px] md:items-center md:gap-4" key={request.id}>
               <strong className="text-xs text-brand-700">MR-{request.id.slice(0, 8).toUpperCase()}</strong>
-              <span className="text-xs font-semibold text-slate-700">{request.asset?.assetCode || '—'}</span>
+              <span className="text-xs font-semibold text-slate-700">{requestTypeLabels[request.type] || request.type}</span>
+              <span className="text-xs text-slate-600">{request.asset?.assetCode || '—'}</span>
               <span className="text-xs text-slate-600">{request.description}</span>
               <span className="text-[11px] text-slate-500">{new Date(request.createdAt).toLocaleDateString('vi-VN')}</span>
               <span className={`w-fit rounded-full border px-2.5 py-1 text-[10px] font-bold ${statusTone[request.status] || ''}`}>

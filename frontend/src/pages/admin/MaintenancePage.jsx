@@ -21,7 +21,20 @@ const STATUS_OPTIONS = [
   { value: 'CANCELLED', label: 'Đã hủy' },
 ]
 
-const EMPTY_CREATE = Object.freeze({ assetId: '', requesterId: '', description: '', notes: '' })
+const requestTypeLabels = {
+  INCIDENT: 'Báo hỏng tài sản (Sự cố)',
+  MAINTENANCE: 'Yêu cầu bảo trì',
+  NEW_ALLOCATION: 'Yêu cầu cấp phát mới',
+  EXCHANGE: 'Yêu cầu đổi tài sản',
+  RECALL: 'Yêu cầu thu hồi tài sản',
+  SOFTWARE_INSTALL: 'Yêu cầu cài đặt phần mềm',
+  ACCESS_GRANT: 'Yêu cầu cấp quyền truy cập',
+  OTHER: 'Yêu cầu hỗ trợ khác',
+}
+
+const typesRequiringAsset = ['INCIDENT', 'MAINTENANCE', 'EXCHANGE', 'RECALL']
+
+const EMPTY_CREATE = Object.freeze({ type: 'INCIDENT', assetId: '', requesterId: '', description: '', notes: '' })
 const EMPTY_UPDATE = Object.freeze({
   status: 'IN_PROGRESS',
   repairCost: '',
@@ -154,22 +167,24 @@ export default function MaintenancePage() {
   async function handleCreate(event) {
     event.preventDefault()
     const nextErrors = {}
-    if (!createForm.assetId) nextErrors.assetId = 'Vui lòng chọn tài sản.'
+    const isAssetRequired = typesRequiringAsset.includes(createForm.type)
+    if (isAssetRequired && !createForm.assetId) nextErrors.assetId = 'Vui lòng chọn tài sản.'
     if (!createForm.requesterId) nextErrors.requesterId = 'Vui lòng chọn người yêu cầu.'
-    if (!createForm.description.trim()) nextErrors.description = 'Vui lòng mô tả sự cố.'
+    if (!createForm.description.trim()) nextErrors.description = 'Vui lòng mô tả sự cố/nội dung yêu cầu.'
     setFormErrors(nextErrors)
     if (Object.keys(nextErrors).length) return
 
     setIsSaving(true)
     try {
       await maintenanceApi.create({
-        assetId: createForm.assetId,
+        type: createForm.type,
+        assetId: createForm.assetId || null,
         requesterId: createForm.requesterId,
         description: createForm.description.trim(),
         notes: createForm.notes.trim() || null,
       })
       setModal(null)
-      setToast({ type: 'success', message: 'Tạo yêu cầu bảo trì thành công.' })
+      setToast({ type: 'success', message: 'Tạo yêu cầu hỗ trợ thành công.' })
       await loadData()
     } catch (requestError) {
       setToast({ type: 'error', message: requestError.message })
@@ -215,13 +230,20 @@ export default function MaintenancePage() {
 
   const columns = [
     {
+      key: 'type',
+      label: 'Loại yêu cầu',
+      render: (value, row) => requestTypeLabels[row.type] || row.type,
+    },
+    {
       key: 'asset',
       label: 'Tài sản',
-      render: (asset) => (
+      render: (asset) => asset ? (
         <div>
-          <strong className="block text-slate-900">{asset?.assetCode}</strong>
-          <span className="text-xs text-slate-500">{asset?.name}</span>
+          <strong className="block text-slate-900">{asset.assetCode}</strong>
+          <span className="text-xs text-slate-500">{asset.name}</span>
         </div>
+      ) : (
+        <span className="text-xs text-slate-400 italic">Không liên kết</span>
       ),
     },
     {
@@ -229,7 +251,7 @@ export default function MaintenancePage() {
       label: 'Người yêu cầu',
       render: (requester) => requester?.fullName || 'Chưa xác định',
     },
-    { key: 'description', label: 'Sự cố' },
+    { key: 'description', label: 'Nội dung' },
     { key: 'createdAt', label: 'Ngày tạo', render: formatDate },
     { key: 'status', label: 'Trạng thái', render: (value) => <StatusBadge status={value} /> },
     {
@@ -239,7 +261,7 @@ export default function MaintenancePage() {
         <button
           className="grid size-9 place-items-center rounded-xl text-slate-400 transition hover:bg-brand-50 hover:text-brand-700"
           type="button"
-          title={`Xem yêu cầu ${request.asset?.assetCode}`}
+          title={`Xem yêu cầu ${request.asset?.assetCode || ''}`}
           onClick={() =>
             ['COMPLETED', 'CANCELLED'].includes(request.status)
               ? (setSelected(request), setModal('detail'))
@@ -290,9 +312,14 @@ export default function MaintenancePage() {
       {modal === 'create' && (
         <Modal title="Tạo yêu cầu bảo trì" description="Admin có thể ghi nhận yêu cầu thay cho nhân viên." onClose={closeModal}>
           <form className="grid gap-5" noValidate onSubmit={handleCreate}>
-            <FormField as="select" label="Tài sản" name="assetId" value={createForm.assetId} error={formErrors.assetId} options={assetOptions} onChange={updateField(setCreateForm)} />
+            <FormField as="select" label="Loại yêu cầu" name="type" value={createForm.type} options={Object.entries(requestTypeLabels).map(([value, label]) => ({ value, label }))} onChange={updateField(setCreateForm)} />
+            {typesRequiringAsset.includes(createForm.type) ? (
+              <FormField as="select" label="Tài sản" name="assetId" value={createForm.assetId} error={formErrors.assetId} options={assetOptions} onChange={updateField(setCreateForm)} />
+            ) : (
+              <FormField as="select" label="Tài sản liên kết (tùy chọn)" name="assetId" value={createForm.assetId} error={formErrors.assetId} options={[{ value: '', label: 'Không liên kết tài sản' }, ...assetOptions.slice(1)]} onChange={updateField(setCreateForm)} />
+            )}
             <FormField as="select" label="Người yêu cầu" name="requesterId" value={createForm.requesterId} error={formErrors.requesterId} options={[{ value: '', label: 'Chọn nhân viên' }, ...employeeOptions.slice(1)]} onChange={updateField(setCreateForm)} />
-            <FormField as="textarea" label="Mô tả sự cố" name="description" value={createForm.description} error={formErrors.description} maxLength={2000} placeholder="Mô tả hiện tượng và mức độ ảnh hưởng..." onChange={updateField(setCreateForm)} />
+            <FormField as="textarea" label="Chi tiết yêu cầu" name="description" value={createForm.description} error={formErrors.description} maxLength={2000} placeholder="Mô tả hiện tượng hoặc nội dung yêu cầu hỗ trợ..." onChange={updateField(setCreateForm)} />
             <FormField as="textarea" label="Ghi chú" name="notes" value={createForm.notes} maxLength={1000} onChange={updateField(setCreateForm)} />
             <Actions isSaving={isSaving} label="Tạo yêu cầu" onClose={closeModal} />
           </form>
@@ -300,16 +327,20 @@ export default function MaintenancePage() {
       )}
 
       {modal === 'process' && selected && (
-        <Modal title={`Xử lý ${selected.asset?.assetCode}`} description={selected.description} onClose={closeModal}>
+        <Modal title={`Xử lý yêu cầu ${selected.asset?.assetCode ? `cho ${selected.asset.assetCode}` : ''}`} description={selected.description} onClose={closeModal}>
           <form className="grid gap-5" onSubmit={handleUpdate}>
             <FormField as="select" label="Trạng thái xử lý" name="status" value={updateForm.status} options={STATUS_OPTIONS.slice(1)} onChange={updateField(setUpdateForm)} />
-            <FormField label="Chi phí sửa chữa (VND)" name="repairCost" type="number" min="0" value={updateForm.repairCost} onChange={updateField(setUpdateForm)} />
-            <FormField as="select" label="Trạng thái tài sản" name="assetStatus" value={updateForm.assetStatus} options={[
-              { value: 'MAINTENANCE', label: 'Đang bảo trì' },
-              { value: 'AVAILABLE', label: 'Sẵn sàng' },
-              { value: 'BROKEN', label: 'Bị hỏng' },
-              { value: 'DISPOSED', label: 'Đã thanh lý' },
-            ]} onChange={updateField(setUpdateForm)} />
+            {selected.assetId && (
+              <>
+                <FormField label="Chi phí sửa chữa (VND)" name="repairCost" type="number" min="0" value={updateForm.repairCost} onChange={updateField(setUpdateForm)} />
+                <FormField as="select" label="Trạng thái tài sản" name="assetStatus" value={updateForm.assetStatus} options={[
+                  { value: 'MAINTENANCE', label: 'Đang bảo trì' },
+                  { value: 'AVAILABLE', label: 'Sẵn sàng' },
+                  { value: 'BROKEN', label: 'Bị hỏng' },
+                  { value: 'DISPOSED', label: 'Đã thanh lý' },
+                ]} onChange={updateField(setUpdateForm)} />
+              </>
+            )}
             <FormField as="textarea" label="Ghi chú xử lý" name="notes" value={updateForm.notes} maxLength={1000} onChange={updateField(setUpdateForm)} />
             <Actions isSaving={isSaving} label="Lưu xử lý" onClose={closeModal} />
           </form>
@@ -317,14 +348,14 @@ export default function MaintenancePage() {
       )}
 
       {modal === 'detail' && selected && (
-        <Modal title={`Chi tiết ${selected.asset?.assetCode}`} description={selected.description} onClose={closeModal}>
+        <Modal title={`Chi tiết yêu cầu ${selected.asset?.assetCode ? `cho ${selected.asset.assetCode}` : ''}`} description={selected.description} onClose={closeModal}>
           <dl className="grid gap-3 text-sm sm:grid-cols-2">
             {[
               ['Người yêu cầu', selected.requester?.fullName],
               ['Trạng thái', STATUS_OPTIONS.find((item) => item.value === selected.status)?.label],
               ['Ngày tạo', formatDate(selected.createdAt)],
-              ['Chi phí', formatMoney(selected.repairCost)],
-            ].map(([label, value]) => (
+              selected.assetId && ['Chi phí', formatMoney(selected.repairCost)],
+            ].filter(Boolean).map(([label, value]) => (
               <div className="rounded-xl bg-slate-50 p-4" key={label}>
                 <dt className="text-xs font-semibold text-slate-400">{label}</dt>
                 <dd className="mt-1 font-bold text-slate-800">{value || 'Chưa cập nhật'}</dd>

@@ -140,6 +140,17 @@ model AssetAssignment {
   @@map("asset_assignments")
 }
 
+enum RequestType {
+  INCIDENT
+  MAINTENANCE
+  NEW_ALLOCATION
+  EXCHANGE
+  RECALL
+  SOFTWARE_INSTALL
+  ACCESS_GRANT
+  OTHER
+}
+
 enum MaintenanceStatus {
   PENDING
   IN_PROGRESS
@@ -149,7 +160,8 @@ enum MaintenanceStatus {
 
 model MaintenanceRequest {
   id          String            @id @default(uuid()) @db.Char(36)
-  assetId     String            @map("asset_id") @db.Char(36)
+  type        RequestType       @default(MAINTENANCE)
+  assetId     String?           @map("asset_id") @db.Char(36)
   requesterId String            @map("requester_id") @db.Char(36)
   description String            @db.Text
   status      MaintenanceStatus @default(PENDING)
@@ -157,7 +169,7 @@ model MaintenanceRequest {
   notes       String?           @db.Text
   createdAt   DateTime          @default(now()) @map("created_at")
   updatedAt   DateTime          @updatedAt @map("updated_at")
-  asset       Asset             @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  asset       Asset?            @relation(fields: [assetId], references: [id], onDelete: Restrict)
   requester   Employee          @relation(fields: [requesterId], references: [id], onDelete: Restrict)
 
   @@map("maintenance_requests")

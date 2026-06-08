@@ -2,6 +2,7 @@ const defaultPrisma = require("../../config/database");
 
 const MAINTENANCE_SELECT = Object.freeze({
   id: true,
+  type: true,
   assetId: true,
   requesterId: true,
   description: true,
@@ -19,6 +20,7 @@ function createMaintenanceRequestsRepository(prismaClient = defaultPrisma) {
     async findAll(filters = {}) {
       const where = {};
       if (filters.status) where.status = filters.status;
+      if (filters.type) where.type = filters.type;
       if (filters.assetId) where.assetId = filters.assetId;
       if (filters.requesterId) where.requesterId = filters.requesterId;
 
@@ -36,7 +38,8 @@ function createMaintenanceRequestsRepository(prismaClient = defaultPrisma) {
     async create(data) {
       return prismaClient.maintenanceRequest.create({
         data: {
-          assetId: data.assetId,
+          type: data.type,
+          assetId: data.assetId || null,
           requesterId: data.requesterId,
           description: data.description,
           notes: data.notes ?? null,
@@ -57,7 +60,7 @@ function createMaintenanceRequestsRepository(prismaClient = defaultPrisma) {
           select: MAINTENANCE_SELECT,
         });
 
-        if (data.assetStatus) {
+        if (data.assetStatus && request.assetId) {
           await tx.asset.update({
             where: { id: request.assetId },
             data: { status: data.assetStatus },
