@@ -487,6 +487,7 @@ function createAuthService({
 
         logger.error(
           {
+            err: error,
             requestId,
             authEvent: "forgot_password_otp_requested",
             outcome: "otp_delivery_failed",

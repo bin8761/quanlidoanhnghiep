@@ -1,9 +1,8 @@
 describe('auth.service', () => {
   const USER_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  const EMPLOYEE_ID = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
   const INACTIVE_USER_ID = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
   const OTP_ID = 'eeeeeeee-eeee-4eee-8eee-000000000001';
-  const EMPLOYEE_ID = '11111111-1111-4111-8111-111111111111';
-
   function loadAuthService({
     repositoryOverrides = {},
     passwordUtilOverrides = {},

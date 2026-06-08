@@ -71,7 +71,7 @@ function authenticate(req, res, next) {
     res.locals.user = safeUser;
 
     return next();
-  } catch (error) {
+  } catch {
     return next(createUnauthorizedError());
   }
 }

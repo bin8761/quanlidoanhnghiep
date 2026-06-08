@@ -82,7 +82,7 @@ describe("employees.service", () => {
 
   test("getEmployeeById throws 403 Forbidden if requested by non-linked USER", async () => {
     const emp = { id: EMPLOYEE_ID, fullName: "John Doe" };
-    const { employeesService, repository } = loadEmployeesService({
+    const { employeesService } = loadEmployeesService({
       repositoryOverrides: {
         findById: jest.fn().mockResolvedValue(emp),
         isEmployeeLinkedToUser: jest.fn().mockResolvedValue(false),
