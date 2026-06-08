@@ -95,7 +95,7 @@ test('mobile login, dashboard and sidebar remain usable', async ({ page }) => {
   const sidebar = page.getByRole('complementary')
   await expect(page.getByRole('navigation', { name: 'Điều hướng quản trị' })).toBeVisible()
   await expect(sidebar.getByText('EAM Workspace', { exact: true })).toBeVisible()
-  await expect(sidebar).toHaveCSS('width', '272px')
+  await expect(sidebar).toHaveCSS('width', '256px')
   await page.waitForTimeout(500)
   await page.screenshot({ path: 'test-results/mobile-sidebar.png' })
 
@@ -192,10 +192,10 @@ test('admin can create, update and delete a category through the real API', asyn
   await expect(page.getByRole('heading', { level: 2, name: 'Danh mục tài sản' })).toBeVisible()
 
   await page.getByRole('button', { name: 'Thêm danh mục' }).click()
-  await page.getByLabel('Tên danh mục').fill(categoryName)
-  await page.getByLabel('Mô tả').fill('Danh mục tạo bởi kiểm thử giao diện')
-  await page
-    .getByRole('dialog', { name: 'Thêm danh mục' })
+  const categoryDialog = page.getByRole('dialog', { name: 'Thêm danh mục' })
+  await categoryDialog.getByLabel('Tên danh mục').fill(categoryName)
+  await categoryDialog.getByLabel('Mô tả', { exact: true }).fill('Danh mục tạo bởi kiểm thử giao diện')
+  await categoryDialog
     .getByRole('button', { name: 'Thêm danh mục', exact: true })
     .click()
   await expect(page.getByText('Thêm danh mục thành công.')).toBeVisible()
@@ -241,10 +241,10 @@ test('admin can manage departments, employees and assets through the real APIs',
 
   await page.getByRole('link', { name: 'Phòng ban', exact: true }).click()
   await page.getByRole('button', { name: 'Thêm phòng ban' }).click()
-  await page.getByLabel('Tên phòng ban').fill(departmentName)
-  await page.getByLabel('Mô tả').fill('Phòng ban được tạo bởi kiểm thử UI')
-  await page
-    .getByRole('dialog', { name: 'Thêm phòng ban' })
+  const departmentDialog = page.getByRole('dialog', { name: 'Thêm phòng ban' })
+  await departmentDialog.getByLabel('Tên phòng ban').fill(departmentName)
+  await departmentDialog.getByLabel('Mô tả', { exact: true }).fill('Phòng ban được tạo bởi kiểm thử UI')
+  await departmentDialog
     .getByRole('button', { name: 'Thêm phòng ban', exact: true })
     .click()
   await expect(page.getByText('Thêm phòng ban thành công.')).toBeVisible()

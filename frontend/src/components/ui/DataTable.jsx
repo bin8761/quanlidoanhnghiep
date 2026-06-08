@@ -11,16 +11,17 @@ export default function DataTable({
   onFilterClick,
 }) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-soft">
-      <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+    <section className="surface overflow-hidden">
+      <div className="flex flex-col gap-3 border-b border-slate-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <div className="relative w-full sm:max-w-[390px]">
           <Search
             className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-slate-400"
             size={17}
           />
           <input
-            className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pr-4 pl-11 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 hover:border-slate-300 hover:bg-white focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/10"
+            className="h-11 w-full rounded-[10px] border border-slate-200 bg-slate-50 pr-4 pl-11 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 hover:border-slate-300 hover:bg-white focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/12"
             type="search"
+            aria-label={searchPlaceholder}
             value={searchValue}
             placeholder={searchPlaceholder}
             onChange={(event) => onSearchChange(event.target.value)}
@@ -44,7 +45,7 @@ export default function DataTable({
               <tr>
                 {columns.map((column) => (
                   <th
-                    className="border-b border-slate-200 bg-slate-50/80 px-5 py-3.5 text-[10px] font-extrabold tracking-[0.08em] text-slate-500 uppercase"
+                    className="border-b border-slate-200 bg-slate-50/90 px-5 py-3 text-[10px] font-extrabold tracking-[0.08em] text-slate-500 uppercase"
                     key={column.key}
                   >
                     {column.label}
@@ -55,12 +56,12 @@ export default function DataTable({
             <tbody>
               {rows.map((row) => (
                 <tr
-                  className="group border-b border-slate-100 transition-colors last:border-b-0 hover:bg-brand-50/40"
+                  className="group border-b border-slate-100 transition-colors last:border-b-0 hover:bg-brand-50/55"
                   key={row.id}
                 >
                   {columns.map((column, index) => (
                     <td
-                      className={`px-5 py-4 text-[13px] text-slate-600 ${
+                      className={`px-5 py-3.5 text-[13px] text-slate-600 ${
                         index === 0 ? 'font-semibold text-slate-900' : ''
                       }`}
                       key={column.key}
@@ -73,9 +74,9 @@ export default function DataTable({
             </tbody>
           </table>
         ) : (
-          <div className="grid min-h-72 place-items-center px-5 py-12 text-center">
+          <div className="grid min-h-64 place-items-center px-5 py-12 text-center">
             <div>
-              <span className="mx-auto mb-4 grid size-14 place-items-center rounded-2xl bg-slate-100 text-slate-400">
+              <span className="mx-auto mb-4 grid size-12 place-items-center rounded-[14px] border border-slate-200 bg-slate-50 text-slate-400">
                 <Database size={24} />
               </span>
               <strong className="block text-sm font-bold text-slate-900">
@@ -90,7 +91,7 @@ export default function DataTable({
       </div>
 
       {rows.length > 0 && (
-        <footer className="flex items-center justify-between border-t border-slate-100 px-5 py-3.5 text-xs text-slate-500">
+        <footer className="flex items-center justify-between border-t border-slate-100 bg-slate-50/45 px-5 py-3 text-[11px] text-slate-500">
           <span>Hiển thị {rows.length} kết quả</span>
           <span className="hidden sm:inline">Dữ liệu được cập nhật gần đây</span>
         </footer>

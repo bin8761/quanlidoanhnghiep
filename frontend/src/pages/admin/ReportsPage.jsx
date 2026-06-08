@@ -3,6 +3,7 @@ import { Boxes, ClipboardCheck, PackageCheck, RefreshCw, Wrench } from 'lucide-r
 import { reportApi } from '../../api/reports'
 import { ResourceError } from '../../components/admin/ResourceFeedback'
 import Button from '../../components/ui/Button'
+import PageHeader from '../../components/ui/PageHeader'
 import StatusBadge from '../../components/ui/StatusBadge'
 
 const STATUS_LABELS = {
@@ -16,9 +17,9 @@ const STATUS_LABELS = {
 
 function Metric({ icon: Icon, label, value, tone }) {
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <article className="metric-card p-4 sm:p-5">
       <span className={`grid size-10 place-items-center rounded-xl ${tone}`}><Icon size={19} /></span>
-      <strong className="mt-5 block text-3xl font-extrabold text-slate-950">{value}</strong>
+      <strong className="mt-4 block text-3xl font-extrabold text-slate-950">{value}</strong>
       <span className="mt-1 block text-xs font-semibold text-slate-500">{label}</span>
     </article>
   )
@@ -85,22 +86,22 @@ export default function ReportsPage() {
 
   return (
     <div className="animate-fade-up">
-      <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="mb-2 text-xs font-bold text-brand-700">Phân tích dữ liệu vận hành</p>
-          <h2 className="text-2xl font-extrabold text-slate-950 sm:text-3xl">Báo cáo tài sản</h2>
-          <p className="mt-2 text-sm text-slate-500">Tổng hợp trạng thái, phân bổ và khối lượng công việc từ dữ liệu hệ thống.</p>
-        </div>
-        <Button className="w-full sm:w-auto" variant="secondary" type="button" disabled={isLoading} onClick={loadReports}>
-          <RefreshCw className={isLoading ? 'animate-spin' : ''} size={16} />Làm mới dữ liệu
-        </Button>
-      </header>
+      <PageHeader
+        eyebrow="Phân tích dữ liệu vận hành"
+        title="Báo cáo tài sản"
+        description="Tổng hợp trạng thái, phân bổ và khối lượng công việc từ dữ liệu hệ thống."
+        actions={(
+          <Button className="w-full sm:w-auto" variant="secondary" type="button" disabled={isLoading} onClick={loadReports}>
+            <RefreshCw className={isLoading ? 'animate-spin' : ''} size={16} />Làm mới dữ liệu
+          </Button>
+        )}
+      />
 
       {error && <ResourceError message={error} onRetry={loadReports} />}
 
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {[1, 2, 3, 4].map((item) => <div className="h-40 animate-pulse rounded-2xl bg-slate-100" key={item} />)}
+          {[1, 2, 3, 4].map((item) => <div className="skeleton h-36 rounded-[18px]" key={item} />)}
         </div>
       ) : summary && (
         <>
@@ -112,14 +113,14 @@ export default function ReportsPage() {
           </section>
 
           <section className="mt-5 grid gap-5 xl:grid-cols-[0.85fr_1.15fr]">
-            <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <article className="surface p-5 sm:p-6">
               <header className="mb-6">
                 <h3 className="text-sm font-extrabold text-slate-900">Tình trạng tài sản</h3>
                 <p className="mt-1 text-xs text-slate-500">Tỷ trọng theo trạng thái hiện tại</p>
               </header>
               <div className="grid gap-3">
                 {statusRows.map((item) => (
-                  <div className="flex items-center justify-between gap-4 rounded-xl bg-slate-50 p-4" key={item.status}>
+                  <div className="flex items-center justify-between gap-4 rounded-[12px] border border-slate-100 bg-slate-50/75 p-4" key={item.status}>
                     <div><StatusBadge status={item.status} /><p className="mt-1 text-xs text-slate-500">{item.label}</p></div>
                     <div className="text-right"><strong className="block text-lg text-slate-950">{item.count}</strong><span className="text-xs text-slate-400">{item.percent}%</span></div>
                   </div>
@@ -127,7 +128,7 @@ export default function ReportsPage() {
               </div>
             </article>
 
-            <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <article className="surface p-5 sm:p-6">
               <header className="mb-6">
                 <h3 className="text-sm font-extrabold text-slate-900">Tài sản theo danh mục</h3>
                 <p className="mt-1 text-xs text-slate-500">Số lượng tài sản trong từng nhóm</p>
@@ -136,7 +137,7 @@ export default function ReportsPage() {
             </article>
           </section>
 
-          <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+          <section className="surface mt-5 p-5 sm:p-6">
             <header className="mb-6">
               <h3 className="text-sm font-extrabold text-slate-900">Tài sản đang sử dụng theo phòng ban</h3>
               <p className="mt-1 text-xs text-slate-500">Tính theo các lượt bàn giao đang hoạt động</p>

@@ -1,5 +1,6 @@
 import { ArrowRightLeft, CalendarDays, Clock, Wrench } from 'lucide-react'
 import { useState } from 'react'
+import PageHeader from '../../components/ui/PageHeader'
 
 // Demo data — Week 3: replace with GET /api/assignments/history and GET /api/maintenance-requests
 const allocationHistory = [
@@ -104,14 +105,12 @@ export default function EmployeeHistoryPage() {
 
   return (
     <div className="animate-fade-up">
-      <header className="mb-6">
-        <h2 className="text-2xl font-extrabold text-slate-950">Lịch sử hoạt động</h2>
-        <p className="mt-2 text-sm text-slate-500">
-          Toàn bộ lịch sử bàn giao tài sản và yêu cầu bảo trì của bạn.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="Nhật ký cá nhân"
+        title="Lịch sử hoạt động"
+        description="Toàn bộ lịch sử bàn giao tài sản và yêu cầu bảo trì của bạn."
+      />
 
-      {/* Tabs */}
       <div className="mb-5 flex gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
         {tabs.map(({ key, label, icon: Icon }) => (
           <button

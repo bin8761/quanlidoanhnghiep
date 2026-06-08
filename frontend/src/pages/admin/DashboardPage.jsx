@@ -13,6 +13,7 @@ import { assignmentApi } from '../../api/assignments'
 import { inventoryApi } from '../../api/inventory'
 import { reportApi } from '../../api/reports'
 import { ResourceError } from '../../components/admin/ResourceFeedback'
+import PageHeader from '../../components/ui/PageHeader'
 import StatusBadge from '../../components/ui/StatusBadge'
 
 const STATUS_LABELS = {
@@ -53,7 +54,7 @@ function formatDateTime(value) {
 function MetricCard({ label, value, note, icon: Icon, accent, href }) {
   return (
     <Link
-      className="group min-w-0 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lg"
+      className="metric-card group p-4 sm:p-5"
       to={href}
     >
       <div className="flex items-start justify-between gap-3">
@@ -62,7 +63,7 @@ function MetricCard({ label, value, note, icon: Icon, accent, href }) {
           <Icon size={19} />
         </span>
       </div>
-      <div className="mt-5 text-[28px] leading-none font-extrabold text-slate-950">{value}</div>
+      <div className="mt-4 text-[28px] leading-none font-extrabold text-slate-950">{value}</div>
       <div className="mt-3 flex items-center justify-between gap-2 text-[11px] font-medium text-slate-500">
         <span>{note}</span>
         <ArrowRight className="text-brand-600 transition group-hover:translate-x-0.5" size={14} />
@@ -183,36 +184,30 @@ export default function DashboardPage() {
 
   return (
     <div className="animate-fade-up">
-      <header className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="mb-2 flex items-center gap-2 text-xs font-bold text-brand-700">
-            <Sparkles size={14} />
-            Tổng quan vận hành
-          </div>
-          <h2 className="text-2xl font-extrabold text-slate-950 sm:text-3xl">
-            {getGreeting()}, Quản trị viên
-          </h2>
-          <p className="mt-2 text-sm text-slate-500">
-            Số liệu được tổng hợp trực tiếp từ hoạt động quản lý tài sản.
-          </p>
-        </div>
-        <button
-          className="flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 disabled:opacity-60"
-          type="button"
-          disabled={isLoading}
-          onClick={loadDashboard}
-        >
-          <RefreshCw className={isLoading ? 'animate-spin' : ''} size={14} />
-          {syncedAt ? `Cập nhật ${formatDateTime(syncedAt)}` : 'Làm mới dữ liệu'}
-        </button>
-      </header>
+      <PageHeader
+        eyebrow="Tổng quan vận hành"
+        title={`${getGreeting()}, Quản trị viên`}
+        description="Số liệu được tổng hợp trực tiếp từ hoạt động quản lý tài sản."
+        icon={Sparkles}
+        actions={(
+          <button
+            className="flex min-h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 disabled:opacity-60"
+            type="button"
+            disabled={isLoading}
+            onClick={loadDashboard}
+          >
+            <RefreshCw className={isLoading ? 'animate-spin' : ''} size={14} />
+            {syncedAt ? `Cập nhật ${formatDateTime(syncedAt)}` : 'Làm mới dữ liệu'}
+          </button>
+        )}
+      />
 
       {error && <ResourceError message={error} onRetry={loadDashboard} />}
 
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {[1, 2, 3, 4].map((item) => (
-            <div className="h-40 animate-pulse rounded-2xl bg-slate-100" key={item} />
+            <div className="skeleton h-36 rounded-[18px]" key={item} />
           ))}
         </div>
       ) : summary && (
@@ -222,7 +217,7 @@ export default function DashboardPage() {
           </section>
 
           <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.75fr)]">
-            <article className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-soft">
+            <article className="surface overflow-hidden">
               <header className="flex min-h-18 items-center justify-between gap-4 border-b border-slate-100 px-5 py-4 sm:px-6">
                 <div>
                   <h3 className="text-sm font-extrabold text-slate-900">Hoạt động gần đây</h3>
@@ -257,7 +252,7 @@ export default function DashboardPage() {
               </div>
             </article>
 
-            <article className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-soft sm:p-6">
+            <article className="surface p-5 sm:p-6">
               <header className="mb-6">
                 <h3 className="text-sm font-extrabold text-slate-900">Trạng thái tài sản</h3>
                 <p className="mt-1 text-xs text-slate-500">Phân bổ theo dữ liệu hiện tại</p>

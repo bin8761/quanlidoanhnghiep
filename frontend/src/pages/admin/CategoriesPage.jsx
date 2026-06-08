@@ -6,6 +6,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import DataTable from '../../components/ui/DataTable'
 import FormField from '../../components/ui/FormField'
 import Modal from '../../components/ui/Modal'
+import PageHeader from '../../components/ui/PageHeader'
 import StatusBadge from '../../components/ui/StatusBadge'
 import Toast from '../../components/ui/Toast'
 
@@ -215,21 +216,17 @@ export default function CategoriesPage() {
 
   return (
     <div className="animate-fade-up">
-      <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="mb-2 text-xs font-bold text-brand-700">Quản lý dữ liệu</p>
-          <h2 className="text-2xl font-extrabold text-slate-950 sm:text-3xl">
-            Danh mục tài sản
-          </h2>
-          <p className="mt-2 text-sm text-slate-500">
-            Chuẩn hóa nhóm tài sản dùng trong toàn hệ thống.
-          </p>
-        </div>
-        <Button className="w-full sm:w-auto" type="button" onClick={openCreateModal}>
-          <Plus size={17} />
-          Thêm danh mục
-        </Button>
-      </header>
+      <PageHeader
+        eyebrow="Quản lý dữ liệu"
+        title="Danh mục tài sản"
+        description="Chuẩn hóa nhóm tài sản dùng trong toàn hệ thống."
+        actions={(
+          <Button className="w-full sm:w-auto" type="button" onClick={openCreateModal}>
+            <Plus size={17} />
+            Thêm danh mục
+          </Button>
+        )}
+      />
 
       {error && !isLoading && (
         <div className="mb-5 flex flex-col gap-4 rounded-2xl border border-red-200 bg-red-50 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -285,7 +282,7 @@ export default function CategoriesPage() {
               maxLength={500}
               onChange={updateField}
             />
-            <div className="mt-1 flex flex-col-reverse gap-2 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+            <div className="form-actions mt-1">
               <Button
                 className="w-full sm:w-auto"
                 type="button"

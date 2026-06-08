@@ -9,6 +9,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import DataTable from '../../components/ui/DataTable'
 import FormField from '../../components/ui/FormField'
 import Modal from '../../components/ui/Modal'
+import PageHeader from '../../components/ui/PageHeader'
 import StatusBadge from '../../components/ui/StatusBadge'
 import Toast from '../../components/ui/Toast'
 import useAutoDismiss from '../../hooks/useAutoDismiss'
@@ -235,21 +236,19 @@ export default function AssetsPage() {
 
   return (
     <div className="animate-fade-up">
-      <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="mb-2 text-xs font-bold text-brand-700">Danh mục tài sản doanh nghiệp</p>
-          <h2 className="text-2xl font-extrabold text-slate-950 sm:text-3xl">Quản lý tài sản</h2>
-          <p className="mt-2 text-sm text-slate-500">
-            Theo dõi thông tin, trạng thái và người đang sử dụng từng tài sản.
-          </p>
-        </div>
-        <Button className="w-full sm:w-auto" type="button" onClick={openCreateModal}>
-          <Plus size={17} />
-          Thêm tài sản
-        </Button>
-      </header>
+      <PageHeader
+        eyebrow="Danh mục tài sản doanh nghiệp"
+        title="Quản lý tài sản"
+        description="Theo dõi thông tin, trạng thái và người đang sử dụng từng tài sản."
+        actions={(
+          <Button className="w-full sm:w-auto" type="button" onClick={openCreateModal}>
+            <Plus size={17} />
+            Thêm tài sản
+          </Button>
+        )}
+      />
 
-      <section className="mb-5 grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2 xl:grid-cols-4">
+      <section className="filter-panel sm:grid-cols-2 xl:grid-cols-4">
         <FormField as="select" label="Danh mục" name="categoryFilter" value={filters.categoryId} options={[{ value: '', label: 'Tất cả danh mục' }, ...categoryOptions.slice(1)]} onChange={(event) => updateFilter('categoryId', event.target.value)} />
         <FormField as="select" label="Trạng thái" name="statusFilter" value={filters.status} options={[{ value: '', label: 'Tất cả trạng thái' }, ...ASSET_STATUSES]} onChange={(event) => updateFilter('status', event.target.value)} />
         <FormField as="select" label="Phòng ban sử dụng" name="departmentFilter" value={filters.departmentId} options={departmentOptions} onChange={(event) => updateFilter('departmentId', event.target.value)} />
@@ -282,7 +281,7 @@ export default function AssetsPage() {
               <FormField label="URL hình ảnh" name="imageUrl" type="url" value={form.imageUrl} error={formErrors.imageUrl} placeholder="https://..." onChange={updateField} />
             </div>
             <FormField as="textarea" label="Ghi chú" name="notes" value={form.notes} hint={`${form.notes.length}/1000`} maxLength={1000} placeholder="Thông tin bổ sung về tài sản" onChange={updateField} />
-            <div className="flex flex-col-reverse gap-2 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+            <div className="form-actions">
               <Button type="button" variant="secondary" disabled={isSaving} onClick={closeFormModal}>Hủy</Button>
               <Button type="submit" disabled={isSaving}>
                 {isSaving && <span className="size-4 animate-spin-soft rounded-full border-2 border-white/30 border-t-white" />}

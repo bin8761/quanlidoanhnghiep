@@ -45,7 +45,7 @@ export default function StatusBadge({ status }) {
 
   return (
     <span
-      className={`inline-flex min-h-6 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-extrabold tracking-wide ${tone}`}
+      className={`inline-flex min-h-6 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold ${tone}`}
     >
       <span className="size-1.5 rounded-full bg-current opacity-70" />
       {label}

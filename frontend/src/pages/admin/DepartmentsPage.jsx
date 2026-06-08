@@ -7,6 +7,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import DataTable from '../../components/ui/DataTable'
 import FormField from '../../components/ui/FormField'
 import Modal from '../../components/ui/Modal'
+import PageHeader from '../../components/ui/PageHeader'
 import Toast from '../../components/ui/Toast'
 import useAutoDismiss from '../../hooks/useAutoDismiss'
 
@@ -191,19 +192,17 @@ export default function DepartmentsPage() {
 
   return (
     <div className="animate-fade-up">
-      <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="mb-2 text-xs font-bold text-brand-700">Cơ cấu doanh nghiệp</p>
-          <h2 className="text-2xl font-extrabold text-slate-950 sm:text-3xl">Quản lý phòng ban</h2>
-          <p className="mt-2 text-sm text-slate-500">
-            Tổ chức nhân sự và tài sản theo từng đơn vị trong doanh nghiệp.
-          </p>
-        </div>
-        <Button className="w-full sm:w-auto" type="button" onClick={openCreateModal}>
-          <Plus size={17} />
-          Thêm phòng ban
-        </Button>
-      </header>
+      <PageHeader
+        eyebrow="Cơ cấu doanh nghiệp"
+        title="Quản lý phòng ban"
+        description="Tổ chức nhân sự và tài sản theo từng đơn vị trong doanh nghiệp."
+        actions={(
+          <Button className="w-full sm:w-auto" type="button" onClick={openCreateModal}>
+            <Plus size={17} />
+            Thêm phòng ban
+          </Button>
+        )}
+      />
 
       {error && !isLoading && <ResourceError message={error} onRetry={loadDepartments} />}
 
@@ -247,7 +246,7 @@ export default function DepartmentsPage() {
               maxLength={500}
               onChange={updateField}
             />
-            <div className="flex flex-col-reverse gap-2 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+            <div className="form-actions">
               <Button type="button" variant="secondary" disabled={isSaving} onClick={closeFormModal}>
                 Hủy
               </Button>

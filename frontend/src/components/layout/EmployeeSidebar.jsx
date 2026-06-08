@@ -28,13 +28,13 @@ export default function EmployeeSidebar({ open, onClose }) {
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-40 flex w-[272px] flex-col overflow-hidden border-r border-white/10 bg-[#10251d] text-white shadow-2xl transition-transform duration-300 lg:translate-x-0 ${
+      className={`fixed inset-y-0 left-0 z-40 flex w-[256px] flex-col overflow-hidden border-r border-white/8 bg-[var(--sidebar)] text-white shadow-2xl transition-transform duration-300 lg:translate-x-0 ${
         open ? 'translate-x-0' : '-translate-x-full'
       }`}
     >
-      <div className="flex h-[72px] items-center gap-3 border-b border-white/10 px-5">
-        <span className="grid size-11 place-items-center rounded-2xl bg-white text-brand-800 shadow-lg shadow-black/10">
-          <ShieldCheck size={23} />
+      <div className="flex h-16 items-center gap-3 border-b border-white/8 px-4">
+        <span className="grid size-10 place-items-center rounded-[12px] border border-white/10 bg-white text-brand-800 shadow-lg shadow-black/10">
+          <ShieldCheck size={21} />
         </span>
         <span className="min-w-0">
           <strong className="block truncate text-sm font-extrabold">EAM Workspace</strong>
@@ -50,7 +50,7 @@ export default function EmployeeSidebar({ open, onClose }) {
         </button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-5" aria-label="Điều hướng nhân viên">
+      <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Điều hướng nhân viên">
         <p className="px-3 pb-2 text-[10px] font-extrabold tracking-[0.14em] text-white/35 uppercase">
           Không gian cá nhân
         </p>
@@ -60,22 +60,23 @@ export default function EmployeeSidebar({ open, onClose }) {
               key={to}
               to={to}
               className={({ isActive }) =>
-                `group flex min-h-11 items-center gap-3 rounded-xl px-3 text-[13px] font-semibold transition-all duration-200 ${
+                `group relative flex min-h-10 items-center gap-3 rounded-[10px] px-3 text-[12px] font-semibold transition-all duration-200 ${
                   isActive
-                    ? 'bg-white text-slate-950 shadow-lg shadow-black/10'
-                    : 'text-white/65 hover:bg-white/8 hover:text-white'
+                    ? 'bg-white/12 text-white shadow-inner shadow-white/5'
+                    : 'text-white/65 hover:bg-white/7 hover:text-white'
                 }`
               }
               onClick={onClose}
             >
               {({ isActive }) => (
                 <>
-                  <Icon className={isActive ? 'text-brand-600' : 'text-white/60'} size={18} />
+                  {isActive && <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-emerald-300" />}
+                  <Icon className={isActive ? 'text-emerald-300' : 'text-white/60'} size={18} />
                   <span>{label}</span>
                   <ChevronRight
                     className={`ml-auto transition ${
                       isActive
-                        ? 'text-slate-400'
+                        ? 'text-white/55'
                         : 'translate-x-1 opacity-0 group-hover:translate-x-0 group-hover:opacity-60'
                     }`}
                     size={15}
@@ -88,9 +89,9 @@ export default function EmployeeSidebar({ open, onClose }) {
       </nav>
 
       <div className="p-3">
-        <div className="rounded-2xl border border-white/10 bg-white/6 p-2">
+        <div className="rounded-[14px] border border-white/10 bg-white/6 p-1.5">
           <div className="flex items-center gap-3 p-2">
-            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-500 text-xs font-extrabold">
+            <span className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-brand-600 text-xs font-extrabold">
               {initials}
             </span>
             <span className="min-w-0 flex-1">

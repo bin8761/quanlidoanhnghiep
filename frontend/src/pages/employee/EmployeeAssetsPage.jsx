@@ -1,6 +1,7 @@
 import { Boxes, CalendarDays, Hash, Laptop, Search, Tag } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import PageHeader from '../../components/ui/PageHeader'
 import { employeeAssets } from './employeeData'
 
 export default function EmployeeAssetsPage() {
@@ -18,18 +19,17 @@ export default function EmployeeAssetsPage() {
 
   return (
     <div className="animate-fade-up">
-      <header className="mb-6">
-        <h2 className="text-2xl font-extrabold text-slate-950">Tài sản của tôi</h2>
-        <p className="mt-2 text-sm text-slate-500">
-          Danh sách thiết bị và tài sản hiện đang được bàn giao cho bạn.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="Thiết bị được bàn giao"
+        title="Tài sản của tôi"
+        description="Danh sách thiết bị và tài sản hiện đang được bàn giao cho bạn."
+      />
 
-      {/* Search */}
-      <div className="mb-5 flex min-h-12 items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 shadow-sm sm:max-w-md">
+      <div className="surface mb-5 flex min-h-11 items-center gap-3 px-4 sm:max-w-md">
         <Search className="text-slate-400" size={17} />
         <input
           className="min-w-0 flex-1 border-0 bg-transparent text-sm outline-none placeholder:text-slate-400"
+          aria-label="Tìm tài sản"
           placeholder="Tìm theo mã hoặc tên tài sản..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -42,7 +42,7 @@ export default function EmployeeAssetsPage() {
             <Link
               key={asset.code}
               to={`/employee/assets/${asset.code}`}
-              className="block overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-soft transition hover:-translate-y-0.5 hover:shadow-lg"
+              className="metric-card block overflow-hidden"
             >
               <div className="flex items-start justify-between border-b border-slate-100 bg-slate-50/70 p-5">
                 <span className="grid size-12 place-items-center rounded-xl bg-brand-50 text-brand-700">
@@ -80,7 +80,7 @@ export default function EmployeeAssetsPage() {
           ))}
         </section>
       ) : (
-        <div className="grid min-h-72 place-items-center rounded-2xl border border-dashed border-slate-300 bg-white text-center">
+        <div className="surface grid min-h-64 place-items-center border-dashed text-center">
           <div>
             <Boxes className="mx-auto text-slate-300" size={34} />
 

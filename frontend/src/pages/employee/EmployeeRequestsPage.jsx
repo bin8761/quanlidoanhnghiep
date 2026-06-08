@@ -2,6 +2,7 @@ import { Headphones, Plus, Send, X } from 'lucide-react'
 import { useState } from 'react'
 import Button from '../../components/ui/Button'
 import FormField from '../../components/ui/FormField'
+import PageHeader from '../../components/ui/PageHeader'
 import { employeeAssets, initialEmployeeRequests } from './employeeData'
 
 const statusTone = {
@@ -39,17 +40,16 @@ export default function EmployeeRequestsPage() {
 
   return (
     <div className="animate-fade-up">
-      <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-extrabold text-slate-950">Yêu cầu hỗ trợ</h2>
-          <p className="mt-2 text-sm text-slate-500">
-            Báo cáo sự cố và theo dõi tiến độ xử lý tài sản.
-          </p>
-        </div>
-        <Button onClick={() => setFormOpen(true)}>
-          <Plus size={17} /> Tạo yêu cầu
-        </Button>
-      </header>
+      <PageHeader
+        eyebrow="Trung tâm hỗ trợ"
+        title="Yêu cầu hỗ trợ"
+        description="Báo cáo sự cố và theo dõi tiến độ xử lý tài sản."
+        actions={(
+          <Button className="w-full sm:w-auto" onClick={() => setFormOpen(true)}>
+            <Plus size={17} /> Tạo yêu cầu
+          </Button>
+        )}
+      />
 
       {success && (
         <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
@@ -58,7 +58,7 @@ export default function EmployeeRequestsPage() {
       )}
 
       {formOpen && (
-        <section className="mb-5 rounded-2xl border border-brand-200 bg-white p-5 shadow-soft sm:p-6">
+        <section className="surface mb-5 border-brand-200 p-5 sm:p-6">
           <div className="mb-5 flex items-start justify-between">
             <div>
               <h3 className="text-base font-extrabold text-slate-900">Tạo yêu cầu mới</h3>
@@ -106,7 +106,7 @@ export default function EmployeeRequestsPage() {
         </section>
       )}
 
-      <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-soft">
+      <section className="surface overflow-hidden">
         <div className="hidden grid-cols-[110px_110px_minmax(220px,1fr)_120px_120px] gap-4 border-b border-slate-100 bg-slate-50 px-5 py-3 text-[10px] font-extrabold text-slate-500 uppercase md:grid">
           <span>Mã yêu cầu</span><span>Tài sản</span><span>Sự cố</span><span>Ngày tạo</span><span>Trạng thái</span>
         </div>

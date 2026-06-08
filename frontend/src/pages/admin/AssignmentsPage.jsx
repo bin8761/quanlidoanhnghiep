@@ -16,6 +16,7 @@ import Button from '../../components/ui/Button'
 import DataTable from '../../components/ui/DataTable'
 import FormField from '../../components/ui/FormField'
 import Modal from '../../components/ui/Modal'
+import PageHeader from '../../components/ui/PageHeader'
 import StatusBadge from '../../components/ui/StatusBadge'
 import Toast from '../../components/ui/Toast'
 import useAutoDismiss from '../../hooks/useAutoDismiss'
@@ -82,7 +83,7 @@ function SummaryCard({ icon: Icon, label, value, tone }) {
   }
 
   return (
-    <article className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <article className="metric-card flex items-center gap-4 p-4">
       <span className={`grid size-11 shrink-0 place-items-center rounded-xl ${tones[tone]}`}>
         <Icon size={20} />
       </span>
@@ -385,24 +386,22 @@ export default function AssignmentsPage() {
 
   return (
     <div className="animate-fade-up">
-      <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="mb-2 text-xs font-bold text-brand-700">Vòng đời sử dụng tài sản</p>
-          <h2 className="text-2xl font-extrabold text-slate-950 sm:text-3xl">Quản lý bàn giao</h2>
-          <p className="mt-2 text-sm text-slate-500">
-            Bàn giao, thu hồi, chuyển người sử dụng và truy vết toàn bộ lịch sử tài sản.
-          </p>
-        </div>
-        <Button
-          className="w-full sm:w-auto"
-          type="button"
-          disabled={!availableAssets.length || !activeEmployees.length}
-          onClick={openAssignModal}
-        >
-          <Plus size={17} />
-          Tạo bàn giao
-        </Button>
-      </header>
+      <PageHeader
+        eyebrow="Vòng đời sử dụng tài sản"
+        title="Quản lý bàn giao"
+        description="Bàn giao, thu hồi, chuyển người sử dụng và truy vết toàn bộ lịch sử tài sản."
+        actions={(
+          <Button
+            className="w-full sm:w-auto"
+            type="button"
+            disabled={!availableAssets.length || !activeEmployees.length}
+            onClick={openAssignModal}
+          >
+            <Plus size={17} />
+            Tạo bàn giao
+          </Button>
+        )}
+      />
 
       <section className="mb-5 grid gap-3 sm:grid-cols-3">
         <SummaryCard icon={PackageCheck} label="Đang bàn giao" value={activeAssignments.length} tone="emerald" />
@@ -410,7 +409,7 @@ export default function AssignmentsPage() {
         <SummaryCard icon={UserRound} label="Nhân viên đang sử dụng" value={new Set(activeAssignments.map((item) => item.employeeId)).size} tone="slate" />
       </section>
 
-      <section className="mb-5 grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2 xl:grid-cols-4">
+      <section className="filter-panel sm:grid-cols-2 xl:grid-cols-4">
         <FormField as="select" label="Trạng thái" name="statusFilter" value={filters.status} options={STATUS_OPTIONS} onChange={(event) => updateFilter('status', event.target.value)} />
         <FormField as="select" label="Tài sản" name="assetFilter" value={filters.assetId} options={assetOptions} onChange={(event) => updateFilter('assetId', event.target.value)} />
         <FormField as="select" label="Nhân viên" name="employeeFilter" value={filters.employeeId} options={employeeOptions} onChange={(event) => updateFilter('employeeId', event.target.value)} />
@@ -480,7 +479,7 @@ export default function AssignmentsPage() {
 
 function WorkflowActions({ isSaving, submitLabel, onClose }) {
   return (
-    <div className="flex flex-col-reverse gap-2 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+    <div className="form-actions">
       <Button type="button" variant="secondary" disabled={isSaving} onClick={onClose}>
         Hủy
       </Button>
