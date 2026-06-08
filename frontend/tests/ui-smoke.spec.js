@@ -180,6 +180,35 @@ test('employee can use dashboard, mobile navigation and create a support request
   expect(errors).toEqual([])
 })
 
+test('employee can create a support request for new allocation without linking an asset', async ({ page }) => {
+  const errors = collectConsoleErrors(page)
+
+  await page.setViewportSize({ width: 1280, height: 960 })
+  await loginAsEmployee(page)
+  await page.getByRole('link', { name: 'Yêu cầu hỗ trợ' }).click()
+  await expect(page).toHaveURL(/\/employee\/requests$/)
+
+  await page.getByRole('button', { name: 'Tạo yêu cầu' }).click()
+  
+  // Select 'Yêu cầu cấp phát mới'
+  await page.getByLabel('Loại yêu cầu').selectOption('NEW_ALLOCATION')
+  
+  // Choose 'Không liên kết tài sản'
+  await page.getByLabel('Tài sản liên kết (tùy chọn)').selectOption('')
+
+  await page.getByLabel('Mô tả sự cố').fill('Cần cấp thêm một màn hình di động 15.6 inch để đi công tác')
+  await page.getByRole('button', { name: 'Gửi yêu cầu' }).click()
+
+  await expect(page.getByText('Yêu cầu hỗ trợ đã được gửi thành công.')).toBeVisible()
+  
+  // Verify that the request is shown in the list with the correct type and empty asset
+  const lastRequest = page.locator('article').first()
+  await expect(lastRequest.getByText('Yêu cầu cấp phát mới')).toBeVisible()
+  await expect(lastRequest.getByText('—')).toBeVisible() // empty asset code placeholder
+
+  expect(errors).toEqual([])
+})
+
 test('admin can create, update and delete a category through the real API', async ({ page }) => {
   const errors = collectConsoleErrors(page)
   const categoryName = `Playwright Category ${Date.now()}`
