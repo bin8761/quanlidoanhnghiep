@@ -1,4 +1,4 @@
-# Local Auth Seed Runbook
+# Local Demo Seed Runbook
 
 This runbook pairs with `backend/prisma/seed.js`.
 
@@ -23,6 +23,11 @@ This runbook pairs with `backend/prisma/seed.js`.
 - Inactive-user login rejection for `inactive.employee@company.local`.
 - First-login password-change flow for `firstlogin.employee@company.local`.
 - Normal login and forgot-password flow for `active.employee@company.local`.
+- Admin CRUD screens for departments, employees, categories, and assets.
+- Assignment, return, transfer, and assignment-history demonstrations.
+- Maintenance request processing and repair-cost demonstrations.
+- Inventory session and inventory-item result demonstrations.
+- Dashboard and report pages with meaningful aggregate data.
 
 ## Seed Command
 
@@ -30,6 +35,20 @@ Run from the `backend/` directory.
 
 ```powershell
 npx prisma db seed
+```
+
+The seed uses `upsert` and fixed workflow ids, so this command can be run
+multiple times without duplicating the shared demo records.
+
+## Fresh Local Setup
+
+Run from the `backend/` directory:
+
+```powershell
+npm install
+npx prisma migrate deploy
+npx prisma generate
+npm run db:seed
 ```
 
 ## Postman Defaults To Use

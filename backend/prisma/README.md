@@ -44,7 +44,7 @@ Run client generation after schema changes or migration updates:
 npx prisma generate
 ```
 
-### 4. Seed Local Auth Data
+### 4. Seed Local Demo Data
 
 After migrations are applied:
 
@@ -52,9 +52,14 @@ After migrations are applied:
 npx prisma db seed
 ```
 
+The command is idempotent: it can be run again to restore the shared demo
+records without creating duplicates.
+
 ## Important Notes
 
 - The user is responsible for reviewing schema changes before migration.
 - If `prisma init` would overwrite or conflict with the current `prisma/` folder, skip it and continue with migration and client generation only.
-- The current seed script provisions one fixed `ADMIN`, one employee without a user, one inactive `USER`, one first-login `USER`, and one active `USER`.
+- The seed provisions auth test accounts plus departments, employees,
+  categories, assets, assignment history, maintenance requests, and inventory
+  sessions used by the frontend demo.
 - The current schema uses UUID string ids for `Employee`, `User`, and `PasswordResetOtp`.
