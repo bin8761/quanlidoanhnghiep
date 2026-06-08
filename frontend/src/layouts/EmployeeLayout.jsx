@@ -1,7 +1,10 @@
-import { Bell, Menu } from 'lucide-react'
+import { Menu } from 'lucide-react'
 import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import EmployeeSidebar from '../components/layout/EmployeeSidebar'
+import NotificationBell from '../components/layout/NotificationBell'
+import SyncStatusBadge from '../components/layout/SyncStatusBadge'
+import { useNotifications } from '../notifications/notifications-context'
 
 const PAGE_TITLES = {
   '/employee/dashboard': 'Tổng quan',
@@ -11,9 +14,11 @@ const PAGE_TITLES = {
   '/employee/profile': 'Hồ sơ cá nhân',
   '/employee/change-password': 'Đổi mật khẩu',
 }
+
 export default function EmployeeLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const location = useLocation()
+  const { connectionStatus } = useNotifications()
 
   return (
     <div className="app-shell lg:grid lg:grid-cols-[256px_minmax(0,1fr)]">
@@ -50,18 +55,8 @@ export default function EmployeeLayout() {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="hidden items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-bold text-emerald-700 sm:inline-flex">
-              <span className="size-1.5 rounded-full bg-emerald-500" />
-              Đã đồng bộ
-            </span>
-            <button
-              className="icon-button relative"
-              type="button"
-              title="Thông báo"
-            >
-              <Bell size={18} />
-              <span className="absolute top-2 right-2 size-2 rounded-full border-2 border-white bg-amber-500" />
-            </button>
+            <SyncStatusBadge status={connectionStatus} />
+            <NotificationBell />
           </div>
         </header>
 

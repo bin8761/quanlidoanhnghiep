@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CircleDollarSign, Clock3, Eye, Plus, Wrench } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 import { assetApi } from '../../api/assets'
 import { employeeApi } from '../../api/employees'
 import { maintenanceApi } from '../../api/maintenance'
@@ -70,6 +71,7 @@ function Metric({ icon: Icon, label, value, tone }) {
 }
 
 export default function MaintenancePage() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [requests, setRequests] = useState([])
   const [assets, setAssets] = useState([])
   const [employees, setEmployees] = useState([])
@@ -113,6 +115,33 @@ export default function MaintenancePage() {
     const timer = window.setTimeout(loadData, 0)
     return () => window.clearTimeout(timer)
   }, [loadData])
+
+  useEffect(() => {
+    if (isLoading || !requests.length) return
+
+    const requestId = searchParams.get('requestId')
+    if (!requestId) return
+
+    const request = requests.find((item) => item.id === requestId)
+    if (!request) return
+
+    const timer = window.setTimeout(() => {
+      if (['COMPLETED', 'CANCELLED'].includes(request.status)) {
+        setSelected(request)
+        setModal('detail')
+      } else {
+        openProcess(request)
+      }
+
+      setSearchParams((current) => {
+        const next = new URLSearchParams(current)
+        next.delete('requestId')
+        return next
+      }, { replace: true })
+    }, 0)
+
+    return () => window.clearTimeout(timer)
+  }, [isLoading, requests, searchParams, setSearchParams])
 
   const filteredRequests = useMemo(() => {
     const keyword = filters.keyword.trim().toLowerCase()

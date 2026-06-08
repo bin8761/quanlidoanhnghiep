@@ -1,4 +1,6 @@
 const assignmentsRepository = require("./assignments.repository");
+const notificationsService = require("../notifications/notifications.service");
+const logger = require("../../config/logger");
 const AppError = require("../../shared/errors/AppError");
 const ERROR_CODES = require("../../shared/errors/errorCodes");
 
@@ -6,7 +8,7 @@ function workflowError(message, statusCode = 400) {
   return new AppError({ message, statusCode, errorCode: ERROR_CODES.VALIDATION_ERROR });
 }
 
-function createAssignmentsService({ repository = assignmentsRepository } = {}) {
+function createAssignmentsService({ repository = assignmentsRepository, notifications = notificationsService } = {}) {
   return Object.freeze({
     async getMyAssignments(authenticatedUser) {
       if (!authenticatedUser) throw new Error("Unauthorized");
@@ -38,7 +40,14 @@ function createAssignmentsService({ repository = assignmentsRepository } = {}) {
       const activeAssignment = await repository.findActiveAssignmentByAssetId(data.assetId);
       if (activeAssignment) throw workflowError("Asset already has an active assignment");
 
-      return repository.assignAsset(data);
+      const assignment = await repository.assignAsset(data);
+      try {
+        await notifications.notifyAssetAssigned(assignment);
+      } catch (error) {
+        logger.error({ err: error, assignmentId: assignment.id }, "Failed to publish asset assignment notification");
+      }
+
+      return assignment;
     },
 
     async returnAsset(data) {

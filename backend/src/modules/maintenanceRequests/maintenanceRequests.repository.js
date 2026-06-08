@@ -12,7 +12,15 @@ const MAINTENANCE_SELECT = Object.freeze({
   createdAt: true,
   updatedAt: true,
   asset: { select: { id: true, assetCode: true, name: true, status: true } },
-  requester: { select: { id: true, employeeCode: true, fullName: true, departmentId: true } },
+  requester: {
+    select: {
+      id: true,
+      employeeCode: true,
+      fullName: true,
+      departmentId: true,
+      user: { select: { id: true } },
+    },
+  },
 });
 
 function createMaintenanceRequestsRepository(prismaClient = defaultPrisma) {

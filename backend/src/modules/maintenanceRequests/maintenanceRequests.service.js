@@ -1,4 +1,6 @@
 const repository = require("./maintenanceRequests.repository");
+const notificationsService = require("../notifications/notifications.service");
+const logger = require("../../config/logger");
 const AppError = require("../../shared/errors/AppError");
 const ERROR_CODES = require("../../shared/errors/errorCodes");
 const { ADMIN, USER } = require("../../shared/constants/roles");
@@ -41,7 +43,7 @@ async function resolveRequester({ maintenanceRepository, authenticatedUser, requ
 
 const typesRequiringAsset = ["INCIDENT", "MAINTENANCE", "EXCHANGE", "RECALL"];
 
-function createMaintenanceRequestsService({ maintenanceRepository = repository } = {}) {
+function createMaintenanceRequestsService({ maintenanceRepository = repository, notifications = notificationsService } = {}) {
   return Object.freeze({
     async getAll(filters = {}, context = {}) {
       const requesterId = await resolveRequester({
@@ -97,10 +99,18 @@ function createMaintenanceRequestsService({ maintenanceRepository = repository }
         }
       }
 
-      return maintenanceRepository.create({
+      const request = await maintenanceRepository.create({
         ...data,
         requesterId,
       });
+
+      try {
+        await notifications.notifyMaintenanceRequestCreated(request);
+      } catch (error) {
+        logger.error({ err: error, requestId: request.id }, "Failed to publish maintenance request notification");
+      }
+
+      return request;
     },
 
     async updateStatus(id, data) {
@@ -120,10 +130,18 @@ function createMaintenanceRequestsService({ maintenanceRepository = repository }
         nextAssetStatus = undefined;
       }
 
-      return maintenanceRepository.updateStatus(id, {
+      const updatedRequest = await maintenanceRepository.updateStatus(id, {
         ...data,
         assetStatus: nextAssetStatus,
       });
+
+      try {
+        await notifications.notifyMaintenanceRequestUpdated(updatedRequest);
+      } catch (error) {
+        logger.error({ err: error, requestId: updatedRequest.id }, "Failed to publish maintenance update notification");
+      }
+
+      return updatedRequest;
     },
   });
 }

@@ -32,6 +32,7 @@ export default function EmployeeHistoryPage() {
   const [activeTab, setActiveTab] = useState('allocation')
   const [allocationHistory, setAllocationHistory] = useState([])
   const [maintenanceHistory, setMaintenanceHistory] = useState([])
+  const [loadError, setLoadError] = useState('')
 
   useEffect(() => {
     Promise.all([getMyAssignmentHistory(), getMyMaintenanceHistory()])
@@ -40,8 +41,7 @@ export default function EmployeeHistoryPage() {
         setMaintenanceHistory(maint)
       })
       .catch((err) => {
-        console.error('Failed to load history:', err)
-        // Nếu là lỗi 401, user đã được redirect về login
+        setLoadError(err.message)
       })
   }, [])
 
@@ -52,6 +52,12 @@ export default function EmployeeHistoryPage() {
         title="Lịch sử hoạt động"
         description="Toàn bộ lịch sử bàn giao tài sản và yêu cầu bảo trì của bạn."
       />
+
+      {loadError && (
+        <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700">
+          {loadError}
+        </div>
+      )}
 
       <div className="mb-5 flex gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
         {tabs.map(({ key, label, icon: Icon }) => (

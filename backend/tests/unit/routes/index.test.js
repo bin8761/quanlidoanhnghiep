@@ -33,6 +33,7 @@ describe('routes/index', () => {
     jest.doMock('../../../src/modules/maintenanceRequests/maintenanceRequests.route', () => ({ mocked: 'maintenanceRequestsRouter' }));
     jest.doMock('../../../src/modules/inventory/inventory.route', () => ({ mocked: 'inventoryRouter' }));
     jest.doMock('../../../src/modules/reports/reports.route', () => ({ mocked: 'reportsRouter' }));
+    jest.doMock('../../../src/modules/notifications/notifications.route', () => ({ mocked: 'notificationsRouter' }));
 
     return {
       routesIndex: require('../../../src/routes/index'),
@@ -53,6 +54,7 @@ describe('routes/index', () => {
     expect(apiRouter.use).toHaveBeenCalledWith('/maintenance-requests', expect.anything());
     expect(apiRouter.use).toHaveBeenCalledWith('/', expect.anything());
     expect(apiRouter.use).toHaveBeenCalledWith('/reports', expect.anything());
+    expect(apiRouter.use).toHaveBeenCalledWith('/notifications', expect.anything());
     expect(rootRouter.use).toHaveBeenCalledWith(
       '/api',
       expect.objectContaining({

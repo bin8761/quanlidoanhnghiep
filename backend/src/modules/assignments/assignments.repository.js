@@ -22,6 +22,7 @@ const ASSIGNMENT_SELECT = Object.freeze({
       assetCode: true,
       name: true,
       status: true,
+      serialNumber: true,
       category: { select: { id: true, name: true } },
     },
   },
@@ -32,6 +33,7 @@ const ASSIGNMENT_SELECT = Object.freeze({
       fullName: true,
       departmentId: true,
       department: { select: { id: true, name: true } },
+      user: { select: { id: true } },
     },
   },
 });

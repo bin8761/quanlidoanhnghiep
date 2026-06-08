@@ -1,5 +1,6 @@
 import { Headphones, Plus, Send, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import Button from '../../components/ui/Button'
 import FormField from '../../components/ui/FormField'
 import PageHeader from '../../components/ui/PageHeader'
@@ -33,12 +34,15 @@ const requestTypeLabels = {
 const typesRequiringAsset = ['INCIDENT', 'MAINTENANCE', 'EXCHANGE', 'RECALL']
 
 export default function EmployeeRequestsPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [requests, setRequests] = useState([])
   const [formOpen, setFormOpen] = useState(false)
   const [success, setSuccess] = useState('')
+  const [error, setError] = useState('')
   const [form, setForm] = useState({ type: 'INCIDENT', asset: '', issue: '', priority: 'Trung bình' })
   const [myAssets, setMyAssets] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [highlightedRequestId, setHighlightedRequestId] = useState('')
 
   useEffect(() => {
     Promise.all([getMyRequests(), getMyAssets()])
@@ -48,11 +52,43 @@ export default function EmployeeRequestsPage() {
         if (assetList.length) setForm((f) => ({ ...f, asset: assetList[0].asset?.assetCode }))
       })
       .catch((err) => {
-        console.error('Failed to load requests and assets:', err)
-        // Nếu là lỗi 401, user đã được redirect về login
+        setError(err.message)
       })
       .finally(() => setIsLoading(false))
   }, [])
+
+  useEffect(() => {
+    if (isLoading || !requests.length) return undefined
+
+    const requestId = searchParams.get('requestId')
+    if (!requestId) return undefined
+
+    const request = requests.find((item) => item.id === requestId)
+    if (!request) return undefined
+
+    const timer = window.setTimeout(() => {
+      setHighlightedRequestId(requestId)
+      document.getElementById(`maintenance-request-${requestId}`)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      })
+
+      setSearchParams((current) => {
+        const next = new URLSearchParams(current)
+        next.delete('requestId')
+        return next
+      }, { replace: true })
+    }, 0)
+
+    const clearHighlightTimer = window.setTimeout(() => {
+      setHighlightedRequestId('')
+    }, 4500)
+
+    return () => {
+      window.clearTimeout(timer)
+      window.clearTimeout(clearHighlightTimer)
+    }
+  }, [isLoading, requests, searchParams, setSearchParams])
 
   if (isLoading) {
     return (
@@ -93,10 +129,11 @@ export default function EmployeeRequestsPage() {
       setRequests(updated)
       setForm((f) => ({ ...f, issue: '' }))
       setFormOpen(false)
+      setError('')
       setSuccess('Yêu cầu hỗ trợ đã được gửi thành công.')
     } catch (err) {
-      console.error(err)
       setSuccess('')
+      setError(err.message)
     }
   }
 
@@ -116,6 +153,12 @@ export default function EmployeeRequestsPage() {
       {success && (
         <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
           {success}
+        </div>
+      )}
+
+      {error && (
+        <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700">
+          {error}
         </div>
       )}
 
@@ -199,7 +242,13 @@ export default function EmployeeRequestsPage() {
         </div>
         <div className="divide-y divide-slate-100">
           {requests.map((request) => (
-            <article className="grid gap-3 px-5 py-4 md:grid-cols-[110px_130px_110px_minmax(200px,1fr)_120px_120px] md:items-center md:gap-4" key={request.id}>
+            <article
+              className={`grid gap-3 px-5 py-4 transition md:grid-cols-[110px_130px_110px_minmax(200px,1fr)_120px_120px] md:items-center md:gap-4 ${
+                highlightedRequestId === request.id ? 'bg-amber-50 ring-1 ring-inset ring-amber-200' : ''
+              }`}
+              id={`maintenance-request-${request.id}`}
+              key={request.id}
+            >
               <strong className="text-xs text-brand-700">MR-{request.id.slice(0, 8).toUpperCase()}</strong>
               <span className="text-xs font-semibold text-slate-700">{requestTypeLabels[request.type] || request.type}</span>
               <span className="text-xs text-slate-600">{request.asset?.assetCode || '—'}</span>

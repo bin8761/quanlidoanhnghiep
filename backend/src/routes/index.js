@@ -10,6 +10,7 @@ const assignmentsRouter = require("../modules/assignments/assignments.route");
 const maintenanceRequestsRouter = require("../modules/maintenanceRequests/maintenanceRequests.route");
 const inventoryRouter = require("../modules/inventory/inventory.route");
 const reportsRouter = require("../modules/reports/reports.route");
+const notificationsRouter = require("../modules/notifications/notifications.route");
 
 const rootRouter = express.Router();
 const apiRouter = express.Router();
@@ -24,6 +25,7 @@ apiRouter.use("/assignments", assignmentsRouter);
 apiRouter.use("/maintenance-requests", maintenanceRequestsRouter);
 apiRouter.use("/", inventoryRouter);
 apiRouter.use("/reports", reportsRouter);
+apiRouter.use("/notifications", notificationsRouter);
 
 rootRouter.use("/api", apiRouter);
 

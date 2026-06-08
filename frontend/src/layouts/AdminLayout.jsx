@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Bell, Menu, Search } from 'lucide-react'
+import { Menu, Search } from 'lucide-react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import NotificationBell from '../components/layout/NotificationBell'
 import Sidebar from '../components/layout/Sidebar'
+import SyncStatusBadge from '../components/layout/SyncStatusBadge'
 import Modal from '../components/ui/Modal'
+import { useNotifications } from '../notifications/notifications-context'
 import { managementPages } from '../pages/admin/managementData'
 
 const PAGE_TITLES = {
@@ -18,6 +21,7 @@ export default function AdminLayout() {
   const [keyword, setKeyword] = useState('')
   const location = useLocation()
   const navigate = useNavigate()
+  const { connectionStatus } = useNotifications()
   const title = PAGE_TITLES[location.pathname] || 'Quản trị tài sản'
   const destinations = useMemo(
     () => Object.entries(PAGE_TITLES).map(([path, label]) => ({ path, label })),
@@ -90,17 +94,8 @@ export default function AdminLayout() {
                 Ctrl K
               </span>
             </button>
-            <span className="hidden items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1.5 text-[11px] font-bold text-brand-700 sm:inline-flex">
-              <span className="size-1.5 rounded-full bg-emerald-500" />
-              Hệ thống hoạt động
-            </span>
-            <button
-              className="icon-button relative"
-              type="button"
-              title="Không có thông báo mới"
-            >
-              <Bell size={18} />
-            </button>
+            <SyncStatusBadge status={connectionStatus} systemLabel="Hệ thống hoạt động" />
+            <NotificationBell />
           </div>
         </header>
 
@@ -119,7 +114,10 @@ export default function AdminLayout() {
           }}
         >
           <div className="relative">
-            <Search className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-slate-400" size={17} />
+            <Search
+              className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-slate-400"
+              size={17}
+            />
             <input
               className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pr-4 pl-11 text-sm outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/10"
               autoFocus
@@ -138,11 +136,15 @@ export default function AdminLayout() {
                 onClick={() => openDestination(item.path)}
               >
                 {item.label}
-                <span className="text-xs font-normal text-slate-400">{item.path.replace('/admin/', '')}</span>
+                <span className="text-xs font-normal text-slate-400">
+                  {item.path.replace('/admin/', '')}
+                </span>
               </button>
             ))}
             {!filteredDestinations.length && (
-              <p className="py-10 text-center text-sm text-slate-500">Không tìm thấy chức năng phù hợp.</p>
+              <p className="py-10 text-center text-sm text-slate-500">
+                Không tìm thấy chức năng phù hợp.
+              </p>
             )}
           </div>
         </Modal>
