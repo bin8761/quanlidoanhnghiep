@@ -1,79 +1,7 @@
 import { ArrowRightLeft, CalendarDays, Clock, Wrench } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import PageHeader from '../../components/ui/PageHeader'
-
-// Demo data — Week 3: replace with GET /api/assignments/history and GET /api/maintenance-requests
-const allocationHistory = [
-  {
-    id: 1,
-    assetCode: 'LT-0248',
-    assetName: 'Dell Latitude 5440',
-    type: 'Bàn giao',
-    date: '04/06/2026',
-    note: 'Bàn giao thiết bị cho nhân viên mới',
-    status: 'ACTIVE',
-  },
-  {
-    id: 2,
-    assetCode: 'MN-0131',
-    assetName: 'Dell P2422H',
-    type: 'Bàn giao',
-    date: '04/06/2026',
-    note: '',
-    status: 'ACTIVE',
-  },
-  {
-    id: 3,
-    assetCode: 'LT-0101',
-    assetName: 'HP EliteBook 840 G8',
-    type: 'Thu hồi',
-    date: '01/08/2025',
-    note: 'Thu hồi do chuyển phòng ban',
-    status: 'RETURNED',
-  },
-  {
-    id: 4,
-    assetCode: 'KB-0084',
-    assetName: 'Logitech K380',
-    type: 'Bàn giao',
-    date: '12/01/2026',
-    note: '',
-    status: 'ACTIVE',
-  },
-]
-
-const maintenanceHistory = [
-  {
-    id: 1,
-    code: 'MR-1029',
-    assetCode: 'LT-0248',
-    assetName: 'Dell Latitude 5440',
-    issue: 'Pin sạc chậm và nhanh hết',
-    status: 'IN_PROGRESS',
-    createdAt: '03/06/2026',
-    resolvedAt: null,
-  },
-  {
-    id: 2,
-    code: 'MR-0987',
-    assetCode: 'MN-0131',
-    assetName: 'Dell P2422H',
-    issue: 'Màn hình chớp trong vài giây khi khởi động',
-    status: 'COMPLETED',
-    createdAt: '18/05/2026',
-    resolvedAt: '25/05/2026',
-  },
-  {
-    id: 3,
-    code: 'MR-0812',
-    assetCode: 'LT-0248',
-    assetName: 'Dell Latitude 5440',
-    issue: 'Quạt tản nhiệt kêu to khi chạy nặng',
-    status: 'COMPLETED',
-    createdAt: '10/03/2026',
-    resolvedAt: '18/03/2026',
-  },
-]
+import { getMyAssignmentHistory, getMyMaintenanceHistory } from '../../services/employee.service'
 
 const allocationStatusTone = {
   ACTIVE: 'border-emerald-200 bg-emerald-50 text-emerald-700',
@@ -102,6 +30,20 @@ const tabs = [
 
 export default function EmployeeHistoryPage() {
   const [activeTab, setActiveTab] = useState('allocation')
+  const [allocationHistory, setAllocationHistory] = useState([])
+  const [maintenanceHistory, setMaintenanceHistory] = useState([])
+
+  useEffect(() => {
+    Promise.all([getMyAssignmentHistory(), getMyMaintenanceHistory()])
+      .then(([alloc, maint]) => {
+        setAllocationHistory(alloc)
+        setMaintenanceHistory(maint)
+      })
+      .catch((err) => {
+        console.error('Failed to load history:', err)
+        // Nếu là lỗi 401, user đã được redirect về login
+      })
+  }, [])
 
   return (
     <div className="animate-fade-up">

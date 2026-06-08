@@ -473,3 +473,62 @@ test('all admin pages remain responsive and console-clean', async ({ page }) => 
   await page.screenshot({ path: 'test-results/week5-admin-dashboard-mobile.png', fullPage: true })
   expect(errors).toEqual([])
 })
+
+test('employee change password validates and submits correctly', async ({ page }) => {
+  const errors = collectConsoleErrors(page)
+
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await loginAsEmployee(page)
+  await page.goto('/employee/change-password')
+  await expect(page.getByRole('heading', { name: 'Đổi mật khẩu' })).toBeVisible()
+
+  // Submit trống → validate
+  await page.getByRole('button', { name: 'Cập nhật mật khẩu' }).click()
+  await expect(page.getByText('Vui lòng nhập mật khẩu hiện tại.')).toBeVisible()
+
+  // Mật khẩu mới không đủ mạnh
+  await page.getByPlaceholder('Nhập mật khẩu đang dùng').fill('Active1234')
+  await page.getByPlaceholder('Nhập mật khẩu mới').fill('abc')
+  await page.getByRole('button', { name: 'Cập nhật mật khẩu' }).click()
+  await expect(page.getByText('Mật khẩu mới cần ít nhất 8 ký tự, gồm chữ và số.')).toBeVisible()
+
+  expect(errors).toEqual([])
+})
+
+test('all employee pages remain responsive and console-clean', async ({ page }) => {
+  const errors = collectConsoleErrors(page)
+  const routes = [
+    '/employee/dashboard',
+    '/employee/assets',
+    '/employee/requests',
+    '/employee/history',
+    '/employee/profile',
+    '/employee/change-password',
+  ]
+
+  await page.setViewportSize({ width: 1366, height: 900 })
+  await loginAsEmployee(page)
+
+  for (const route of routes) {
+    await page.goto(route)
+    await expect(page.locator('main')).toBeVisible()
+    const hasOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    )
+    expect(hasOverflow, `desktop overflow at ${route}`).toBe(false)
+  }
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  for (const route of routes) {
+    await page.goto(route)
+    const hasOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    )
+    expect(hasOverflow, `mobile overflow at ${route}`).toBe(false)
+  }
+
+  await page.goto('/employee/dashboard')
+  await page.waitForTimeout(500)
+  await page.screenshot({ path: 'test-results/week5-employee-dashboard-mobile.png', fullPage: true })
+  expect(errors).toEqual([])
+})

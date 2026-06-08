@@ -1,20 +1,27 @@
 import { Boxes, CalendarDays, Hash, Laptop, Search, Tag } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useMemo, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import PageHeader from '../../components/ui/PageHeader'
-import { employeeAssets } from './employeeData'
+import { getMyAssets } from '../../services/employee.service'
 
 export default function EmployeeAssetsPage() {
   const [query, setQuery] = useState('')
+  const [assets, setAssets] = useState([])
+
+  useEffect(() => {
+    getMyAssets()
+      .then(setAssets)
+      .catch(() => setAssets([]))
+  }, [])
 
   const filteredAssets = useMemo(
     () =>
-      employeeAssets.filter((asset) =>
-        `${asset.code} ${asset.name} ${asset.category}`
+      assets.filter((asset) =>
+        `${asset.assetCode} ${asset.name} ${asset.category?.name || ''}`
           .toLowerCase()
           .includes(query.toLowerCase()),
       ),
-    [query],
+    [assets, query],
   )
 
   return (

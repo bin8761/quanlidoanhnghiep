@@ -38,6 +38,24 @@ const ASSIGNMENT_SELECT = Object.freeze({
 
 function createAssignmentsRepository(prismaClient = defaultPrisma) {
   return Object.freeze({
+    async findEmployeeByUserId(userId) {
+      return prismaClient.employee.findFirst({
+        where: { user: { id: userId } },
+        select: { id: true, fullName: true, employeeCode: true },
+      });
+    },
+
+    async findMyAssignments(employeeId) {
+      return prismaClient.assetAssignment.findMany({
+        where: {
+          employeeId,
+          status: "ACTIVE",
+        },
+        orderBy: { assignedAt: "desc" },
+        select: ASSIGNMENT_SELECT,
+      });
+    },
+
     async findHistory(filters = {}) {
       const where = {};
       if (filters.assetId) where.assetId = filters.assetId;
