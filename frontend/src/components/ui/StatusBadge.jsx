@@ -17,10 +17,31 @@ const statusTone = {
   TRANSFERRED: 'border-slate-200 bg-slate-50 text-slate-600',
 }
 
+const statusLabel = {
+  AVAILABLE: 'Sẵn sàng',
+  ACTIVE: 'Đang hoạt động',
+  COMPLETED: 'Hoàn tất',
+  ASSIGNED: 'Đã bàn giao',
+  IN_PROGRESS: 'Đang xử lý',
+  PENDING: 'Chờ xử lý',
+  DRAFT: 'Bản nháp',
+  CANCELLED: 'Đã hủy',
+  OK: 'Bình thường',
+  MISSING: 'Thiếu',
+  DAMAGED: 'Hư hỏng',
+  BROKEN: 'Bị hỏng',
+  INACTIVE: 'Ngừng hoạt động',
+  MAINTENANCE: 'Đang bảo trì',
+  RETURNED: 'Đã thu hồi',
+  TRANSFERRED: 'Đã chuyển giao',
+  LOST: 'Thất lạc',
+  DISPOSED: 'Đã thanh lý',
+}
+
 export default function StatusBadge({ status }) {
   const normalizedStatus = String(status || '').toUpperCase()
   const tone = statusTone[normalizedStatus] || 'border-slate-200 bg-slate-50 text-slate-600'
-  const label = normalizedStatus.replaceAll('_', ' ')
+  const label = statusLabel[normalizedStatus] || normalizedStatus.replaceAll('_', ' ')
 
   return (
     <span

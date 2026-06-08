@@ -62,8 +62,15 @@ test('desktop login and dashboard render without console errors', async ({ page 
   await expect(page.getByLabel('Email công ty')).toBeVisible()
   await page.getByRole('button', { name: 'Đăng nhập hệ thống' }).click()
   await expect(page).toHaveURL(/\/admin\/dashboard$/)
-  await expect(page.getByRole('heading', { name: 'Chào buổi sáng, Quản trị viên' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Chào buổi (sáng|chiều|tối), Quản trị viên/ })).toBeVisible()
   await expect(page.getByText('Tổng tài sản', { exact: true })).toBeVisible()
+  await page.keyboard.press('Control+k')
+  const quickSearch = page.getByRole('dialog', { name: 'Đi tới chức năng' })
+  await expect(quickSearch).toBeVisible()
+  await quickSearch.getByPlaceholder('Nhập tên chức năng...').fill('Báo cáo')
+  await quickSearch.getByRole('button', { name: /Báo cáo tài sản/ }).click()
+  await expect(page).toHaveURL(/\/admin\/reports$/)
+  await page.goto('/admin/dashboard')
   await page.waitForTimeout(500)
   await page.screenshot({ path: 'test-results/desktop-dashboard.png', fullPage: true })
 
@@ -105,7 +112,7 @@ test('management table, empty state and modal work without console errors', asyn
 
   await page.setViewportSize({ width: 1280, height: 900 })
   await loginAsAdmin(page)
-  await page.getByRole('link', { name: 'Tài sản' }).click()
+  await page.getByRole('link', { name: 'Tài sản', exact: true }).click()
 
   await expect(page.getByRole('heading', { level: 2, name: 'Quản lý tài sản' })).toBeVisible()
   const search = page.getByPlaceholder('Tìm theo mã, tên hoặc serial...')
@@ -181,7 +188,7 @@ test('admin can create, update and delete a category through the real API', asyn
   await page.setViewportSize({ width: 1280, height: 900 })
   await loginAsAdmin(page)
 
-  await page.getByRole('link', { name: 'Danh mục' }).click()
+  await page.getByRole('link', { name: 'Danh mục', exact: true }).click()
   await expect(page.getByRole('heading', { level: 2, name: 'Danh mục tài sản' })).toBeVisible()
 
   await page.getByRole('button', { name: 'Thêm danh mục' }).click()
@@ -232,7 +239,7 @@ test('admin can manage departments, employees and assets through the real APIs',
   await page.setViewportSize({ width: 1440, height: 960 })
   await loginAsAdmin(page)
 
-  await page.getByRole('link', { name: 'Phòng ban' }).click()
+  await page.getByRole('link', { name: 'Phòng ban', exact: true }).click()
   await page.getByRole('button', { name: 'Thêm phòng ban' }).click()
   await page.getByLabel('Tên phòng ban').fill(departmentName)
   await page.getByLabel('Mô tả').fill('Phòng ban được tạo bởi kiểm thử UI')
@@ -246,7 +253,7 @@ test('admin can manage departments, employees and assets through the real APIs',
   await page.getByRole('button', { name: 'Lưu thay đổi' }).click()
   await expect(page.getByText('Cập nhật phòng ban thành công.')).toBeVisible()
 
-  await page.getByRole('link', { name: 'Nhân viên' }).click()
+  await page.getByRole('link', { name: 'Nhân viên', exact: true }).click()
   await page.getByRole('button', { name: 'Thêm nhân viên' }).click()
   await page.getByLabel('Mã nhân viên').fill(employeeCode)
   await page.getByLabel('Họ và tên').fill(employeeName)
@@ -262,7 +269,7 @@ test('admin can manage departments, employees and assets through the real APIs',
   await page.getByRole('button', { name: 'Lưu thay đổi' }).click()
   await expect(page.getByText('Cập nhật nhân viên thành công.')).toBeVisible()
 
-  await page.getByRole('link', { name: 'Tài sản' }).click()
+  await page.getByRole('link', { name: 'Tài sản', exact: true }).click()
   await page.getByRole('button', { name: 'Thêm tài sản' }).click()
   await page.getByLabel('Mã tài sản').fill(assetCode)
   await page.getByLabel('Tên tài sản').fill(assetName)
@@ -286,7 +293,7 @@ test('admin can manage departments, employees and assets through the real APIs',
     .click()
   await expect(page.getByText('Xóa tài sản thành công.')).toBeVisible()
 
-  await page.getByRole('link', { name: 'Nhân viên' }).click()
+  await page.getByRole('link', { name: 'Nhân viên', exact: true }).click()
   await page.getByTitle(`Xóa ${updatedEmployeeName}`).click()
   await page
     .getByRole('dialog', { name: `Xóa nhân viên "${updatedEmployeeName}"?` })
@@ -294,7 +301,7 @@ test('admin can manage departments, employees and assets through the real APIs',
     .click()
   await expect(page.getByText('Xóa nhân viên thành công.')).toBeVisible()
 
-  await page.getByRole('link', { name: 'Phòng ban' }).click()
+  await page.getByRole('link', { name: 'Phòng ban', exact: true }).click()
   await page.getByTitle(`Xóa ${updatedDepartmentName}`).click()
   await page
     .getByRole('dialog', { name: `Xóa phòng ban "${updatedDepartmentName}"?` })
@@ -329,7 +336,7 @@ test('admin can assign, transfer and return an asset through the real APIs', asy
   await page.setViewportSize({ width: 1440, height: 960 })
   await loginAsAdmin(page)
 
-  await page.getByRole('link', { name: 'Tài sản' }).click()
+  await page.getByRole('link', { name: 'Tài sản', exact: true }).click()
   await page.getByRole('button', { name: 'Thêm tài sản' }).click()
   const assetDialog = page.getByRole('dialog', { name: 'Thêm tài sản' })
   await assetDialog.getByLabel('Mã tài sản').fill(assetCode)
@@ -338,7 +345,7 @@ test('admin can assign, transfer and return an asset through the real APIs', asy
   await assetDialog.getByRole('button', { name: 'Thêm tài sản', exact: true }).click()
   await expect(page.getByText('Thêm tài sản thành công.')).toBeVisible()
 
-  await page.getByRole('link', { name: 'Bàn giao' }).click()
+  await page.getByRole('link', { name: 'Bàn giao', exact: true }).click()
 
   await expect(page.getByRole('heading', { level: 2, name: 'Quản lý bàn giao' })).toBeVisible()
   await page.screenshot({ path: 'test-results/week3-assignment-desktop.png', fullPage: true })
@@ -389,21 +396,21 @@ test('admin can open maintenance, inventory and report workflows', async ({ page
   await page.setViewportSize({ width: 1440, height: 960 })
   await loginAsAdmin(page)
 
-  await page.getByRole('link', { name: 'Bảo trì' }).click()
+  await page.getByRole('link', { name: 'Bảo trì', exact: true }).click()
   await expect(page.getByRole('heading', { level: 2, name: 'Yêu cầu bảo trì' })).toBeVisible()
   await page.getByRole('button', { name: 'Tạo yêu cầu' }).click()
   const maintenanceDialog = page.getByRole('dialog', { name: 'Tạo yêu cầu bảo trì' })
   await expect(maintenanceDialog).toBeVisible()
   await maintenanceDialog.getByRole('button', { name: 'Đóng' }).click()
 
-  await page.getByRole('link', { name: 'Kiểm kê' }).click()
+  await page.getByRole('link', { name: 'Kiểm kê', exact: true }).click()
   await expect(page.getByRole('heading', { level: 2, name: 'Phiên kiểm kê' })).toBeVisible()
   await page.getByRole('button', { name: 'Tạo phiên kiểm kê' }).click()
   const inventoryDialog = page.getByRole('dialog', { name: 'Tạo phiên kiểm kê' })
   await expect(inventoryDialog).toBeVisible()
   await inventoryDialog.getByRole('button', { name: 'Đóng' }).click()
 
-  await page.getByRole('link', { name: 'Báo cáo' }).click()
+  await page.getByRole('link', { name: 'Báo cáo', exact: true }).click()
   await expect(page.getByRole('heading', { level: 2, name: 'Báo cáo tài sản' })).toBeVisible()
   await expect(page.getByText('Tổng tài sản')).toBeVisible()
   await expect(page.getByText('Tài sản theo danh mục')).toBeVisible()
@@ -417,5 +424,52 @@ test('admin can open maintenance, inventory and report workflows', async ({ page
   )
 
   expect(hasHorizontalOverflow).toBe(false)
+  expect(errors).toEqual([])
+})
+
+test('all admin pages remain responsive and console-clean', async ({ page }) => {
+  const errors = collectConsoleErrors(page)
+  const routes = [
+    '/admin/dashboard',
+    '/admin/assets',
+    '/admin/categories',
+    '/admin/employees',
+    '/admin/departments',
+    '/admin/assignments',
+    '/admin/maintenance',
+    '/admin/inventory',
+    '/admin/reports',
+  ]
+
+  await page.setViewportSize({ width: 1366, height: 900 })
+  await loginAsAdmin(page)
+
+  for (const route of routes) {
+    await page.goto(route)
+    await expect(page.locator('main')).toBeVisible()
+    const hasDesktopOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    )
+    expect(hasDesktopOverflow, `desktop overflow at ${route}`).toBe(false)
+  }
+
+  await page.goto('/admin/dashboard')
+  await page.waitForTimeout(600)
+  await page.screenshot({ path: 'test-results/week5-admin-dashboard-desktop.png', fullPage: true })
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.waitForTimeout(500)
+
+  for (const route of routes) {
+    await page.goto(route)
+    await expect(page.locator('main')).toBeVisible()
+    const hasMobileOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    )
+    expect(hasMobileOverflow, `mobile overflow at ${route}`).toBe(false)
+  }
+
+  await page.goto('/admin/dashboard')
+  await page.waitForTimeout(600)
+  await page.screenshot({ path: 'test-results/week5-admin-dashboard-mobile.png', fullPage: true })
   expect(errors).toEqual([])
 })

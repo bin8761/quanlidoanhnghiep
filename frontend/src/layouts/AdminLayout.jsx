@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Bell, Menu, Search } from 'lucide-react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import Sidebar from '../components/layout/Sidebar'
+import Modal from '../components/ui/Modal'
 import { managementPages } from '../pages/admin/managementData'
 
 const PAGE_TITLES = {
@@ -13,8 +14,36 @@ const PAGE_TITLES = {
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [keyword, setKeyword] = useState('')
   const location = useLocation()
+  const navigate = useNavigate()
   const title = PAGE_TITLES[location.pathname] || 'Quản trị tài sản'
+  const destinations = useMemo(
+    () => Object.entries(PAGE_TITLES).map(([path, label]) => ({ path, label })),
+    [],
+  )
+  const filteredDestinations = destinations.filter((item) =>
+    item.label.toLowerCase().includes(keyword.trim().toLowerCase()),
+  )
+
+  useEffect(() => {
+    function handleShortcut(event) {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        setSearchOpen(true)
+      }
+    }
+
+    window.addEventListener('keydown', handleShortcut)
+    return () => window.removeEventListener('keydown', handleShortcut)
+  }, [])
+
+  function openDestination(path) {
+    setSearchOpen(false)
+    setKeyword('')
+    navigate(path)
+  }
 
   return (
     <div className="min-h-screen bg-[#f3f7f5] lg:grid lg:grid-cols-[272px_minmax(0,1fr)]">
@@ -52,6 +81,7 @@ export default function AdminLayout() {
               className="hidden min-h-10 w-64 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 text-left text-xs text-slate-400 transition hover:border-slate-300 hover:bg-white md:flex"
               type="button"
               title="Tìm kiếm"
+              onClick={() => setSearchOpen(true)}
             >
               <Search size={15} />
               Tìm kiếm nhanh...
@@ -66,10 +96,9 @@ export default function AdminLayout() {
             <button
               className="relative grid size-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-slate-300 hover:text-slate-900"
               type="button"
-              title="Thông báo"
+              title="Không có thông báo mới"
             >
               <Bell size={18} />
-              <span className="absolute top-2 right-2 size-2 rounded-full border-2 border-white bg-red-500" />
             </button>
           </div>
         </header>
@@ -78,6 +107,45 @@ export default function AdminLayout() {
           <Outlet />
         </div>
       </main>
+
+      {searchOpen && (
+        <Modal
+          title="Đi tới chức năng"
+          description="Tìm nhanh một khu vực trong không gian quản trị."
+          onClose={() => {
+            setSearchOpen(false)
+            setKeyword('')
+          }}
+        >
+          <div className="relative">
+            <Search className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-slate-400" size={17} />
+            <input
+              className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 pr-4 pl-11 text-sm outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/10"
+              autoFocus
+              type="search"
+              value={keyword}
+              placeholder="Nhập tên chức năng..."
+              onChange={(event) => setKeyword(event.target.value)}
+            />
+          </div>
+          <div className="mt-4 grid max-h-80 gap-1 overflow-y-auto">
+            {filteredDestinations.map((item) => (
+              <button
+                className="flex min-h-11 items-center justify-between rounded-xl px-3 text-left text-sm font-semibold text-slate-700 transition hover:bg-brand-50 hover:text-brand-800"
+                key={item.path}
+                type="button"
+                onClick={() => openDestination(item.path)}
+              >
+                {item.label}
+                <span className="text-xs font-normal text-slate-400">{item.path.replace('/admin/', '')}</span>
+              </button>
+            ))}
+            {!filteredDestinations.length && (
+              <p className="py-10 text-center text-sm text-slate-500">Không tìm thấy chức năng phù hợp.</p>
+            )}
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }
