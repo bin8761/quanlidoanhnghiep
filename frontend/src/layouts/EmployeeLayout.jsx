@@ -1,7 +1,8 @@
-import { Bell, Menu } from 'lucide-react'
+import { Bell, Menu, QrCode } from 'lucide-react'
 import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import EmployeeSidebar from '../components/layout/EmployeeSidebar'
+import QrScannerModal from '../components/ui/QrScannerModal'
 
 const PAGE_TITLES = {
   '/employee/dashboard': 'Tổng quan',
@@ -13,6 +14,7 @@ const PAGE_TITLES = {
 }
 export default function EmployeeLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [qrOpen, setQrOpen] = useState(false)
   const location = useLocation()
 
   return (
@@ -62,6 +64,14 @@ export default function EmployeeLayout() {
               <Bell size={18} />
               <span className="absolute top-2 right-2 size-2 rounded-full border-2 border-white bg-amber-500" />
             </button>
+            <button
+              className="icon-button"
+              type="button"
+              title="Quét mã QR"
+              onClick={() => setQrOpen(true)}
+            >
+              <QrCode size={18} />
+            </button>
           </div>
         </header>
 
@@ -69,6 +79,7 @@ export default function EmployeeLayout() {
           <Outlet />
         </div>
       </main>
+      {qrOpen && <QrScannerModal onClose={() => setQrOpen(false)} />}
     </div>
   )
 }

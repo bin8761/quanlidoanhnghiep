@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Bell, Menu, Search } from 'lucide-react'
+import { Bell, Menu, QrCode, Search } from 'lucide-react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import Sidebar from '../components/layout/Sidebar'
 import Modal from '../components/ui/Modal'
+import QrScannerModal from '../components/ui/QrScannerModal'
 import { managementPages } from '../pages/admin/managementData'
 
 const PAGE_TITLES = {
@@ -15,6 +16,7 @@ const PAGE_TITLES = {
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [qrOpen, setQrOpen] = useState(false)
   const [keyword, setKeyword] = useState('')
   const location = useLocation()
   const navigate = useNavigate()
@@ -101,6 +103,14 @@ export default function AdminLayout() {
             >
               <Bell size={18} />
             </button>
+            <button
+              className="icon-button"
+              type="button"
+              title="Quét mã QR"
+              onClick={() => setQrOpen(true)}
+            >
+              <QrCode size={18} />
+            </button>
           </div>
         </header>
 
@@ -147,6 +157,7 @@ export default function AdminLayout() {
           </div>
         </Modal>
       )}
+      {qrOpen && <QrScannerModal onClose={() => setQrOpen(false)} />}
     </div>
   )
 }

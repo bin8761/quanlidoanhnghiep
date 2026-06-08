@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Eye, Pencil, Plus, Trash2 } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 import { assetApi } from '../../api/assets'
 import { categoryApi } from '../../api/categories'
 import { departmentApi } from '../../api/departments'
@@ -45,15 +46,21 @@ function formatCurrency(value) {
 }
 
 export default function AssetsPage() {
+  const [searchParams] = useSearchParams()
   const [assets, setAssets] = useState([])
   const [categories, setCategories] = useState([])
   const [departments, setDepartments] = useState([])
   const [filters, setFilters] = useState({
-    keyword: '',
+    keyword: searchParams.get('search') || '',
     status: '',
     categoryId: '',
     departmentId: '',
   })
+
+  useEffect(() => {
+    const searchVal = searchParams.get('search') || ''
+    setFilters((current) => ({ ...current, keyword: searchVal }))
+  }, [searchParams])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [editingAsset, setEditingAsset] = useState(null)
@@ -310,6 +317,30 @@ export default function AssetsPage() {
             ))}
           </dl>
           {viewingAsset.notes && <p className="mt-4 rounded-xl border border-slate-200 p-4 text-sm leading-6 text-slate-600">{viewingAsset.notes}</p>}
+          <div className="mt-6 border-t border-slate-100 pt-5 text-center">
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Mã QR tài sản</h4>
+            <div className="mx-auto mt-3 grid size-44 place-items-center rounded-2xl border border-slate-200 bg-white p-2">
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(`${window.location.origin}/employee/assets/${viewingAsset.assetCode}`)}`}
+                alt={`Mã QR của ${viewingAsset.assetCode}`}
+                className="size-40"
+              />
+            </div>
+            <p className="mt-2 text-[10px] text-slate-400 truncate max-w-xs mx-auto font-medium">{`${window.location.origin}/employee/assets/${viewingAsset.assetCode}`}</p>
+            <button
+              type="button"
+              className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-brand-700 hover:text-brand-800 transition"
+              onClick={() => {
+                const link = document.createElement('a')
+                link.href = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`${window.location.origin}/employee/assets/${viewingAsset.assetCode}`)}`
+                link.download = `QR-${viewingAsset.assetCode}.png`
+                link.target = '_blank'
+                link.click()
+              }}
+            >
+              Tải xuống mã QR
+            </button>
+          </div>
         </Modal>
       )}
 
