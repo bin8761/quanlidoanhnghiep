@@ -10,6 +10,7 @@ const ASSET_SELECT = Object.freeze({
   name: true,
   categoryId: true,
   locationId: true,
+  ownerDepartmentId: true,
   locationX: true,
   locationY: true,
   serialNumber: true,
@@ -31,6 +32,12 @@ const ASSET_SELECT = Object.freeze({
       id: true,
       name: true,
       floorPlanUrl: true,
+    },
+  },
+  ownerDepartment: {
+    select: {
+      id: true,
+      name: true,
     },
   },
   assignments: {
@@ -138,6 +145,7 @@ function createAssetsRepository(prismaClient) {
           name: data.name,
           categoryId: Number(data.categoryId),
           locationId: data.locationId ? Number(data.locationId) : null,
+          ownerDepartmentId: data.ownerDepartmentId ? Number(data.ownerDepartmentId) : null,
           locationX: data.locationX !== undefined && data.locationX !== null ? Number(data.locationX) : null,
           locationY: data.locationY !== undefined && data.locationY !== null ? Number(data.locationY) : null,
           serialNumber: data.serialNumber ?? null,
@@ -157,6 +165,7 @@ function createAssetsRepository(prismaClient) {
       if (typeof data.name !== "undefined") updateData.name = data.name;
       if (typeof data.categoryId !== "undefined") updateData.categoryId = Number(data.categoryId);
       if (typeof data.locationId !== "undefined") updateData.locationId = data.locationId ? Number(data.locationId) : null;
+      if (typeof data.ownerDepartmentId !== "undefined") updateData.ownerDepartmentId = data.ownerDepartmentId ? Number(data.ownerDepartmentId) : null;
       if (typeof data.locationX !== "undefined") updateData.locationX = data.locationX !== null ? Number(data.locationX) : null;
       if (typeof data.locationY !== "undefined") updateData.locationY = data.locationY !== null ? Number(data.locationY) : null;
       if (typeof data.serialNumber !== "undefined") updateData.serialNumber = data.serialNumber;

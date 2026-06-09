@@ -31,6 +31,7 @@ const EMPTY_FORM = Object.freeze({
   assetCode: '',
   name: '',
   categoryId: '',
+  ownerDepartmentId: '',
   serialNumber: '',
   purchaseDate: '',
   value: '',
@@ -141,6 +142,7 @@ export default function AssetsPage() {
       assetCode: asset.assetCode,
       name: asset.name,
       categoryId: String(asset.categoryId),
+      ownerDepartmentId: asset.ownerDepartmentId ? String(asset.ownerDepartmentId) : '',
       serialNumber: asset.serialNumber || '',
       purchaseDate: toDateInputValue(asset.purchaseDate),
       value: asset.value === null ? '' : String(asset.value),
@@ -187,6 +189,7 @@ export default function AssetsPage() {
       const payload = {
         name: form.name.trim(),
         categoryId: Number(form.categoryId),
+        ownerDepartmentId: form.ownerDepartmentId ? Number(form.ownerDepartmentId) : null,
         serialNumber: form.serialNumber.trim() || null,
         purchaseDate: form.purchaseDate ? `${form.purchaseDate}T00:00:00.000Z` : null,
         value: form.value === '' ? null : Number(form.value),
@@ -377,6 +380,7 @@ export default function AssetsPage() {
               <FormField label="Mã tài sản" name="assetCode" value={form.assetCode} error={formErrors.assetCode} placeholder="VD: LT-0249" disabled={Boolean(editingAsset.id)} onChange={updateField} />
               <FormField label="Tên tài sản" name="name" value={form.name} error={formErrors.name} placeholder="VD: Dell Latitude 5440" onChange={updateField} />
               <FormField as="select" label="Danh mục" name="categoryId" value={form.categoryId} error={formErrors.categoryId} options={categoryOptions} onChange={updateField} />
+              <FormField as="select" label="Phòng ban sở hữu" name="ownerDepartmentId" value={form.ownerDepartmentId} options={[{ value: '', label: 'Chưa xác định' }, ...departments.map((department) => ({ value: String(department.id), label: department.name }))]} onChange={updateField} />
               <FormField label="Số serial" name="serialNumber" value={form.serialNumber} placeholder="Nhập số serial" onChange={updateField} />
               <FormField label="Ngày mua" name="purchaseDate" type="date" value={form.purchaseDate} onChange={updateField} />
               <FormField label="Giá trị (VND)" name="value" type="number" min="0" value={form.value} error={formErrors.value} placeholder="VD: 25000000" onChange={updateField} />
@@ -421,6 +425,7 @@ export default function AssetsPage() {
           <dl className="grid gap-4 text-sm sm:grid-cols-2">
             {[
               ['Danh mục', viewingAsset.category?.name || 'Chưa phân loại'],
+              ['Phòng ban sở hữu', viewingAsset.ownerDepartment?.name || 'Chưa xác định'],
               ['Serial', viewingAsset.serialNumber || 'Chưa cập nhật'],
               ['Ngày mua', viewingAsset.purchaseDate ? new Intl.DateTimeFormat('vi-VN').format(new Date(viewingAsset.purchaseDate)) : 'Chưa cập nhật'],
               ['Giá trị', formatCurrency(viewingAsset.value)],

@@ -1,7 +1,7 @@
 describe("assets.service", () => {
   const ASSET_ID = "22222222-2222-4222-8222-222222222222";
 
-  function loadAssetsService({ repositoryOverrides = {}, catRepositoryOverrides = {} } = {}) {
+  function loadAssetsService({ repositoryOverrides = {}, catRepositoryOverrides = {}, deptRepositoryOverrides = {} } = {}) {
     jest.resetModules();
 
     const repository = {
@@ -19,6 +19,10 @@ describe("assets.service", () => {
       findById: jest.fn(),
       ...catRepositoryOverrides,
     };
+    const deptRepository = {
+      findById: jest.fn(),
+      ...deptRepositoryOverrides,
+    };
 
     jest.doMock("../../../../src/modules/assets/assets.repository", () => repository);
     jest.doMock("../../../../src/modules/categories/categories.repository", () => catRepository);
@@ -27,12 +31,14 @@ describe("assets.service", () => {
     const assetsService = assetsServiceModule.createAssetsService({
       repository,
       catRepository,
+      deptRepository,
     });
 
     return {
       assetsService,
       repository,
       catRepository,
+      deptRepository,
     };
   }
 
@@ -103,6 +109,19 @@ describe("assets.service", () => {
     await expect(assetsService.createAsset(data)).rejects.toMatchObject({
       statusCode: 404,
       errorCode: "CATEGORY_NOT_FOUND",
+    });
+  });
+
+  test("createAsset throws 404 if owner department does not exist", async () => {
+    const data = { assetCode: "AST01", name: "Dell Laptop", categoryId: 1, ownerDepartmentId: 99 };
+    const { assetsService } = loadAssetsService({
+      repositoryOverrides: { findByAssetCode: jest.fn().mockResolvedValue(null) },
+      catRepositoryOverrides: { findById: jest.fn().mockResolvedValue({ id: 1 }) },
+      deptRepositoryOverrides: { findById: jest.fn().mockResolvedValue(null) },
+    });
+    await expect(assetsService.createAsset(data)).rejects.toMatchObject({
+      statusCode: 404,
+      errorCode: "DEPARTMENT_NOT_FOUND",
     });
   });
 
