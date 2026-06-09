@@ -128,6 +128,7 @@ model Department {
   updatedAt         DateTime           @updatedAt @map("updated_at")
   employees         Employee[]
   inventorySessions InventorySession[]
+  ownedAssets        Asset[]             @relation("AssetOwnerDepartment")
 
   @@map("departments")
 }
@@ -158,6 +159,7 @@ model Asset {
   name                String
   categoryId          Int                  @map("category_id")
   locationId          Int?                 @map("location_id")
+  ownerDepartmentId   Int?                 @map("owner_department_id")
   locationX           Float?               @map("location_x")
   locationY           Float?               @map("location_y")
   serialNumber        String?              @map("serial_number")
@@ -170,10 +172,12 @@ model Asset {
   updatedAt           DateTime             @updatedAt @map("updated_at")
   category            AssetCategory        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   location            Location?            @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  ownerDepartment     Department?          @relation("AssetOwnerDepartment", fields: [ownerDepartmentId], references: [id], onDelete: SetNull)
   assignments         AssetAssignment[]
   supportRequests      SupportRequest[]
   inventoryItems      InventoryItem[]
 
+  @@index([status, categoryId, ownerDepartmentId, locationId])
   @@map("assets")
 }
 
@@ -196,6 +200,9 @@ model AssetAssignment {
   asset      Asset            @relation(fields: [assetId], references: [id], onDelete: Restrict)
   employee   Employee         @relation(fields: [employeeId], references: [id], onDelete: Restrict)
 
+  @@index([assetId, status])
+  @@index([employeeId, status])
+  @@index([assignedAt])
   @@map("asset_assignments")
 }
 
@@ -303,6 +310,7 @@ model InventorySession {
   department   Department             @relation(fields: [departmentId], references: [id], onDelete: Restrict)
   items        InventoryItem[]
 
+  @@index([departmentId, status])
   @@map("inventory_sessions")
 }
 
@@ -328,6 +336,7 @@ model InventoryItem {
   location   Location?        @relation(fields: [locationId], references: [id], onDelete: SetNull)
 
   @@unique([sessionId, assetId])
+  @@index([assetId])
   @@map("inventory_items")
 }
 
