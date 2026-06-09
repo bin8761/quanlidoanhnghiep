@@ -167,7 +167,7 @@ export default function EmployeesPage() {
         const detail = await locationApi.get(data[0].id)
         setSelectedLocDetail(detail)
       }
-    } catch (err) {
+    } catch {
       setToast({ type: 'error', message: 'Lỗi tải danh sách sơ đồ' })
     }
   }
@@ -183,7 +183,7 @@ export default function EmployeesPage() {
         if (pinningEmployee.locationId === Number(locId)) {
           setPinCoords({ x: pinningEmployee.deskX, y: pinningEmployee.deskY })
         }
-      } catch (err) {
+      } catch {
         setSelectedLocDetail(null)
       }
     } else {

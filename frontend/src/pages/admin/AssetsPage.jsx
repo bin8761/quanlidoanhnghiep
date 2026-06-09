@@ -60,7 +60,10 @@ export default function AssetsPage() {
 
   useEffect(() => {
     const searchVal = searchParams.get('search') || ''
-    setFilters((current) => ({ ...current, keyword: searchVal }))
+    const timer = window.setTimeout(() => {
+      setFilters((current) => ({ ...current, keyword: searchVal }))
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [searchParams])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
@@ -215,7 +218,7 @@ export default function AssetsPage() {
         const detail = await locationApi.get(data[0].id)
         setSelectedLocDetail(detail)
       }
-    } catch (err) {
+    } catch {
       setToast({ type: 'error', message: 'Lỗi tải danh sách sơ đồ' })
     }
   }
@@ -231,7 +234,7 @@ export default function AssetsPage() {
         if (pinningAsset.locationId === Number(locId)) {
           setPinCoords({ x: pinningAsset.locationX, y: pinningAsset.locationY })
         }
-      } catch (err) {
+      } catch {
         setSelectedLocDetail(null)
       }
     } else {

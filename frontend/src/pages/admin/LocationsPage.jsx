@@ -4,8 +4,6 @@ import {
   MapPin,
   Plus,
   Trash2,
-  Users,
-  Boxes,
   Eye,
   Settings,
   Search,
@@ -13,7 +11,6 @@ import {
   X,
   XCircle,
   CheckCircle,
-  HelpCircle,
 } from 'lucide-react'
 import { locationApi } from '../../api/locations'
 import { employeeApi } from '../../api/employees'
@@ -45,7 +42,7 @@ export default function LocationsPage() {
   // States
   const [isLoading, setIsLoading] = useState(true)
   const [isDetailsLoading, setIsDetailsLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [, setError] = useState('')
   const [toast, setToast] = useState(null)
   
   // Modals & Dialogs
@@ -134,12 +131,15 @@ export default function LocationsPage() {
   }
 
   useEffect(() => {
-    if (mode === 'edit-pins') {
-      loadPinningOptions()
-    } else {
-      setSelectedItemToPin(null)
-      setTempCoords(null)
-    }
+    const timer = window.setTimeout(() => {
+      if (mode === 'edit-pins') {
+        loadPinningOptions()
+      } else {
+        setSelectedItemToPin(null)
+        setTempCoords(null)
+      }
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [mode])
 
   const handleLocationSelect = async (loc) => {

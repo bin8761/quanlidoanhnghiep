@@ -207,7 +207,7 @@ export default function InventoryPage() {
         const detail = await locationApi.get(data[0].id)
         setSelectedLocDetail(detail)
       }
-    } catch (err) {
+    } catch {
       setToast({ type: 'error', message: 'Lỗi tải danh sách sơ đồ' })
     }
   }
@@ -220,7 +220,7 @@ export default function InventoryPage() {
       try {
         const detail = await locationApi.get(locId)
         setSelectedLocDetail(detail)
-      } catch (err) {
+      } catch {
         setSelectedLocDetail(null)
       }
     } else {
