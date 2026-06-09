@@ -129,15 +129,47 @@ async function seedCategories() {
   return categories;
 }
 
-async function upsertEmployee({ id, employeeCode, fullName, email, departmentId, status = "ACTIVE" }) {
+async function seedLocations() {
+  const locations = {};
+
+  locations.floor1 = await prisma.location.upsert({
+    where: { name: "Tầng 1 - Phòng Hành chính & Kinh doanh" },
+    update: {
+      description: "Khu vực làm việc tầng 1 dành cho ban giám đốc, phòng kinh doanh và phòng hành chính nhân sự.",
+      floorPlanUrl: "/floorplans/floor1.png",
+    },
+    create: {
+      name: "Tầng 1 - Phòng Hành chính & Kinh doanh",
+      description: "Khu vực làm việc tầng 1 dành cho ban giám đốc, phòng kinh doanh và phòng hành chính nhân sự.",
+      floorPlanUrl: "/floorplans/floor1.png",
+    },
+  });
+
+  locations.floor2 = await prisma.location.upsert({
+    where: { name: "Tầng 2 - Phòng Kỹ thuật & R&D" },
+    update: {
+      description: "Khu vực làm việc tầng 2 dành cho đội ngũ phát triển công nghệ, máy chủ và vận hành mạng.",
+      floorPlanUrl: "/floorplans/floor2.png",
+    },
+    create: {
+      name: "Tầng 2 - Phòng Kỹ thuật & R&D",
+      description: "Khu vực làm việc tầng 2 dành cho đội ngũ phát triển công nghệ, máy chủ và vận hành mạng.",
+      floorPlanUrl: "/floorplans/floor2.png",
+    },
+  });
+
+  return locations;
+}
+
+async function upsertEmployee({ id, employeeCode, fullName, email, departmentId, locationId, deskX, deskY, status = "ACTIVE" }) {
   return prisma.employee.upsert({
     where: { employeeCode },
-    update: { fullName, email, departmentId, status },
-    create: { id, employeeCode, fullName, email, departmentId, status },
+    update: { fullName, email, departmentId, locationId, deskX, deskY, status },
+    create: { id, employeeCode, fullName, email, departmentId, locationId, deskX, deskY, status },
   });
 }
 
-async function seedEmployees(departments) {
+async function seedEmployees(departments, locations) {
   const employees = {};
 
   employees.noUser = await upsertEmployee({
@@ -146,6 +178,9 @@ async function seedEmployees(departments) {
     fullName: "Nhân viên 1",
     email: ACCOUNT_EMAILS.noUserEmployee,
     departmentId: departments.engineering.id,
+    locationId: locations.floor2.id,
+    deskX: 32.5,
+    deskY: 42.0,
   });
   employees.inactive = await upsertEmployee({
     id: FIXED_IDS.employees.inactive,
@@ -153,6 +188,9 @@ async function seedEmployees(departments) {
     fullName: "Inactive User Employee",
     email: ACCOUNT_EMAILS.inactive,
     departmentId: departments.administration.id,
+    locationId: locations.floor1.id,
+    deskX: 25.0,
+    deskY: 30.0,
   });
   employees.firstLogin = await upsertEmployee({
     id: FIXED_IDS.employees.firstLogin,
@@ -160,6 +198,9 @@ async function seedEmployees(departments) {
     fullName: "First Login Employee",
     email: ACCOUNT_EMAILS.firstLogin,
     departmentId: departments.sales.id,
+    locationId: locations.floor1.id,
+    deskX: 42.0,
+    deskY: 55.0,
   });
   employees.active = await upsertEmployee({
     id: FIXED_IDS.employees.active,
@@ -167,6 +208,9 @@ async function seedEmployees(departments) {
     fullName: "Active User Employee",
     email: ACCOUNT_EMAILS.active,
     departmentId: departments.engineering.id,
+    locationId: locations.floor2.id,
+    deskX: 68.0,
+    deskY: 38.5,
   });
   employees.finance = await upsertEmployee({
     id: FIXED_IDS.employees.finance,
@@ -174,6 +218,9 @@ async function seedEmployees(departments) {
     fullName: "Nguyễn Minh Anh",
     email: "minhanh@company.local",
     departmentId: departments.finance.id,
+    locationId: locations.floor1.id,
+    deskX: 72.0,
+    deskY: 28.0,
   });
   employees.sales = await upsertEmployee({
     id: FIXED_IDS.employees.sales,
@@ -181,6 +228,9 @@ async function seedEmployees(departments) {
     fullName: "Trần Hoàng Nam",
     email: "hoangnam@company.local",
     departmentId: departments.sales.id,
+    locationId: locations.floor1.id,
+    deskX: 55.0,
+    deskY: 65.0,
   });
 
   return employees;
@@ -288,7 +338,7 @@ async function upsertAsset({ id, assetCode, ...data }) {
   });
 }
 
-async function seedAssets(categories) {
+async function seedAssets(categories, locations) {
   const assets = {};
   assets.primaryLaptop = await upsertAsset({
     id: FIXED_IDS.assets.primaryLaptop,
@@ -332,6 +382,9 @@ async function seedAssets(categories) {
     purchaseDate: new Date("2023-10-05T00:00:00.000Z"),
     value: 8900000,
     status: "MAINTENANCE",
+    locationId: locations.floor1.id,
+    locationX: 85.0,
+    locationY: 75.0,
     notes: "Máy in dùng chung khu vực hành chính.",
   });
   assets.projector = await upsertAsset({
@@ -343,6 +396,9 @@ async function seedAssets(categories) {
     purchaseDate: new Date("2023-05-18T00:00:00.000Z"),
     value: 12500000,
     status: "AVAILABLE",
+    locationId: locations.floor1.id,
+    locationX: 50.0,
+    locationY: 20.0,
     notes: "Máy chiếu phòng họp lớn.",
   });
   assets.keyboard = await upsertAsset({
@@ -595,9 +651,10 @@ async function main() {
   const hashes = await buildPasswordHashes();
   const departments = await seedDepartments();
   const categories = await seedCategories();
-  const employees = await seedEmployees(departments);
+  const locations = await seedLocations();
+  const employees = await seedEmployees(departments, locations);
   const users = await seedUsers(employees, hashes);
-  const assets = await seedAssets(categories);
+  const assets = await seedAssets(categories, locations);
 
   await seedAssignments(assets, employees);
   await seedMaintenance(assets, employees);
@@ -612,6 +669,7 @@ async function main() {
     prisma.assetAssignment.count(),
     prisma.supportRequest.count(),
     prisma.inventorySession.count(),
+    prisma.location.count(),
   ]);
 
   console.log(
@@ -633,6 +691,7 @@ async function main() {
           assignments: counts[4],
           maintenanceRequests: counts[5],
           inventorySessions: counts[6],
+          locations: counts[7],
         },
         seededUserIds: Object.fromEntries(
           Object.entries(users).map(([key, user]) => [key, user.id]),
