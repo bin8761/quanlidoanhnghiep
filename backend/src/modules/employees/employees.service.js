@@ -35,6 +35,10 @@ function createEmployeesService({ repository = employeesRepository, deptReposito
     },
 
     async createEmployee(data) {
+      if (!data.employeeCode || data.employeeCode.trim() === "") {
+        data.employeeCode = await repository.getNextEmployeeCode();
+      }
+
       const existingCode = await repository.findByEmployeeCode(data.employeeCode);
       if (existingCode) {
         throw new AppError({
