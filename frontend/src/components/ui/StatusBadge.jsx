@@ -15,6 +15,9 @@ const statusTone = {
   MAINTENANCE: 'border-amber-200 bg-amber-50 text-amber-700',
   RETURNED: 'border-slate-200 bg-slate-50 text-slate-600',
   TRANSFERRED: 'border-slate-200 bg-slate-50 text-slate-600',
+  APPROVED: 'border-indigo-200 bg-indigo-50 text-indigo-700',
+  WAITING_USER: 'border-orange-200 bg-orange-50 text-orange-700',
+  REJECTED: 'border-rose-200 bg-rose-50 text-rose-700',
 }
 
 const statusLabel = {
@@ -36,6 +39,9 @@ const statusLabel = {
   TRANSFERRED: 'Đã chuyển giao',
   LOST: 'Thất lạc',
   DISPOSED: 'Đã thanh lý',
+  APPROVED: 'Đã duyệt',
+  WAITING_USER: 'Chờ bổ sung',
+  REJECTED: 'Từ chối',
 }
 
 export default function StatusBadge({ status }) {
