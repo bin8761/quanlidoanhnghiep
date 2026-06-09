@@ -463,10 +463,10 @@ async function seedMaintenance(assets, employees) {
   ];
 
   for (const seed of maintenanceSeeds) {
-    await prisma.maintenanceRequest.upsert({
+    await prisma.supportRequest.upsert({
       where: { id: seed.id },
-      update: seed,
-      create: seed,
+      update: { priority: "MEDIUM", ...seed },
+      create: { priority: "MEDIUM", ...seed },
     });
   }
 }
@@ -574,7 +574,7 @@ async function main() {
     prisma.assetCategory.count(),
     prisma.asset.count(),
     prisma.assetAssignment.count(),
-    prisma.maintenanceRequest.count(),
+    prisma.supportRequest.count(),
     prisma.inventorySession.count(),
   ]);
 

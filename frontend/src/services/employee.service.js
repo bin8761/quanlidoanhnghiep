@@ -33,10 +33,10 @@ export async function getMyAssignmentHistory() {
 
 /**
  * Lấy lịch sử yêu cầu bảo trì của user hiện tại.
- * GET /api/maintenance-requests
+ * GET /api/support-requests
  */
 export async function getMyMaintenanceHistory() {
-  const response = await apiClient.get('/maintenance-requests')
+  const response = await apiClient.get('/support-requests')
   return response.data
 }
 
@@ -44,28 +44,28 @@ export async function getMyMaintenanceHistory() {
 
 /**
  * Lấy danh sách yêu cầu bảo trì của user hiện tại.
- * GET /api/maintenance-requests
+ * GET /api/support-requests
  */
 export async function getMyRequests() {
-  const response = await apiClient.get('/maintenance-requests')
+  const response = await apiClient.get('/support-requests')
   return response.data
 }
 
 /**
  * Tạo yêu cầu bảo trì mới.
- * POST /api/maintenance-requests
- * @param {{ assetId: string, description: string, priority: string }} data
+ * POST /api/support-requests
+ * @param {{ assetId: string, description: string, priority: string, type: string }} data
  */
 export async function createRequest(data) {
-  const response = await apiClient.post('/maintenance-requests', data)
+  const response = await apiClient.post('/support-requests', data)
   return response.data
 }
 
 /**
  * Lấy lịch sử bảo trì của một tài sản cụ thể.
- * GET /api/maintenance-requests?assetId=:id
+ * GET /api/support-requests?assetId=:id
  */
 export async function getMaintenanceByAsset(assetId) {
-  const response = await apiClient.get(`/maintenance-requests?assetId=${assetId}`)
+  const response = await apiClient.get(`/support-requests?assetId=${assetId}`)
   return response.data
 }

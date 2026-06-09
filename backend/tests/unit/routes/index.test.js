@@ -30,6 +30,7 @@ describe('routes/index', () => {
     jest.doMock('../../../src/modules/employees/employees.route', () => ({ mocked: 'employeesRouter' }));
     jest.doMock('../../../src/modules/assets/assets.route', () => ({ mocked: 'assetsRouter' }));
     jest.doMock('../../../src/modules/assignments/assignments.route', () => ({ mocked: 'assignmentsRouter' }));
+    jest.doMock('../../../src/modules/supportRequests/supportRequests.route', () => ({ mocked: 'supportRequestsRouter' }));
     jest.doMock('../../../src/modules/maintenanceRequests/maintenanceRequests.route', () => ({ mocked: 'maintenanceRequestsRouter' }));
     jest.doMock('../../../src/modules/inventory/inventory.route', () => ({ mocked: 'inventoryRouter' }));
     jest.doMock('../../../src/modules/reports/reports.route', () => ({ mocked: 'reportsRouter' }));
@@ -52,6 +53,7 @@ describe('routes/index', () => {
     expect(apiRouter.get).toHaveBeenCalledWith('/health', expect.any(Function));
     expect(apiRouter.use).toHaveBeenCalledWith('/auth', expect.anything());
     expect(apiRouter.use).toHaveBeenCalledWith('/assignments', expect.anything());
+    expect(apiRouter.use).toHaveBeenCalledWith('/support-requests', expect.anything());
     expect(apiRouter.use).toHaveBeenCalledWith('/maintenance-requests', expect.anything());
     expect(apiRouter.use).toHaveBeenCalledWith('/', expect.anything());
     expect(apiRouter.use).toHaveBeenCalledWith('/reports', expect.anything());

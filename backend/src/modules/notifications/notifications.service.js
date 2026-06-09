@@ -6,11 +6,14 @@ const { ADMIN } = require("../../shared/constants/roles");
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
-const MAINTENANCE_STATUS_LABELS = Object.freeze({
-  PENDING: "chờ xử lý",
-  IN_PROGRESS: "đang xử lý",
-  COMPLETED: "hoàn tất",
-  CANCELLED: "đã hủy",
+const STATUS_LABELS = Object.freeze({
+  PENDING: "cho xu ly",
+  APPROVED: "da duyet",
+  IN_PROGRESS: "dang xu ly",
+  WAITING_USER: "dang cho bo sung",
+  COMPLETED: "hoan tat",
+  REJECTED: "bi tu choi",
+  CANCELLED: "da huy",
 });
 
 function parseLimit(value) {
@@ -29,11 +32,7 @@ function notFoundError() {
 
 function normalizeNotification(notification) {
   if (!notification) return null;
-
-  return {
-    ...notification,
-    isRead: Boolean(notification.readAt),
-  };
+  return { ...notification, isRead: Boolean(notification.readAt) };
 }
 
 function createNotificationsService({ repository = notificationsRepository, realtime = sseHub } = {}) {
@@ -44,13 +43,12 @@ function createNotificationsService({ repository = notificationsRepository, real
     return normalized;
   }
 
-  return Object.freeze({
+  const service = {
     async list(authenticatedUser, filters = {}) {
       const notifications = await repository.findForUser(authenticatedUser.userId, {
         limit: parseLimit(filters.limit),
         unreadOnly: filters.unreadOnly === "true" || filters.unreadOnly === true,
       });
-
       return notifications.map(normalizeNotification);
     },
 
@@ -73,12 +71,11 @@ function createNotificationsService({ repository = notificationsRepository, real
     async notifyAssetAssigned(assignment) {
       const recipientUserId = assignment?.employee?.user?.id;
       if (!recipientUserId) return null;
-
       return createAndPublish({
         userId: recipientUserId,
         type: "ASSET_ASSIGNED",
-        title: "Bạn vừa được bàn giao tài sản",
-        message: `${assignment.asset?.name || "Tài sản"} đã được bàn giao cho bạn.`,
+        title: "Ban vua duoc ban giao tai san",
+        message: `${assignment.asset?.name || "Tai san"} da duoc ban giao cho ban.`,
         data: {
           assignmentId: assignment.id,
           assetId: assignment.assetId,
@@ -90,21 +87,21 @@ function createNotificationsService({ repository = notificationsRepository, real
       });
     },
 
-    async notifyMaintenanceRequestCreated(request) {
+    async notifySupportRequestCreated(request) {
       const admins = await repository.findActiveUsersByRole(ADMIN);
       if (!admins.length) return [];
-
       const notifications = [];
-      const assetName = request.asset?.name || "Tài sản";
-      const requesterName = request.requester?.fullName || "Nhân viên";
+      const assetName = request.asset?.name || "khong lien ket tai san";
+      const requesterName = request.requester?.fullName || "Nhan vien";
 
       for (const admin of admins) {
         const notification = await createAndPublish({
           userId: admin.id,
           type: "MAINTENANCE_CREATED",
-          title: "Có yêu cầu sửa chữa mới",
-          message: `${requesterName} vừa gửi yêu cầu sửa chữa cho ${assetName}.`,
+          title: "Co yeu cau ho tro moi",
+          message: `${requesterName} vua gui yeu cau ${request.type} cho ${assetName}.`,
           data: {
+            supportRequestId: request.id,
             maintenanceRequestId: request.id,
             assetId: request.assetId,
             assetCode: request.asset?.assetCode,
@@ -114,26 +111,23 @@ function createNotificationsService({ repository = notificationsRepository, real
             targetUrl: `/admin/maintenance?requestId=${request.id}`,
           },
         });
-
         notifications.push(notification);
       }
-
       return notifications;
     },
 
-    async notifyMaintenanceRequestUpdated(request) {
+    async notifySupportRequestUpdated(request) {
       const recipientUserId = request?.requester?.user?.id;
       if (!recipientUserId) return null;
-
-      const assetName = request.asset?.name || "tài sản";
-      const statusLabel = MAINTENANCE_STATUS_LABELS[request.status] || request.status;
-
+      const assetName = request.asset?.name || "yeu cau";
+      const statusLabel = STATUS_LABELS[request.status] || request.status;
       return createAndPublish({
         userId: recipientUserId,
         type: "MAINTENANCE_UPDATED",
-        title: "Yêu cầu sửa chữa đã được cập nhật",
-        message: `Yêu cầu sửa chữa cho ${assetName} hiện ${statusLabel}.`,
+        title: "Yeu cau ho tro da duoc cap nhat",
+        message: `Yeu cau ho tro ${assetName} hien ${statusLabel}.`,
         data: {
+          supportRequestId: request.id,
           maintenanceRequestId: request.id,
           assetId: request.assetId,
           assetCode: request.asset?.assetCode,
@@ -144,7 +138,12 @@ function createNotificationsService({ repository = notificationsRepository, real
         },
       });
     },
-  });
+  };
+
+  service.notifyMaintenanceRequestCreated = service.notifySupportRequestCreated;
+  service.notifyMaintenanceRequestUpdated = service.notifySupportRequestUpdated;
+
+  return Object.freeze(service);
 }
 
 const notificationsService = createNotificationsService();

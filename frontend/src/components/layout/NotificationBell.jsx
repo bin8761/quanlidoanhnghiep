@@ -40,11 +40,11 @@ export default function NotificationBell() {
     }
 
     if (notification.type === 'MAINTENANCE_CREATED' && user?.role === 'ADMIN') {
-      return `/admin/maintenance?requestId=${notification.data?.maintenanceRequestId || ''}`
+      return `/admin/maintenance?requestId=${notification.data?.supportRequestId || notification.data?.maintenanceRequestId || ''}`
     }
 
     if (notification.type === 'MAINTENANCE_UPDATED' && user?.role === 'USER') {
-      return `/employee/requests?requestId=${notification.data?.maintenanceRequestId || ''}`
+      return `/employee/requests?requestId=${notification.data?.supportRequestId || notification.data?.maintenanceRequestId || ''}`
     }
 
     if (notification.type === 'ASSET_ASSIGNED' && user?.role === 'USER') {

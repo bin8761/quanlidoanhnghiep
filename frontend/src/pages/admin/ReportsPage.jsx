@@ -108,7 +108,7 @@ export default function ReportsPage() {
           <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <Metric icon={Boxes} label="Tổng tài sản" value={summary.totalAssets} tone="bg-brand-50 text-brand-700" />
             <Metric icon={PackageCheck} label="Đang bàn giao" value={summary.activeAssignments} tone="bg-blue-50 text-blue-700" />
-            <Metric icon={Wrench} label="Yêu cầu bảo trì mở" value={summary.openMaintenanceRequests} tone="bg-amber-50 text-amber-700" />
+            <Metric icon={Wrench} label="Yêu cầu hỗ trợ mở" value={summary.openMaintenanceRequests} tone="bg-amber-50 text-amber-700" />
             <Metric icon={ClipboardCheck} label="Phiên kiểm kê" value={summary.inventorySessions} tone="bg-violet-50 text-violet-700" />
           </section>
 

@@ -196,7 +196,7 @@ test('employee can create a support request for new allocation without linking a
   // Choose 'Không liên kết tài sản'
   await page.getByLabel('Tài sản liên kết (tùy chọn)').selectOption('')
 
-  await page.getByLabel('Mô tả sự cố').fill('Cần cấp thêm một màn hình di động 15.6 inch để đi công tác')
+  await page.getByLabel('Nhu cầu cấp phát').fill('Cần cấp thêm một màn hình di động 15.6 inch để đi công tác')
   await page.getByRole('button', { name: 'Gửi yêu cầu' }).click()
 
   await expect(page.getByText('Yêu cầu hỗ trợ đã được gửi thành công.')).toBeVisible()
@@ -204,7 +204,7 @@ test('employee can create a support request for new allocation without linking a
   // Verify that the request is shown in the list with the correct type and empty asset
   const lastRequest = page.locator('article').first()
   await expect(lastRequest.getByText('Yêu cầu cấp phát mới')).toBeVisible()
-  await expect(lastRequest.getByText('—')).toBeVisible() // empty asset code placeholder
+  await expect(lastRequest.getByText('-', { exact: true })).toBeVisible() // empty asset code placeholder
 
   expect(errors).toEqual([])
 })
@@ -426,9 +426,9 @@ test('admin can open maintenance, inventory and report workflows', async ({ page
   await loginAsAdmin(page)
 
   await page.getByRole('link', { name: 'Bảo trì', exact: true }).click()
-  await expect(page.getByRole('heading', { level: 2, name: 'Yêu cầu bảo trì' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 2, name: 'Yêu cầu hỗ trợ' })).toBeVisible()
   await page.getByRole('button', { name: 'Tạo yêu cầu' }).click()
-  const maintenanceDialog = page.getByRole('dialog', { name: 'Tạo yêu cầu bảo trì' })
+  const maintenanceDialog = page.getByRole('dialog', { name: 'Tạo yêu cầu hỗ trợ' })
   await expect(maintenanceDialog).toBeVisible()
   await maintenanceDialog.getByRole('button', { name: 'Đóng' }).click()
 

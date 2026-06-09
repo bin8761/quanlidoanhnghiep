@@ -7,7 +7,7 @@ function createReportsRepository(prismaClient = defaultPrisma) {
         prismaClient.asset.count(),
         prismaClient.asset.groupBy({ by: ["status"], _count: { _all: true } }),
         prismaClient.assetAssignment.count({ where: { status: "ACTIVE" } }),
-        prismaClient.maintenanceRequest.count({ where: { status: { in: ["PENDING", "IN_PROGRESS"] } } }),
+        prismaClient.supportRequest.count({ where: { status: { in: ["PENDING", "APPROVED", "IN_PROGRESS", "WAITING_USER"] } } }),
         prismaClient.inventorySession.count(),
       ]);
 
