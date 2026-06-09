@@ -14,11 +14,15 @@ const INVENTORY_SESSION_SELECT = Object.freeze({
     select: {
       id: true,
       assetId: true,
+      locationId: true,
+      locationX: true,
+      locationY: true,
       result: true,
       notes: true,
       createdAt: true,
       updatedAt: true,
       asset: { select: { id: true, assetCode: true, name: true, status: true } },
+      location: { select: { id: true, name: true, floorPlanUrl: true } },
     },
     orderBy: { createdAt: "asc" },
   },
@@ -61,22 +65,38 @@ function createInventoryRepository(prismaClient = defaultPrisma) {
     },
 
     async updateItem(id, data) {
+      const updateData = {
+        result: data.result,
+        notes: typeof data.notes === "undefined" ? undefined : data.notes,
+      };
+
+      if (typeof data.locationId !== "undefined") {
+        updateData.locationId = data.locationId ? Number(data.locationId) : null;
+      }
+      if (typeof data.locationX !== "undefined") {
+        updateData.locationX = data.locationX !== null ? Number(data.locationX) : null;
+      }
+      if (typeof data.locationY !== "undefined") {
+        updateData.locationY = data.locationY !== null ? Number(data.locationY) : null;
+      }
+
       return prismaClient.inventoryItem.update({
         where: { id },
-        data: {
-          result: data.result,
-          notes: typeof data.notes === "undefined" ? undefined : data.notes,
-        },
+        data: updateData,
         select: {
           id: true,
           sessionId: true,
           assetId: true,
+          locationId: true,
+          locationX: true,
+          locationY: true,
           result: true,
           notes: true,
           createdAt: true,
           updatedAt: true,
           asset: { select: { id: true, assetCode: true, name: true, status: true } },
           session: { select: { id: true, name: true, status: true } },
+          location: { select: { id: true, name: true, floorPlanUrl: true } },
         },
       });
     },
@@ -92,7 +112,24 @@ function createInventoryRepository(prismaClient = defaultPrisma) {
     async findItemById(id) {
       return prismaClient.inventoryItem.findUnique({
         where: { id },
-        select: { id: true, session: { select: { status: true } } },
+        select: {
+          id: true,
+          assetId: true,
+          session: { select: { status: true } },
+          asset: {
+            select: {
+              id: true,
+              status: true,
+              locationId: true,
+              assignments: {
+                where: { status: "ACTIVE" },
+                select: {
+                  employeeId: true,
+                },
+              },
+            },
+          },
+        },
       });
     },
   });

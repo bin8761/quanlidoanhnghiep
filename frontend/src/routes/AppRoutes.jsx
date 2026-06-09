@@ -15,6 +15,7 @@ import MaintenancePage from '../pages/admin/MaintenancePage'
 import ManagementPage from '../pages/admin/ManagementPage'
 import { managementPages } from '../pages/admin/managementData'
 import ReportsPage from '../pages/admin/ReportsPage'
+import LocationsPage from '../pages/admin/LocationsPage'
 import EmployeeAssetsPage from '../pages/employee/EmployeeAssetsPage'
 import EmployeeDashboardPage from '../pages/employee/EmployeeDashboardPage'
 import EmployeeProfilePage from '../pages/employee/EmployeeProfilePage'
@@ -94,6 +95,7 @@ export default function AppRoutes() {
         <Route path="maintenance" element={<MaintenancePage />} />
         <Route path="inventory" element={<InventoryPage />} />
         <Route path="reports" element={<ReportsPage />} />
+        <Route path="locations" element={<LocationsPage />} />
         {Object.entries(managementPages)
           .filter(([path]) => ![
             'assets',

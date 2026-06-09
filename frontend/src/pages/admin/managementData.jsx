@@ -187,4 +187,8 @@ export const managementPages = {
       { name: 'period', label: 'Kỳ báo cáo', placeholder: 'VD: Tháng 06/2026' },
     ],
   },
+  locations: {
+    title: 'Sơ đồ mặt bằng',
+    description: 'Quản lý bản đồ vị trí thiết bị và bàn làm việc.',
+  },
 }

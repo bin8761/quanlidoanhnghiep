@@ -46,7 +46,7 @@ describe("assets.service", () => {
 
     const result = await assetsService.getAllAssets({ status: "AVAILABLE" });
     expect(repository.findAll).toHaveBeenCalledWith({ status: "AVAILABLE" });
-    expect(result).toEqual(list);
+    expect(result).toEqual([{ id: ASSET_ID, name: "Dell Laptop", resolvedLocation: null }]);
   });
 
   test("getAssetById returns asset if found", async () => {
@@ -59,7 +59,7 @@ describe("assets.service", () => {
 
     const result = await assetsService.getAssetById(ASSET_ID);
     expect(repository.findById).toHaveBeenCalledWith(ASSET_ID);
-    expect(result).toEqual(asset);
+    expect(result).toEqual({ id: ASSET_ID, name: "Dell Laptop", resolvedLocation: null });
   });
 
   test("getAssetById throws 404 AppError if not found", async () => {

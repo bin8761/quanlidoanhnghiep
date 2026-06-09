@@ -38,7 +38,43 @@ function createInventoryService({ inventoryRepository = repository } = {}) {
       if (!item) throw inventoryError("Inventory item not found", 404);
       if (item.session.status === "COMPLETED") throw inventoryError("Completed inventory sessions cannot be edited");
 
-      return inventoryRepository.updateItem(id, data);
+      // Validate location if provided
+      if (data.locationId) {
+        const locationsRepository = require("../locations/locations.repository");
+        const loc = await locationsRepository.findById(data.locationId);
+        if (!loc) throw inventoryError("Location not found", 404);
+      }
+
+      // Update inventory item coordinates and result
+      const updatedItem = await inventoryRepository.updateItem(id, data);
+
+      // If updateMaster is true, synchronize coordinates to the master records
+      if (data.updateMaster && data.locationId && data.locationX !== undefined && data.locationX !== null && data.locationY !== undefined && data.locationY !== null) {
+        const assetsRepository = require("../assets/assets.repository");
+        const employeesRepository = require("../employees/employees.repository");
+
+        const asset = item.asset;
+        if (asset) {
+          const activeAssignment = asset.assignments && asset.assignments[0];
+          if (asset.status === "ASSIGNED" && activeAssignment) {
+            // Update Employee's desk coordinates
+            await employeesRepository.update(activeAssignment.employeeId, {
+              locationId: Number(data.locationId),
+              deskX: Number(data.locationX),
+              deskY: Number(data.locationY),
+            });
+          } else {
+            // Update Fixed Asset's coordinates
+            await assetsRepository.update(asset.id, {
+              locationId: Number(data.locationId),
+              locationX: Number(data.locationX),
+              locationY: Number(data.locationY),
+            });
+          }
+        }
+      }
+
+      return updatedItem;
     },
   });
 }

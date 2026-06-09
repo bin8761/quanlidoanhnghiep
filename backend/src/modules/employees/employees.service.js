@@ -1,9 +1,10 @@
 const employeesRepository = require("./employees.repository");
 const departmentsRepository = require("../departments/departments.repository");
+const locationsRepository = require("../locations/locations.repository");
 const AppError = require("../../shared/errors/AppError");
 const ERROR_CODES = require("../../shared/errors/errorCodes");
 
-function createEmployeesService({ repository = employeesRepository, deptRepository = departmentsRepository } = {}) {
+function createEmployeesService({ repository = employeesRepository, deptRepository = departmentsRepository, locRepository = locationsRepository } = {}) {
   return Object.freeze({
     async getAllEmployees(filters = {}) {
       return repository.findAll(filters);
@@ -94,6 +95,17 @@ function createEmployeesService({ repository = employeesRepository, deptReposito
             message: "Department not found",
             statusCode: 404,
             errorCode: "DEPARTMENT_NOT_FOUND",
+          });
+        }
+      }
+
+      if (data.locationId) {
+        const loc = await locRepository.findById(data.locationId);
+        if (!loc) {
+          throw new AppError({
+            message: "Location not found",
+            statusCode: 404,
+            errorCode: "LOCATION_NOT_FOUND",
           });
         }
       }

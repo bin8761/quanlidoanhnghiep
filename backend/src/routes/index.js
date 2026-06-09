@@ -11,6 +11,7 @@ const maintenanceRequestsRouter = require("../modules/maintenanceRequests/mainte
 const inventoryRouter = require("../modules/inventory/inventory.route");
 const reportsRouter = require("../modules/reports/reports.route");
 const notificationsRouter = require("../modules/notifications/notifications.route");
+const locationsRouter = require("../modules/locations/locations.route");
 
 const rootRouter = express.Router();
 const apiRouter = express.Router();
@@ -26,6 +27,7 @@ apiRouter.use("/maintenance-requests", maintenanceRequestsRouter);
 apiRouter.use("/", inventoryRouter);
 apiRouter.use("/reports", reportsRouter);
 apiRouter.use("/notifications", notificationsRouter);
+apiRouter.use("/locations", locationsRouter);
 
 rootRouter.use("/api", apiRouter);
 

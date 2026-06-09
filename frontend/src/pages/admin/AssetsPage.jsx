@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Eye, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Eye, Pencil, Plus, Trash2, MapPin } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { assetApi } from '../../api/assets'
 import { categoryApi } from '../../api/categories'
 import { departmentApi } from '../../api/departments'
+import { locationApi } from '../../api/locations'
 import { ResourceError, ResourceTableSkeleton } from '../../components/admin/ResourceFeedback'
 import Button from '../../components/ui/Button'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
@@ -71,6 +72,14 @@ export default function AssetsPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [toast, setToast] = useState(null)
+
+  // Pinning states
+  const [pinningAsset, setPinningAsset] = useState(null)
+  const [locList, setLocList] = useState([])
+  const [selectedLocId, setSelectedLocId] = useState('')
+  const [selectedLocDetail, setSelectedLocDetail] = useState(null)
+  const [pinCoords, setPinCoords] = useState(null)
+  const [isSavingPin, setIsSavingPin] = useState(false)
 
   useAutoDismiss(toast, setToast)
 
@@ -189,6 +198,73 @@ export default function AssetsPage() {
     }
   }
 
+  async function openPinModal(asset) {
+    setPinningAsset(asset)
+    setPinCoords(asset.locationX !== null ? { x: asset.locationX, y: asset.locationY } : null)
+    setSelectedLocId(asset.locationId ? String(asset.locationId) : '')
+    setSelectedLocDetail(null)
+    
+    try {
+      const data = await locationApi.list()
+      setLocList(data)
+      if (asset.locationId) {
+        const detail = await locationApi.get(asset.locationId)
+        setSelectedLocDetail(detail)
+      } else if (data.length > 0) {
+        setSelectedLocId(String(data[0].id))
+        const detail = await locationApi.get(data[0].id)
+        setSelectedLocDetail(detail)
+      }
+    } catch (err) {
+      setToast({ type: 'error', message: 'Lỗi tải danh sách sơ đồ' })
+    }
+  }
+
+  async function handleLocChange(e) {
+    const locId = e.target.value
+    setSelectedLocId(locId)
+    setPinCoords(null)
+    if (locId) {
+      try {
+        const detail = await locationApi.get(locId)
+        setSelectedLocDetail(detail)
+        if (pinningAsset.locationId === Number(locId)) {
+          setPinCoords({ x: pinningAsset.locationX, y: pinningAsset.locationY })
+        }
+      } catch (err) {
+        setSelectedLocDetail(null)
+      }
+    } else {
+      setSelectedLocDetail(null)
+    }
+  }
+
+  const handleMapClick = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * 100
+    const y = ((e.clientY - rect.top) / rect.height) * 100
+    setPinCoords({ x: parseFloat(x.toFixed(2)), y: parseFloat(y.toFixed(2)) })
+  }
+
+  async function handleSavePin() {
+    setIsSavingPin(true)
+    try {
+      const payload = {
+        locationId: selectedLocId ? Number(selectedLocId) : null,
+        locationX: pinCoords ? pinCoords.x : null,
+        locationY: pinCoords ? pinCoords.y : null,
+      }
+      await assetApi.update(pinningAsset.id, payload)
+      setToast({ type: 'success', message: 'Cập nhật vị trí thiết bị thành công.' })
+      setPinningAsset(null)
+      await loadAssets(filters)
+    } catch (err) {
+      setToast({ type: 'error', message: err.message })
+    } finally {
+      setIsSavingPin(false)
+    }
+  }
+
   async function handleDelete() {
     setIsDeleting(true)
     try {
@@ -230,6 +306,11 @@ export default function AssetsPage() {
           <button className="grid size-9 place-items-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-800" type="button" title={`Xem ${asset.name}`} onClick={() => setViewingAsset(asset)}>
             <Eye size={16} />
           </button>
+          {asset.status !== 'ASSIGNED' && (
+            <button className="grid size-9 place-items-center rounded-xl text-slate-400 transition hover:bg-emerald-50 hover:text-emerald-700" type="button" title={`Định vị ${asset.name}`} onClick={() => openPinModal(asset)}>
+              <MapPin size={16} />
+            </button>
+          )}
           <button className="grid size-9 place-items-center rounded-xl text-slate-400 transition hover:bg-blue-50 hover:text-blue-700" type="button" title={`Sửa ${asset.name}`} onClick={() => openEditModal(asset)}>
             <Pencil size={16} />
           </button>
@@ -317,6 +398,41 @@ export default function AssetsPage() {
             ))}
           </dl>
           {viewingAsset.notes && <p className="mt-4 rounded-xl border border-slate-200 p-4 text-sm leading-6 text-slate-600">{viewingAsset.notes}</p>}
+          
+          {/* Resolved Map Location Visualizer */}
+          {viewingAsset.resolvedLocation ? (
+            <div className="mt-4 rounded-xl border border-slate-200 p-4">
+              <h4 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Vị trí thực tế trên sơ đồ</h4>
+              <p className="text-xs text-slate-700 font-bold mb-2">
+                📍 {viewingAsset.resolvedLocation.locationName} ({viewingAsset.resolvedLocation.type === 'ASSIGNED' ? `Theo bàn làm việc nhân viên: ${viewingAsset.resolvedLocation.employeeName}` : 'Vị trí cố định'})
+              </p>
+              <div className="relative border border-slate-100 rounded-lg overflow-hidden bg-slate-50 flex items-center justify-center max-h-[220px]">
+                <div className="relative">
+                  <img
+                    src={viewingAsset.resolvedLocation.floorPlanUrl}
+                    alt={viewingAsset.resolvedLocation.locationName}
+                    className="max-w-full max-h-[200px] object-contain block"
+                  />
+                  <div
+                    style={{ left: `${viewingAsset.resolvedLocation.x}%`, top: `${viewingAsset.resolvedLocation.y}%` }}
+                    className="absolute -translate-x-1/2 -translate-y-1/2 z-10"
+                  >
+                    <span className="relative flex size-4">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full size-4 items-center justify-center bg-emerald-600 text-[8px] font-bold text-white shadow-md">
+                        📍
+                      </span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-4 rounded-xl border border-slate-200 p-4 text-xs text-slate-400 text-center italic">
+              Chưa ghim định vị trên sơ đồ mặt bằng
+            </div>
+          )}
+
           <div className="mt-6 border-t border-slate-100 pt-5 text-center">
             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Mã QR tài sản</h4>
             <div className="mx-auto mt-3 grid size-44 place-items-center rounded-2xl border border-slate-200 bg-white p-2">
@@ -346,6 +462,74 @@ export default function AssetsPage() {
 
       {deletingAsset && (
         <ConfirmDialog title={`Xóa tài sản "${deletingAsset.name}"?`} message="Không thể xóa tài sản đang được bàn giao cho nhân viên." confirmLabel="Xóa tài sản" isSubmitting={isDeleting} onConfirm={handleDelete} onClose={() => !isDeleting && setDeletingAsset(null)} />
+      )}
+
+      {pinningAsset && (
+        <Modal
+          title={`Định vị thiết bị: ${pinningAsset.name}`}
+          description="Ghim vị trí lắp đặt cố định của thiết bị trên sơ đồ văn phòng (máy in, wifi, máy chiếu...)"
+          onClose={() => setPinningAsset(null)}
+        >
+          <div className="grid gap-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-bold text-slate-700">Chọn sơ đồ mặt bằng</label>
+              <select
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs focus:border-emerald-500 focus:bg-white focus:outline-none"
+                value={selectedLocId}
+                onChange={handleLocChange}
+              >
+                <option value="">-- Chọn sơ đồ mặt bằng --</option>
+                {locList.map(loc => (
+                  <option key={loc.id} value={loc.id}>{loc.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {selectedLocDetail ? (
+              <div className="flex flex-col gap-2">
+                <p className="text-[10px] text-slate-400 italic">💡 Click trực tiếp vào ảnh sơ đồ bên dưới để ghim vị trí lắp đặt cố định.</p>
+                <div className="relative border border-slate-100 rounded-xl overflow-hidden bg-slate-50 flex items-center justify-center max-h-[300px]">
+                  <div className="relative cursor-crosshair" onClick={handleMapClick}>
+                    <img
+                      src={selectedLocDetail.floorPlanUrl}
+                      alt={selectedLocDetail.name}
+                      className="max-w-full max-h-[300px] object-contain block"
+                    />
+                    
+                    {pinCoords && (
+                      <div
+                        style={{ left: `${pinCoords.x}%`, top: `${pinCoords.y}%` }}
+                        className="absolute -translate-x-1/2 -translate-y-1/2"
+                      >
+                        <span className="flex size-5 items-center justify-center rounded-full bg-orange-600 border border-white text-white text-[10px] font-bold shadow-lg">
+                          📍
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              selectedLocId && (
+                <div className="text-center py-4 text-xs text-slate-400">Đang tải ảnh sơ đồ...</div>
+              )
+            )}
+
+            <div className="form-actions mt-2">
+              <Button type="button" variant="secondary" onClick={() => setPinningAsset(null)}>
+                Hủy
+              </Button>
+              <Button 
+                type="button" 
+                disabled={isSavingPin || !selectedLocId} 
+                onClick={handleSavePin}
+              >
+                {isSavingPin && <span className="size-4 animate-spin-soft rounded-full border-2 border-white/30 border-t-white" />}
+                Lưu vị trí thiết bị
+              </Button>
+            </div>
+          </div>
+        </Modal>
       )}
 
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}

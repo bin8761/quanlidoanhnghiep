@@ -10,6 +10,9 @@ const EMPLOYEE_SELECT = Object.freeze({
   fullName: true,
   email: true,
   departmentId: true,
+  locationId: true,
+  deskX: true,
+  deskY: true,
   status: true,
   createdAt: true,
   updatedAt: true,
@@ -17,6 +20,13 @@ const EMPLOYEE_SELECT = Object.freeze({
     select: {
       id: true,
       name: true,
+    },
+  },
+  location: {
+    select: {
+      id: true,
+      name: true,
+      floorPlanUrl: true,
     },
   },
 });
@@ -91,6 +101,18 @@ function createEmployeesRepository(prismaClient) {
 
       if (typeof data.departmentId !== "undefined") {
         updateData.departmentId = data.departmentId ? Number(data.departmentId) : null;
+      }
+
+      if (typeof data.locationId !== "undefined") {
+        updateData.locationId = data.locationId ? Number(data.locationId) : null;
+      }
+
+      if (typeof data.deskX !== "undefined") {
+        updateData.deskX = data.deskX !== null ? Number(data.deskX) : null;
+      }
+
+      if (typeof data.deskY !== "undefined") {
+        updateData.deskY = data.deskY !== null ? Number(data.deskY) : null;
       }
 
       return activePrisma.employee.update({

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { Pencil, Plus, Trash2, MapPin } from 'lucide-react'
 import { departmentApi } from '../../api/departments'
 import { employeeApi } from '../../api/employees'
+import { locationApi } from '../../api/locations'
 import { ResourceError, ResourceTableSkeleton } from '../../components/admin/ResourceFeedback'
 import Button from '../../components/ui/Button'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
@@ -34,6 +35,14 @@ export default function EmployeesPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [toast, setToast] = useState(null)
+
+  // Pinning desk states
+  const [pinningEmployee, setPinningEmployee] = useState(null)
+  const [locList, setLocList] = useState([])
+  const [selectedLocId, setSelectedLocId] = useState('')
+  const [selectedLocDetail, setSelectedLocDetail] = useState(null)
+  const [pinCoords, setPinCoords] = useState(null)
+  const [isSavingPin, setIsSavingPin] = useState(false)
 
   useAutoDismiss(toast, setToast)
 
@@ -141,6 +150,73 @@ export default function EmployeesPage() {
     }
   }
 
+  async function openPinModal(employee) {
+    setPinningEmployee(employee)
+    setPinCoords(employee.deskX !== null ? { x: employee.deskX, y: employee.deskY } : null)
+    setSelectedLocId(employee.locationId ? String(employee.locationId) : '')
+    setSelectedLocDetail(null)
+    
+    try {
+      const data = await locationApi.list()
+      setLocList(data)
+      if (employee.locationId) {
+        const detail = await locationApi.get(employee.locationId)
+        setSelectedLocDetail(detail)
+      } else if (data.length > 0) {
+        setSelectedLocId(String(data[0].id))
+        const detail = await locationApi.get(data[0].id)
+        setSelectedLocDetail(detail)
+      }
+    } catch (err) {
+      setToast({ type: 'error', message: 'Lỗi tải danh sách sơ đồ' })
+    }
+  }
+
+  async function handleLocChange(e) {
+    const locId = e.target.value
+    setSelectedLocId(locId)
+    setPinCoords(null)
+    if (locId) {
+      try {
+        const detail = await locationApi.get(locId)
+        setSelectedLocDetail(detail)
+        if (pinningEmployee.locationId === Number(locId)) {
+          setPinCoords({ x: pinningEmployee.deskX, y: pinningEmployee.deskY })
+        }
+      } catch (err) {
+        setSelectedLocDetail(null)
+      }
+    } else {
+      setSelectedLocDetail(null)
+    }
+  }
+
+  const handleMapClick = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * 100
+    const y = ((e.clientY - rect.top) / rect.height) * 100
+    setPinCoords({ x: parseFloat(x.toFixed(2)), y: parseFloat(y.toFixed(2)) })
+  }
+
+  async function handleSavePin() {
+    setIsSavingPin(true)
+    try {
+      const payload = {
+        locationId: selectedLocId ? Number(selectedLocId) : null,
+        deskX: pinCoords ? pinCoords.x : null,
+        deskY: pinCoords ? pinCoords.y : null,
+      }
+      await employeeApi.update(pinningEmployee.id, payload)
+      setToast({ type: 'success', message: 'Cập nhật vị trí bàn làm việc nhân viên thành công.' })
+      setPinningEmployee(null)
+      await loadEmployees(filters)
+    } catch (err) {
+      setToast({ type: 'error', message: err.message })
+    } finally {
+      setIsSavingPin(false)
+    }
+  }
+
   async function handleDelete() {
     setIsDeleting(true)
     try {
@@ -175,6 +251,14 @@ export default function EmployeesPage() {
       label: 'Thao tác',
       render: (_value, employee) => (
         <div className="flex items-center gap-1">
+          <button
+            className="grid size-9 place-items-center rounded-xl text-slate-400 transition hover:bg-emerald-50 hover:text-emerald-700"
+            type="button"
+            title={`Định vị bàn làm việc của ${employee.fullName}`}
+            onClick={() => openPinModal(employee)}
+          >
+            <MapPin size={16} />
+          </button>
           <button
             className="grid size-9 place-items-center rounded-xl text-slate-400 transition hover:bg-blue-50 hover:text-blue-700"
             type="button"
@@ -335,6 +419,74 @@ export default function EmployeesPage() {
           onConfirm={handleDelete}
           onClose={() => !isDeleting && setDeletingEmployee(null)}
         />
+      )}
+
+      {pinningEmployee && (
+        <Modal
+          title={`Định vị bàn làm việc: ${pinningEmployee.fullName}`}
+          description="Ghim vị trí bàn làm việc cố định của nhân viên trên sơ đồ văn phòng."
+          onClose={() => setPinningEmployee(null)}
+        >
+          <div className="grid gap-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-bold text-slate-700">Chọn sơ đồ mặt bằng</label>
+              <select
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs focus:border-emerald-500 focus:bg-white focus:outline-none"
+                value={selectedLocId}
+                onChange={handleLocChange}
+              >
+                <option value="">-- Chọn sơ đồ mặt bằng --</option>
+                {locList.map(loc => (
+                  <option key={loc.id} value={loc.id}>{loc.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {selectedLocDetail ? (
+              <div className="flex flex-col gap-2">
+                <p className="text-[10px] text-slate-400 italic">💡 Click trực tiếp vào ảnh sơ đồ bên dưới để đặt chấm định vị bàn làm việc.</p>
+                <div className="relative border border-slate-100 rounded-xl overflow-hidden bg-slate-50 flex items-center justify-center max-h-[300px]">
+                  <div className="relative cursor-crosshair" onClick={handleMapClick}>
+                    <img
+                      src={selectedLocDetail.floorPlanUrl}
+                      alt={selectedLocDetail.name}
+                      className="max-w-full max-h-[300px] object-contain block"
+                    />
+                    
+                    {pinCoords && (
+                      <div
+                        style={{ left: `${pinCoords.x}%`, top: `${pinCoords.y}%` }}
+                        className="absolute -translate-x-1/2 -translate-y-1/2"
+                      >
+                        <span className="flex size-5 items-center justify-center rounded-full bg-blue-600 border border-white text-white text-[10px] font-bold shadow-lg">
+                          👤
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              selectedLocId && (
+                <div className="text-center py-4 text-xs text-slate-400">Đang tải ảnh sơ đồ...</div>
+              )
+            )}
+
+            <div className="form-actions mt-2">
+              <Button type="button" variant="secondary" onClick={() => setPinningEmployee(null)}>
+                Hủy
+              </Button>
+              <Button 
+                type="button" 
+                disabled={isSavingPin || !selectedLocId} 
+                onClick={handleSavePin}
+              >
+                {isSavingPin && <span className="size-4 animate-spin-soft rounded-full border-2 border-white/30 border-t-white" />}
+                Lưu vị trí bàn làm việc
+              </Button>
+            </div>
+          </div>
+        </Modal>
       )}
 
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}

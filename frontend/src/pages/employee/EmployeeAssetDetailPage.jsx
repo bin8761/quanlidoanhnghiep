@@ -26,6 +26,26 @@ export default function EmployeeAssetDetailPage() {
       .then((assignments) => {
         const found = assignments.find((item) => item.asset?.assetCode === code)
         if (found) {
+          const emp = found.employee
+          const ast = found.asset
+          const resolvedLoc = ast.locationId && ast.locationX !== null
+            ? {
+                name: ast.location?.name,
+                floorPlanUrl: ast.location?.floorPlanUrl,
+                x: ast.locationX,
+                y: ast.locationY,
+                type: 'FIXED',
+              }
+            : emp?.locationId && emp?.deskX !== null
+              ? {
+                  name: emp.location?.name,
+                  floorPlanUrl: emp.location?.floorPlanUrl,
+                  x: emp.deskX,
+                  y: emp.deskY,
+                  type: 'ASSIGNED',
+                }
+              : null;
+
           setAsset({
             id: found.asset.id,
             code: found.asset.assetCode,
@@ -35,6 +55,7 @@ export default function EmployeeAssetDetailPage() {
             serial: found.asset.serialNumber || '—',
             assignedAt: new Date(found.assignedAt).toLocaleDateString('vi-VN'),
             condition: found.notes || 'Tốt',
+            resolvedLocation: resolvedLoc,
           })
         } else {
           setAsset(null)
@@ -77,40 +98,76 @@ export default function EmployeeAssetDetailPage() {
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)]">
-        {/* Main Info */}
-        <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-soft">
-          <div className="flex items-start justify-between border-b border-slate-100 bg-slate-50/70 p-5 sm:p-6">
-            <div className="flex items-center gap-4">
-              <span className="grid size-14 place-items-center rounded-2xl bg-brand-50 text-brand-700">
-                <Laptop size={26} />
-              </span>
-              <div>
-                <h2 className="text-lg font-extrabold text-slate-950">{asset.name}</h2>
-                <p className="mt-0.5 text-sm font-semibold text-brand-700">{asset.code}</p>
-              </div>
-            </div>
-            <StatusBadge status={asset.status === 'Đang sử dụng' ? 'ASSIGNED' : 'AVAILABLE'} />
-          </div>
-
-          <dl className="grid gap-px bg-slate-100 sm:grid-cols-2">
-            {[
-              { label: 'Danh mục', value: asset.category, icon: Tag },
-              { label: 'Serial number', value: asset.serial, icon: Hash },
-              { label: 'Ngày nhận', value: asset.assignedAt, icon: CalendarDays },
-              { label: 'Tình trạng', value: asset.condition, icon: FileText },
-            ].map(({ label, value, icon: Icon }) => (
-              <div className="flex items-start gap-3 bg-white p-5" key={label}>
-                <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700">
-                  <Icon size={17} />
+        {/* Main Info with Map */}
+        <div className="grid gap-5">
+          <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-soft">
+            <div className="flex items-start justify-between border-b border-slate-100 bg-slate-50/70 p-5 sm:p-6">
+              <div className="flex items-center gap-4">
+                <span className="grid size-14 place-items-center rounded-2xl bg-brand-50 text-brand-700">
+                  <Laptop size={26} />
                 </span>
                 <div>
-                  <dt className="text-[11px] font-semibold text-slate-400">{label}</dt>
-                  <dd className="mt-1 text-sm font-bold text-slate-800">{value}</dd>
+                  <h2 className="text-lg font-extrabold text-slate-950">{asset.name}</h2>
+                  <p className="mt-0.5 text-sm font-semibold text-brand-700">{asset.code}</p>
                 </div>
               </div>
-            ))}
-          </dl>
-        </section>
+              <StatusBadge status={asset.status === 'Đang sử dụng' ? 'ASSIGNED' : 'AVAILABLE'} />
+            </div>
+
+            <dl className="grid gap-px bg-slate-100 sm:grid-cols-2">
+              {[
+                { label: 'Danh mục', value: asset.category, icon: Tag },
+                { label: 'Serial number', value: asset.serial, icon: Hash },
+                { label: 'Ngày nhận', value: asset.assignedAt, icon: CalendarDays },
+                { label: 'Tình trạng', value: asset.condition, icon: FileText },
+              ].map(({ label, value, icon: Icon }) => (
+                <div className="flex items-start gap-3 bg-white p-5" key={label}>
+                  <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700">
+                    <Icon size={17} />
+                  </span>
+                  <div>
+                    <dt className="text-[11px] font-semibold text-slate-400">{label}</dt>
+                    <dd className="mt-1 text-sm font-bold text-slate-800">{value}</dd>
+                  </div>
+                </div>
+              ))}
+            </dl>
+          </section>
+
+          {/* Sơ đồ vị trí thiết bị */}
+          <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-soft sm:p-6">
+            <h3 className="text-sm font-extrabold text-slate-900 mb-3">Vị trí của thiết bị trên sơ đồ</h3>
+            {asset.resolvedLocation ? (
+              <div>
+                <p className="text-xs text-slate-600 font-bold mb-3 flex items-center gap-1">
+                  <span>📍</span> {asset.resolvedLocation.name} ({asset.resolvedLocation.type === 'ASSIGNED' ? 'Được định vị tại Bàn làm việc của bạn' : 'Vị trí cố định'})
+                </p>
+                <div className="relative border border-slate-100 rounded-xl overflow-hidden bg-slate-50 flex items-center justify-center max-h-[300px]">
+                  <div className="relative">
+                    <img
+                      src={asset.resolvedLocation.floorPlanUrl}
+                      alt={asset.resolvedLocation.name}
+                      className="max-w-full max-h-[300px] object-contain block"
+                    />
+                    <div
+                      style={{ left: `${asset.resolvedLocation.x}%`, top: `${asset.resolvedLocation.y}%` }}
+                      className="absolute -translate-x-1/2 -translate-y-1/2 z-10"
+                    >
+                      <span className="relative flex size-5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full size-5 items-center justify-center bg-emerald-600 text-[10px] font-bold text-white shadow-md">
+                          💻
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-slate-400 italic">Thiết bị này chưa được cấu hình định vị trên sơ đồ văn phòng.</p>
+            )}
+          </section>
+        </div>
 
         {/* Quick Actions */}
         <div className="grid gap-5 content-start">

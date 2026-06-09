@@ -9,6 +9,9 @@ const ASSET_SELECT = Object.freeze({
   assetCode: true,
   name: true,
   categoryId: true,
+  locationId: true,
+  locationX: true,
+  locationY: true,
   serialNumber: true,
   purchaseDate: true,
   value: true,
@@ -23,6 +26,13 @@ const ASSET_SELECT = Object.freeze({
       name: true,
     },
   },
+  location: {
+    select: {
+      id: true,
+      name: true,
+      floorPlanUrl: true,
+    },
+  },
   assignments: {
     where: {
       status: "ACTIVE",
@@ -35,6 +45,16 @@ const ASSET_SELECT = Object.freeze({
           id: true,
           fullName: true,
           departmentId: true,
+          locationId: true,
+          deskX: true,
+          deskY: true,
+          location: {
+            select: {
+              id: true,
+              name: true,
+              floorPlanUrl: true,
+            },
+          },
           department: {
             select: {
               id: true,
@@ -117,6 +137,9 @@ function createAssetsRepository(prismaClient) {
           assetCode: data.assetCode,
           name: data.name,
           categoryId: Number(data.categoryId),
+          locationId: data.locationId ? Number(data.locationId) : null,
+          locationX: data.locationX !== undefined && data.locationX !== null ? Number(data.locationX) : null,
+          locationY: data.locationY !== undefined && data.locationY !== null ? Number(data.locationY) : null,
           serialNumber: data.serialNumber ?? null,
           purchaseDate: data.purchaseDate ? new Date(data.purchaseDate) : null,
           value: data.value ?? null,
@@ -133,6 +156,9 @@ function createAssetsRepository(prismaClient) {
 
       if (typeof data.name !== "undefined") updateData.name = data.name;
       if (typeof data.categoryId !== "undefined") updateData.categoryId = Number(data.categoryId);
+      if (typeof data.locationId !== "undefined") updateData.locationId = data.locationId ? Number(data.locationId) : null;
+      if (typeof data.locationX !== "undefined") updateData.locationX = data.locationX !== null ? Number(data.locationX) : null;
+      if (typeof data.locationY !== "undefined") updateData.locationY = data.locationY !== null ? Number(data.locationY) : null;
       if (typeof data.serialNumber !== "undefined") updateData.serialNumber = data.serialNumber;
       if (typeof data.purchaseDate !== "undefined") updateData.purchaseDate = data.purchaseDate ? new Date(data.purchaseDate) : null;
       if (typeof data.value !== "undefined") updateData.value = data.value;

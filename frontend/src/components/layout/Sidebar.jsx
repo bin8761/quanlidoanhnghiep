@@ -7,6 +7,7 @@ import {
   FolderTree,
   Gauge,
   LogOut,
+  Map,
   PackageCheck,
   ShieldCheck,
   UsersRound,
@@ -26,6 +27,7 @@ const navItems = [
   { to: '/admin/maintenance', label: 'Bảo trì', icon: Wrench },
   { to: '/admin/inventory', label: 'Kiểm kê', icon: ClipboardCheck },
   { to: '/admin/reports', label: 'Báo cáo', icon: ChartNoAxesCombined },
+  { to: '/admin/locations', label: 'Sơ đồ mặt bằng', icon: Map },
 ]
 
 export default function Sidebar({ open, onClose }) {

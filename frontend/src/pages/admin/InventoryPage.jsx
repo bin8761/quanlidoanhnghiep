@@ -3,6 +3,7 @@ import { CheckCircle2, ClipboardCheck, Eye, PackageSearch, Plus } from 'lucide-r
 import { assetApi } from '../../api/assets'
 import { departmentApi } from '../../api/departments'
 import { inventoryApi } from '../../api/inventory'
+import { locationApi } from '../../api/locations'
 import { ResourceError, ResourceTableSkeleton } from '../../components/admin/ResourceFeedback'
 import Button from '../../components/ui/Button'
 import DataTable from '../../components/ui/DataTable'
@@ -69,9 +70,15 @@ export default function InventoryPage() {
   const [formErrors, setFormErrors] = useState({})
   const [selectedSession, setSelectedSession] = useState(null)
   const [editingItem, setEditingItem] = useState(null)
-  const [itemForm, setItemForm] = useState({ result: 'OK', notes: '' })
+  const [itemForm, setItemForm] = useState({ result: 'OK', notes: '', updateMaster: false })
   const [isSaving, setIsSaving] = useState(false)
   const [toast, setToast] = useState(null)
+
+  // Location auditing states
+  const [locList, setLocList] = useState([])
+  const [selectedLocId, setSelectedLocId] = useState('')
+  const [selectedLocDetail, setSelectedLocDetail] = useState(null)
+  const [pinCoords, setPinCoords] = useState(null)
 
   useAutoDismiss(toast, setToast)
 
@@ -178,9 +185,54 @@ export default function InventoryPage() {
     }
   }
 
-  function openItem(item) {
+  async function openItem(item) {
     setEditingItem(item)
-    setItemForm({ result: item.result === 'PENDING' ? 'OK' : item.result, notes: item.notes || '' })
+    setItemForm({ 
+      result: item.result === 'PENDING' ? 'OK' : item.result, 
+      notes: item.notes || '',
+      updateMaster: false
+    })
+    setPinCoords(item.locationX !== null ? { x: item.locationX, y: item.locationY } : null)
+    setSelectedLocId(item.locationId ? String(item.locationId) : '')
+    setSelectedLocDetail(null)
+
+    try {
+      const data = await locationApi.list()
+      setLocList(data)
+      if (item.locationId) {
+        const detail = await locationApi.get(item.locationId)
+        setSelectedLocDetail(detail)
+      } else if (data.length > 0) {
+        setSelectedLocId(String(data[0].id))
+        const detail = await locationApi.get(data[0].id)
+        setSelectedLocDetail(detail)
+      }
+    } catch (err) {
+      setToast({ type: 'error', message: 'Lỗi tải danh sách sơ đồ' })
+    }
+  }
+
+  async function handleLocChange(e) {
+    const locId = e.target.value
+    setSelectedLocId(locId)
+    setPinCoords(null)
+    if (locId) {
+      try {
+        const detail = await locationApi.get(locId)
+        setSelectedLocDetail(detail)
+      } catch (err) {
+        setSelectedLocDetail(null)
+      }
+    } else {
+      setSelectedLocDetail(null)
+    }
+  }
+
+  const handleMapClick = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * 100
+    const y = ((e.clientY - rect.top) / rect.height) * 100
+    setPinCoords({ x: parseFloat(x.toFixed(2)), y: parseFloat(y.toFixed(2)) })
   }
 
   async function handleItemUpdate(event) {
@@ -190,6 +242,10 @@ export default function InventoryPage() {
       await inventoryApi.updateItem(editingItem.id, {
         result: itemForm.result,
         notes: itemForm.notes.trim() || null,
+        locationId: selectedLocId ? Number(selectedLocId) : null,
+        locationX: pinCoords ? pinCoords.x : null,
+        locationY: pinCoords ? pinCoords.y : null,
+        updateMaster: itemForm.updateMaster,
       })
       const refreshed = await inventoryApi.get(selectedSession.id)
       setSelectedSession(refreshed)
@@ -321,10 +377,70 @@ export default function InventoryPage() {
       )}
 
       {editingItem && (
-        <Modal title={`Kiểm kê ${editingItem.asset.assetCode}`} description={editingItem.asset.name} onClose={() => !isSaving && setEditingItem(null)}>
+        <Modal size="lg" title={`Kiểm kê ${editingItem.asset.assetCode}`} description={editingItem.asset.name} onClose={() => !isSaving && setEditingItem(null)}>
           <form className="grid gap-5" onSubmit={handleItemUpdate}>
-            <FormField as="select" label="Kết quả" name="result" value={itemForm.result} options={RESULT_OPTIONS} onChange={(event) => setItemForm((current) => ({ ...current, result: event.target.value }))} />
-            <FormField as="textarea" label="Ghi chú" name="notes" value={itemForm.notes} maxLength={1000} placeholder="Vị trí, tình trạng hoặc nguyên nhân chênh lệch..." onChange={(event) => setItemForm((current) => ({ ...current, notes: event.target.value }))} />
+            <div className="grid gap-5 sm:grid-cols-2">
+              <FormField as="select" label="Kết quả" name="result" value={itemForm.result} options={RESULT_OPTIONS} onChange={(event) => setItemForm((current) => ({ ...current, result: event.target.value }))} />
+              
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-bold text-slate-700">Sơ đồ mặt bằng phát hiện</label>
+                <select
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs focus:border-emerald-500 focus:bg-white focus:outline-none"
+                  value={selectedLocId}
+                  onChange={handleLocChange}
+                >
+                  <option value="">-- Chọn sơ đồ mặt bằng --</option>
+                  {locList.map(loc => (
+                    <option key={loc.id} value={loc.id}>{loc.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {selectedLocDetail ? (
+              <div className="flex flex-col gap-2">
+                <p className="text-[10px] text-slate-400 italic">💡 Click trực tiếp vào ảnh sơ đồ để ghim vị trí thực tế phát hiện thiết bị.</p>
+                <div className="relative border border-slate-100 rounded-xl overflow-hidden bg-slate-50 flex items-center justify-center max-h-[200px]">
+                  <div className="relative cursor-crosshair" onClick={handleMapClick}>
+                    <img
+                      src={selectedLocDetail.floorPlanUrl}
+                      alt={selectedLocDetail.name}
+                      className="max-w-full max-h-[200px] object-contain block"
+                    />
+                    
+                    {pinCoords && (
+                      <div
+                        style={{ left: `${pinCoords.x}%`, top: `${pinCoords.y}%` }}
+                        className="absolute -translate-x-1/2 -translate-y-1/2"
+                      >
+                        <span className="flex size-4 items-center justify-center rounded-full bg-red-600 border border-white text-white text-[8px] font-bold shadow-lg animate-bounce">
+                          📍
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              selectedLocId && (
+                <div className="text-center py-2 text-xs text-slate-400">Đang tải ảnh sơ đồ...</div>
+              )
+            )}
+
+            <div className="flex items-center gap-2">
+              <input
+                id="updateMasterCheckbox"
+                type="checkbox"
+                checked={itemForm.updateMaster}
+                className="size-4 accent-emerald-600 cursor-pointer"
+                onChange={(e) => setItemForm(current => ({ ...current, updateMaster: e.target.checked }))}
+              />
+              <label htmlFor="updateMasterCheckbox" className="text-xs font-bold text-slate-700 cursor-pointer">
+                Đồng bộ vị trí này làm vị trí gốc của thiết bị (Master Data)
+              </label>
+            </div>
+
+            <FormField as="textarea" label="Ghi chú" name="notes" value={itemForm.notes} maxLength={1000} placeholder="Tình trạng hoặc nguyên nhân chênh lệch..." onChange={(event) => setItemForm((current) => ({ ...current, notes: event.target.value }))} />
             <Actions isSaving={isSaving} label="Lưu kết quả" onClose={() => setEditingItem(null)} />
           </form>
         </Modal>

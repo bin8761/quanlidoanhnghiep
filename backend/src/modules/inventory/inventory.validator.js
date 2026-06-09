@@ -27,6 +27,10 @@ module.exports = Object.freeze({
     body: z.object({
       result,
       notes: z.string().trim().max(1000).optional().nullable(),
+      locationId: z.coerce.number().int().positive("Location ID must be a positive integer").optional().nullable(),
+      locationX: z.coerce.number().optional().nullable(),
+      locationY: z.coerce.number().optional().nullable(),
+      updateMaster: z.boolean().optional(),
     }),
   }),
 });

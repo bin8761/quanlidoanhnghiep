@@ -1,12 +1,58 @@
 const assetsRepository = require("./assets.repository");
 const categoriesRepository = require("../categories/categories.repository");
+const locationsRepository = require("../locations/locations.repository");
 const AppError = require("../../shared/errors/AppError");
 const ERROR_CODES = require("../../shared/errors/errorCodes");
 
-function createAssetsService({ repository = assetsRepository, catRepository = categoriesRepository } = {}) {
+function resolveAssetLocation(asset) {
+  if (!asset) return null;
+
+  let resolvedLocation = null;
+
+  // 1. Fixed Asset: has its own location coordinates
+  if (asset.locationId && asset.locationX !== null && asset.locationY !== null) {
+    resolvedLocation = {
+      locationId: asset.locationId,
+      locationName: asset.location?.name || null,
+      floorPlanUrl: asset.location?.floorPlanUrl || null,
+      x: asset.locationX,
+      y: asset.locationY,
+      type: "FIXED",
+    };
+  }
+  // 2. Mobile Asset: check active assignment
+  else if (asset.assignments && asset.assignments.length > 0) {
+    const activeAssignment = asset.assignments[0];
+    const employee = activeAssignment.employee;
+    if (employee && employee.locationId && employee.deskX !== null && employee.deskY !== null) {
+      resolvedLocation = {
+        locationId: employee.locationId,
+        locationName: employee.location?.name || null,
+        floorPlanUrl: employee.location?.floorPlanUrl || null,
+        x: employee.deskX,
+        y: employee.deskY,
+        type: "ASSIGNED",
+        employeeName: employee.fullName,
+        employeeCode: employee.employeeCode,
+      };
+    }
+  }
+
+  return {
+    ...asset,
+    resolvedLocation,
+  };
+}
+
+function createAssetsService({
+  repository = assetsRepository,
+  catRepository = categoriesRepository,
+  locRepository = locationsRepository
+} = {}) {
   return Object.freeze({
     async getAllAssets(filters = {}) {
-      return repository.findAll(filters);
+      const assets = await repository.findAll(filters);
+      return assets.map(resolveAssetLocation);
     },
 
     async getAssetById(id) {
@@ -18,7 +64,7 @@ function createAssetsService({ repository = assetsRepository, catRepository = ca
           errorCode: "ASSET_NOT_FOUND",
         });
       }
-      return asset;
+      return resolveAssetLocation(asset);
     },
 
     async createAsset(data) {
@@ -40,7 +86,19 @@ function createAssetsService({ repository = assetsRepository, catRepository = ca
         });
       }
 
-      return repository.create(data);
+      if (data.locationId) {
+        const loc = await locRepository.findById(data.locationId);
+        if (!loc) {
+          throw new AppError({
+            message: "Location not found",
+            statusCode: 404,
+            errorCode: "LOCATION_NOT_FOUND",
+          });
+        }
+      }
+
+      const created = await repository.create(data);
+      return resolveAssetLocation(created);
     },
 
     async updateAsset(id, data) {
@@ -64,6 +122,17 @@ function createAssetsService({ repository = assetsRepository, catRepository = ca
         }
       }
 
+      if (data.locationId) {
+        const loc = await locRepository.findById(data.locationId);
+        if (!loc) {
+          throw new AppError({
+            message: "Location not found",
+            statusCode: 404,
+            errorCode: "LOCATION_NOT_FOUND",
+          });
+        }
+      }
+
       if (data.status && data.status !== asset.status) {
         const activeAssignmentCount = await repository.countActiveAssignments(id);
         if (activeAssignmentCount > 0 && data.status !== "ASSIGNED") {
@@ -75,7 +144,8 @@ function createAssetsService({ repository = assetsRepository, catRepository = ca
         }
       }
 
-      return repository.update(id, data);
+      const updated = await repository.update(id, data);
+      return resolveAssetLocation(updated);
     },
 
     async deleteAsset(id) {

@@ -26,12 +26,16 @@ model Employee {
   fullName            String               @map("full_name")
   email               String               @unique
   departmentId        Int?                 @map("department_id")
+  locationId          Int?                 @map("location_id")
+  deskX               Float?               @map("desk_x")
+  deskY               Float?               @map("desk_y")
   status              String               @default("ACTIVE")
   createdAt           DateTime             @default(now()) @map("created_at")
   updatedAt           DateTime             @updatedAt @map("updated_at")
 
   user                User?
   department          Department?          @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  location            Location?            @relation(fields: [locationId], references: [id], onDelete: SetNull)
   assignments         AssetAssignment[]
   maintenanceRequests MaintenanceRequest[]
 
@@ -127,6 +131,9 @@ model Asset {
   assetCode           String               @unique @map("asset_code")
   name                String
   categoryId          Int                  @map("category_id")
+  locationId          Int?                 @map("location_id")
+  locationX           Float?               @map("location_x")
+  locationY           Float?               @map("location_y")
   serialNumber        String?              @map("serial_number")
   purchaseDate        DateTime?            @map("purchase_date")
   value               Decimal?             @db.Decimal(15, 2)
@@ -136,6 +143,7 @@ model Asset {
   createdAt           DateTime             @default(now()) @map("created_at")
   updatedAt           DateTime             @updatedAt @map("updated_at")
   category            AssetCategory        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  location            Location?            @relation(fields: [locationId], references: [id], onDelete: SetNull)
   assignments         AssetAssignment[]
   maintenanceRequests MaintenanceRequest[]
   inventoryItems      InventoryItem[]
@@ -228,16 +236,34 @@ enum InventoryResult {
 }
 
 model InventoryItem {
-  id        String          @id @default(uuid()) @db.Char(36)
-  sessionId String          @map("session_id") @db.Char(36)
-  assetId   String          @map("asset_id") @db.Char(36)
-  result    InventoryResult @default(OK)
-  notes     String?         @db.Text
-  createdAt DateTime        @default(now()) @map("created_at")
-  updatedAt DateTime        @updatedAt @map("updated_at")
-  session   InventorySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  asset     Asset            @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  id         String          @id @default(uuid()) @db.Char(36)
+  sessionId  String          @map("session_id") @db.Char(36)
+  assetId    String          @map("asset_id") @db.Char(36)
+  locationId Int?            @map("location_id")
+  locationX  Float?          @map("location_x")
+  locationY  Float?          @map("location_y")
+  result     InventoryResult @default(OK)
+  notes      String?         @db.Text
+  createdAt  DateTime        @default(now()) @map("created_at")
+  updatedAt  DateTime        @updatedAt @map("updated_at")
+  session    InventorySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  asset      Asset            @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  location   Location?        @relation(fields: [locationId], references: [id], onDelete: SetNull)
 
   @@unique([sessionId, assetId])
   @@map("inventory_items")
+}
+
+model Location {
+  id             Int             @id @default(autoincrement())
+  name           String          @unique
+  description    String?         @db.Text
+  floorPlanUrl   String          @map("floor_plan_url") @db.Text
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+  employees      Employee[]
+  assets         Asset[]
+  inventoryItems InventoryItem[]
+
+  @@map("locations")
 }
