@@ -14,8 +14,7 @@ import {
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../auth/auth-context'
 import PageHeader from '../../components/ui/PageHeader'
-import { getMyTasks } from '../../services/employee.service'
-import { employeeAssets, initialEmployeeRequests } from './employeeData'
+import { getMyTasks, getMyAssets, getMyRequests } from '../../services/employee.service'
 
 const getTaskIcon = (type) => {
   switch (type) {
@@ -33,14 +32,18 @@ const getTaskIcon = (type) => {
 export default function EmployeeDashboardPage() {
   const { user } = useAuth()
   const [tasks, setTasks] = useState([])
-  const activeRequests = initialEmployeeRequests.filter((item) => item.status !== 'Hoàn thành')
+  const [assets, setAssets] = useState([])
+  const [requests, setRequests] = useState([])
 
   useEffect(() => {
-    getMyTasks()
-      .then(setTasks)
+    Promise.all([getMyTasks(), getMyAssets(), getMyRequests()])
+      .then(([tasksList, assetsList, requestsList]) => {
+        setTasks(tasksList)
+        setAssets(assetsList || [])
+        setRequests(requestsList || [])
+      })
       .catch((err) => {
-        console.error('Failed to load tasks:', err)
-        setTasks([])
+        console.error('Failed to load dashboard data:', err)
       })
   }, [])
 
@@ -55,8 +58,8 @@ export default function EmployeeDashboardPage() {
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {[
-          { label: 'Tài sản đang giữ', value: employeeAssets.length, icon: Boxes, tone: 'bg-blue-50 text-blue-700' },
-          { label: 'Yêu cầu đang xử lý', value: activeRequests.length, icon: Headphones, tone: 'bg-amber-50 text-amber-700' },
+          { label: 'Tài sản đang giữ', value: assets.length, icon: Boxes, tone: 'bg-blue-50 text-blue-700' },
+          { label: 'Yêu cầu đang xử lý', value: requests.filter((item) => !['COMPLETED', 'REJECTED', 'CANCELLED'].includes(item.status)).length, icon: Headphones, tone: 'bg-amber-50 text-amber-700' },
           { label: 'Công việc cần làm', value: tasks.length, icon: Clock3, tone: 'bg-violet-50 text-violet-700' },
         ].map(({ label, value, icon: Icon, tone }) => (
           <article
@@ -90,20 +93,24 @@ export default function EmployeeDashboardPage() {
             </Link>
           </header>
           <div className="divide-y divide-slate-100 px-5 sm:px-6">
-            {employeeAssets.slice(0, 3).map((asset) => (
-              <div className="flex items-center gap-3 py-4" key={asset.id}>
-                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700">
-                  <Laptop size={18} />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <strong className="block truncate text-xs font-bold text-slate-800">{asset.name}</strong>
-                  <span className="mt-1 block text-[11px] text-slate-500">{asset.code} · {asset.category}</span>
-                </span>
-                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700">
-                  {asset.condition}
-                </span>
-              </div>
-            ))}
+            {assets.length ? (
+              assets.slice(0, 3).map((item) => (
+                <div className="flex items-center gap-3 py-4" key={item.id}>
+                  <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700">
+                    <Laptop size={18} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <strong className="block truncate text-xs font-bold text-slate-800">{item.asset?.name}</strong>
+                    <span className="mt-1 block text-[11px] text-slate-500">{item.asset?.assetCode} · {item.asset?.category?.name || 'Chưa phân loại'}</span>
+                  </span>
+                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700">
+                    {item.notes || 'Tốt'}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <p className="text-xs text-slate-400 italic py-6 text-center">Bạn chưa được bàn giao tài sản nào.</p>
+            )}
           </div>
         </article>
 
