@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
+const path = require("path");
 
 const env = require("../config/env");
 const errorHandler = require("../middlewares/errorHandler");
@@ -36,12 +37,15 @@ function createCorsOptions() {
 const app = express();
 
 app.disable("x-powered-by");
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use(requestId);
 app.use(cors(createCorsOptions()));
 app.use(express.json({ limit: JSON_PAYLOAD_LIMIT }));
 app.use(express.urlencoded({ extended: true, limit: JSON_PAYLOAD_LIMIT }));
 app.use(requestLogger);
+app.use("/uploads", express.static(path.join(__dirname, "../../uploads")));
 app.use(routes);
 app.use(errorHandler);
 

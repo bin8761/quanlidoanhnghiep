@@ -12,6 +12,15 @@ import { Link, useParams, Navigate } from 'react-router-dom'
 import StatusBadge from '../../components/ui/StatusBadge'
 import { useEffect, useState } from 'react'
 import { getMaintenanceByAsset, getMyAssets } from '../../services/employee.service'
+import { API_BASE_URL } from '../../api/client'
+
+const getFullImageUrl = (url) => {
+  if (!url) return ''
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url
+  }
+  return `${API_BASE_URL.replace('/api', '')}${url}`
+}
 
 export default function EmployeeAssetDetailPage() {
   const { code } = useParams()
@@ -53,6 +62,7 @@ export default function EmployeeAssetDetailPage() {
             serial: found.asset.serialNumber || '—',
             assignedAt: new Date(found.assignedAt).toLocaleDateString('vi-VN'),
             condition: found.notes || 'Tốt',
+            imageUrl: found.asset.imageUrl || '',
             resolvedLocation: resolvedLoc,
           })
         } else {
@@ -111,6 +121,20 @@ export default function EmployeeAssetDetailPage() {
               </div>
               <StatusBadge status={asset.status} />
             </div>
+
+            {asset.imageUrl && (
+              <div className="border-b border-slate-100 bg-slate-50/20 p-5 flex justify-center items-center overflow-hidden max-h-[240px]">
+                <img
+                  src={getFullImageUrl(asset.imageUrl)}
+                  alt={asset.name}
+                  className="max-h-[200px] rounded-xl object-contain shadow-soft"
+                  onError={(e) => {
+                    e.target.onerror = null
+                    e.target.src = 'https://placehold.co/600x400?text=Loi+hien+thi+anh'
+                  }}
+                />
+              </div>
+            )}
 
             <dl className="grid gap-px bg-slate-100 sm:grid-cols-2">
               {[

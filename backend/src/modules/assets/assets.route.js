@@ -5,9 +5,19 @@ const validateRequest = require("../../middlewares/validateRequest");
 const authenticate = require("../../middlewares/authenticate");
 const authorize = require("../../middlewares/authorize");
 const passwordChangeGuard = require("../../middlewares/passwordChangeGuard");
+const { uploadSingleImage } = require("../../middlewares/upload");
 const { ADMIN } = require("../../shared/constants/roles");
 
 const router = express.Router();
+
+router.post(
+  "/upload",
+  authenticate,
+  passwordChangeGuard,
+  authorize(ADMIN),
+  uploadSingleImage("image"),
+  assetsController.uploadAssetImage,
+);
 
 router.get(
   "/",

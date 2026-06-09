@@ -22,6 +22,7 @@ const ASSIGNMENT_SELECT = Object.freeze({
       assetCode: true,
       name: true,
       status: true,
+      imageUrl: true,
       serialNumber: true,
       locationId: true,
       locationX: true,

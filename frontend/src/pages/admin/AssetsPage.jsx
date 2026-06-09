@@ -15,6 +15,8 @@ import PageHeader from '../../components/ui/PageHeader'
 import StatusBadge from '../../components/ui/StatusBadge'
 import Toast from '../../components/ui/Toast'
 import useAutoDismiss from '../../hooks/useAutoDismiss'
+import ImageUpload from '../../components/ui/ImageUpload'
+import { API_BASE_URL } from '../../api/client'
 
 const ASSET_STATUSES = [
   { value: 'AVAILABLE', label: 'Sẵn sàng' },
@@ -44,6 +46,14 @@ function toDateInputValue(value) {
 function formatCurrency(value) {
   if (value === null || typeof value === 'undefined') return 'Chưa cập nhật'
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value))
+}
+
+function getFullImageUrl(url) {
+  if (!url) return ''
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url
+  }
+  return `${API_BASE_URL.replace('/api', '')}${url}`
 }
 
 export default function AssetsPage() {
@@ -161,7 +171,9 @@ export default function AssetsPage() {
     if (form.name.trim().length < 2) nextErrors.name = 'Tên tài sản cần ít nhất 2 ký tự.'
     if (!form.categoryId) nextErrors.categoryId = 'Vui lòng chọn danh mục.'
     if (form.value !== '' && Number(form.value) < 0) nextErrors.value = 'Giá trị không được nhỏ hơn 0.'
-    if (form.imageUrl && !/^https?:\/\/.+/i.test(form.imageUrl)) nextErrors.imageUrl = 'URL hình ảnh không hợp lệ.'
+    if (form.imageUrl && !form.imageUrl.startsWith('/uploads/') && !/^https?:\/\/.+/i.test(form.imageUrl)) {
+      nextErrors.imageUrl = 'URL hình ảnh không hợp lệ.'
+    }
     setFormErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
   }
@@ -369,7 +381,15 @@ export default function AssetsPage() {
               <FormField label="Ngày mua" name="purchaseDate" type="date" value={form.purchaseDate} onChange={updateField} />
               <FormField label="Giá trị (VND)" name="value" type="number" min="0" value={form.value} error={formErrors.value} placeholder="VD: 25000000" onChange={updateField} />
               <FormField as="select" label="Trạng thái" name="status" value={form.status} options={ASSET_STATUSES} onChange={updateField} />
-              <FormField label="URL hình ảnh" name="imageUrl" type="url" value={form.imageUrl} error={formErrors.imageUrl} placeholder="https://..." onChange={updateField} />
+              <ImageUpload
+                label="Hình ảnh tài sản"
+                value={form.imageUrl}
+                onChange={(val) => {
+                  setForm((current) => ({ ...current, imageUrl: val }))
+                  setFormErrors((current) => ({ ...current, imageUrl: undefined }))
+                }}
+                error={formErrors.imageUrl}
+              />
             </div>
             <FormField as="textarea" label="Ghi chú" name="notes" value={form.notes} hint={`${form.notes.length}/1000`} maxLength={1000} placeholder="Thông tin bổ sung về tài sản" onChange={updateField} />
             <div className="form-actions">
@@ -385,6 +405,19 @@ export default function AssetsPage() {
 
       {viewingAsset && (
         <Modal title={viewingAsset.name} description={`Mã tài sản: ${viewingAsset.assetCode}`} onClose={() => setViewingAsset(null)}>
+          {viewingAsset.imageUrl && (
+            <div className="mb-5 flex justify-center rounded-2xl border border-slate-200/80 bg-slate-50/50 p-3 overflow-hidden max-h-[200px]">
+              <img
+                src={getFullImageUrl(viewingAsset.imageUrl)}
+                alt={viewingAsset.name}
+                className="max-h-[174px] rounded-xl object-contain shadow-soft"
+                onError={(e) => {
+                  e.target.onerror = null
+                  e.target.src = 'https://placehold.co/600x400?text=Loi+hien+thi+anh'
+                }}
+              />
+            </div>
+          )}
           <dl className="grid gap-4 text-sm sm:grid-cols-2">
             {[
               ['Danh mục', viewingAsset.category?.name || 'Chưa phân loại'],
