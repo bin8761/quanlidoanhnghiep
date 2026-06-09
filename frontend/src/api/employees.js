@@ -17,6 +17,11 @@ export const employeeApi = Object.freeze({
     return response.data
   },
 
+  async getById(employeeId) {
+    const response = await apiClient.get(`/employees/${employeeId}`)
+    return response.data
+  },
+
   async create(payload) {
     const response = await apiClient.post('/employees', payload)
     return response.data
@@ -29,5 +34,25 @@ export const employeeApi = Object.freeze({
 
   async remove(employeeId) {
     return apiClient.delete(`/employees/${employeeId}`)
+  },
+
+  async getAttachments(employeeId) {
+    const response = await apiClient.get(`/employees/${employeeId}/attachments`)
+    return response.data
+  },
+
+  async uploadAttachment(employeeId, payload) {
+    const response = await apiClient.post(`/employees/${employeeId}/attachments`, payload)
+    return response.data
+  },
+
+  async deleteAttachment(employeeId, attachmentId) {
+    const response = await apiClient.delete(`/employees/${employeeId}/attachments/${attachmentId}`)
+    return response.data
+  },
+
+  async getLogs(employeeId) {
+    const response = await apiClient.get(`/employees/${employeeId}/logs`)
+    return response.data
   },
 })
