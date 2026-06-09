@@ -179,7 +179,7 @@ async function seedEmployees(departments, locations) {
     email: ACCOUNT_EMAILS.noUserEmployee,
     departmentId: departments.engineering.id,
     locationId: locations.floor2.id,
-    deskX: 32.5,
+    deskX: 63.0,
     deskY: 42.0,
   });
   employees.inactive = await upsertEmployee({
@@ -189,8 +189,8 @@ async function seedEmployees(departments, locations) {
     email: ACCOUNT_EMAILS.inactive,
     departmentId: departments.administration.id,
     locationId: locations.floor1.id,
-    deskX: 25.0,
-    deskY: 30.0,
+    deskX: 43.8,
+    deskY: 75.4,
   });
   employees.firstLogin = await upsertEmployee({
     id: FIXED_IDS.employees.firstLogin,
@@ -199,8 +199,8 @@ async function seedEmployees(departments, locations) {
     email: ACCOUNT_EMAILS.firstLogin,
     departmentId: departments.sales.id,
     locationId: locations.floor1.id,
-    deskX: 42.0,
-    deskY: 55.0,
+    deskX: 28.5,
+    deskY: 19.0,
   });
   employees.active = await upsertEmployee({
     id: FIXED_IDS.employees.active,
@@ -209,8 +209,8 @@ async function seedEmployees(departments, locations) {
     email: ACCOUNT_EMAILS.active,
     departmentId: departments.engineering.id,
     locationId: locations.floor2.id,
-    deskX: 68.0,
-    deskY: 38.5,
+    deskX: 69.0,
+    deskY: 35.0,
   });
   employees.finance = await upsertEmployee({
     id: FIXED_IDS.employees.finance,
@@ -219,8 +219,8 @@ async function seedEmployees(departments, locations) {
     email: "minhanh@company.local",
     departmentId: departments.finance.id,
     locationId: locations.floor1.id,
-    deskX: 72.0,
-    deskY: 28.0,
+    deskX: 55.6,
+    deskY: 75.4,
   });
   employees.sales = await upsertEmployee({
     id: FIXED_IDS.employees.sales,
@@ -229,8 +229,8 @@ async function seedEmployees(departments, locations) {
     email: "hoangnam@company.local",
     departmentId: departments.sales.id,
     locationId: locations.floor1.id,
-    deskX: 55.0,
-    deskY: 65.0,
+    deskX: 47.5,
+    deskY: 50.2,
   });
 
   return employees;
@@ -383,8 +383,8 @@ async function seedAssets(categories, locations) {
     value: 8900000,
     status: "MAINTENANCE",
     locationId: locations.floor1.id,
-    locationX: 85.0,
-    locationY: 75.0,
+    locationX: 71.0,
+    locationY: 16.5,
     notes: "Máy in dùng chung khu vực hành chính.",
   });
   assets.projector = await upsertAsset({
@@ -397,8 +397,8 @@ async function seedAssets(categories, locations) {
     value: 12500000,
     status: "AVAILABLE",
     locationId: locations.floor1.id,
-    locationX: 50.0,
-    locationY: 20.0,
+    locationX: 22.6,
+    locationY: 68.0,
     notes: "Máy chiếu phòng họp lớn.",
   });
   assets.keyboard = await upsertAsset({
