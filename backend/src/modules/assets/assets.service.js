@@ -1,3 +1,7 @@
+const fs = require("fs");
+const path = require("path");
+const sharp = require("sharp");
+const crypto = require("crypto");
 const assetsRepository = require("./assets.repository");
 const categoriesRepository = require("../categories/categories.repository");
 const locationsRepository = require("../locations/locations.repository");
@@ -168,6 +172,42 @@ function createAssetsService({
       }
 
       return repository.delete(id);
+    },
+
+    async uploadImage(file) {
+      if (!file) {
+        throw new AppError({
+          message: "Không tìm thấy tệp tải lên",
+          statusCode: 400,
+          errorCode: ERROR_CODES.VALIDATION_ERROR,
+        });
+      }
+
+      const uploadDir = path.join(__dirname, "../../../uploads/assets");
+
+      // Tạo thư mục nếu chưa tồn tại
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      const fileName = `${crypto.randomUUID()}.webp`;
+      const filePath = path.join(uploadDir, fileName);
+
+      try {
+        await sharp(file.buffer)
+          .rotate()
+          .resize({ width: 1000, withoutEnlargement: true })
+          .webp({ quality: 80 })
+          .toFile(filePath);
+      } catch (err) {
+        throw new AppError({
+          message: `Lỗi xử lý hình ảnh: ${err.message}`,
+          statusCode: 500,
+          errorCode: "IMAGE_PROCESSING_ERROR",
+        });
+      }
+
+      return `/uploads/assets/${fileName}`;
     },
   });
 }

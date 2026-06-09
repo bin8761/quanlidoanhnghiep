@@ -32,4 +32,9 @@ export const assetApi = Object.freeze({
   async remove(assetId) {
     return apiClient.delete(`/assets/${assetId}`)
   },
+
+  async uploadImage(formData) {
+    const response = await apiClient.post('/assets/upload', formData)
+    return response.data
+  },
 })

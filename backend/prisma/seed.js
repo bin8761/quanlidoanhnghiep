@@ -33,6 +33,15 @@ const FIXED_IDS = Object.freeze({
     active: "44444444-4444-4444-8444-444444444444",
     finance: "55555555-5555-4555-8555-555555555555",
     sales: "66666666-6666-4666-8666-666666666666",
+    ceo: "00000000-0000-4000-9000-000000000007",
+    cto: "00000000-0000-4000-9000-000000000008",
+    hrManager: "00000000-0000-4000-9000-000000000009",
+    sysAdmin: "00000000-0000-4000-9000-000000000010",
+    marketingLead: "00000000-0000-4000-9000-000000000011",
+    designer: "00000000-0000-4000-9000-000000000012",
+    support: "00000000-0000-4000-9000-000000000013",
+    security: "00000000-0000-4000-9000-000000000014",
+    hrSpecialist: "00000000-0000-4000-9000-000000000015",
   },
   users: {
     admin: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
@@ -75,10 +84,13 @@ const FIXED_IDS = Object.freeze({
 });
 
 const DEPARTMENT_SEEDS = Object.freeze([
+  { key: "board", name: "Ban Giám đốc", description: "Lãnh đạo và quản lý chiến lược phát triển doanh nghiệp." },
   { key: "engineering", name: "Phòng Kỹ thuật", description: "Phát triển, vận hành và hỗ trợ hệ thống công nghệ." },
   { key: "sales", name: "Phòng Kinh doanh", description: "Phụ trách khách hàng, hợp đồng và hoạt động bán hàng." },
   { key: "administration", name: "Phòng Hành chính", description: "Quản lý cơ sở vật chất và hoạt động nội bộ." },
   { key: "finance", name: "Phòng Tài chính", description: "Quản lý ngân sách, thanh toán và báo cáo tài chính." },
+  { key: "hr", name: "Phòng Nhân sự", description: "Tuyển dụng, đào tạo, quản lý nhân sự và chế độ phúc lợi." },
+  { key: "marketing", name: "Phòng Marketing", description: "Quản lý thương hiệu, chạy chiến dịch và truyền thông." },
 ]);
 
 const CATEGORY_SEEDS = Object.freeze([
@@ -88,6 +100,10 @@ const CATEGORY_SEEDS = Object.freeze([
   { key: "projector", name: "Máy chiếu", description: "Thiết bị trình chiếu cho phòng họp." },
   { key: "peripheral", name: "Thiết bị ngoại vi", description: "Bàn phím, chuột và phụ kiện máy tính." },
   { key: "mobile", name: "Thiết bị di động", description: "Điện thoại và máy tính bảng phục vụ công việc." },
+  { key: "network", name: "Thiết bị mạng", description: "Router, Switch, Firewall và thiết bị Access Point phát Wifi." },
+  { key: "server", name: "Máy chủ & Lưu trữ", description: "Thiết bị Server, tủ đĩa NAS, tủ Rack và bộ lưu điện UPS." },
+  { key: "office", name: "Thiết bị văn phòng", description: "Máy hủy tài liệu, máy scan độc lập, điện thoại để bàn IP Phone." },
+  { key: "meeting", name: "Thiết bị phòng họp", description: "Màn hình TV họp lớn, loa hội nghị họp trực tuyến." },
 ]);
 
 async function buildPasswordHashes() {
@@ -161,11 +177,11 @@ async function seedLocations() {
   return locations;
 }
 
-async function upsertEmployee({ id, employeeCode, fullName, email, departmentId, locationId, deskX, deskY, status = "ACTIVE" }) {
+async function upsertEmployee({ id, employeeCode, fullName, email, departmentId, locationId, deskX, deskY, position = "Staff", phone = null, joinDate = new Date(), status = "ACTIVE" }) {
   return prisma.employee.upsert({
     where: { employeeCode },
-    update: { fullName, email, departmentId, locationId, deskX, deskY, status },
-    create: { id, employeeCode, fullName, email, departmentId, locationId, deskX, deskY, status },
+    update: { fullName, email, departmentId, locationId, deskX, deskY, position, phone, joinDate, status },
+    create: { id, employeeCode, fullName, email, departmentId, locationId, deskX, deskY, position, phone, joinDate, status },
   });
 }
 
@@ -175,42 +191,55 @@ async function seedEmployees(departments, locations) {
   employees.noUser = await upsertEmployee({
     id: FIXED_IDS.employees.noUser,
     employeeCode: "EMP001",
-    fullName: "Nhân viên 1",
+    fullName: "Nguyễn Hữu Đạt",
     email: ACCOUNT_EMAILS.noUserEmployee,
     departmentId: departments.engineering.id,
     locationId: locations.floor2.id,
     deskX: 63.0,
     deskY: 42.0,
+    position: "Lead Developer",
+    phone: "0912345678",
+    joinDate: new Date("2023-01-10T00:00:00.000Z"),
   });
   employees.inactive = await upsertEmployee({
     id: FIXED_IDS.employees.inactive,
     employeeCode: "EMP002",
-    fullName: "Inactive User Employee",
+    fullName: "Lê Thị Hoa",
     email: ACCOUNT_EMAILS.inactive,
     departmentId: departments.administration.id,
     locationId: locations.floor1.id,
-    deskX: 43.8,
-    deskY: 75.4,
+    deskX: 38.0,
+    deskY: 39.5,
+    position: "Admin Specialist",
+    phone: "0923456789",
+    joinDate: new Date("2024-05-15T00:00:00.000Z"),
+    status: "INACTIVE",
   });
   employees.firstLogin = await upsertEmployee({
     id: FIXED_IDS.employees.firstLogin,
     employeeCode: "EMP003",
-    fullName: "First Login Employee",
+    fullName: "Phạm Văn Hùng",
     email: ACCOUNT_EMAILS.firstLogin,
     departmentId: departments.sales.id,
     locationId: locations.floor1.id,
     deskX: 28.5,
     deskY: 19.0,
+    position: "Sales Manager",
+    phone: "0934567890",
+    joinDate: new Date("2023-09-01T00:00:00.000Z"),
   });
   employees.active = await upsertEmployee({
     id: FIXED_IDS.employees.active,
     employeeCode: "EMP004",
-    fullName: "Active User Employee",
+    fullName: "Hoàng Văn Sơn",
     email: ACCOUNT_EMAILS.active,
     departmentId: departments.engineering.id,
     locationId: locations.floor2.id,
     deskX: 69.0,
     deskY: 35.0,
+    position: "Senior Frontend Developer",
+    phone: "0945678901",
+    joinDate: new Date("2024-02-20T00:00:00.000Z"),
   });
   employees.finance = await upsertEmployee({
     id: FIXED_IDS.employees.finance,
@@ -221,6 +250,9 @@ async function seedEmployees(departments, locations) {
     locationId: locations.floor1.id,
     deskX: 55.6,
     deskY: 75.4,
+    position: "Chief Accountant",
+    phone: "0956789012",
+    joinDate: new Date("2022-03-15T00:00:00.000Z"),
   });
   employees.sales = await upsertEmployee({
     id: FIXED_IDS.employees.sales,
@@ -231,6 +263,126 @@ async function seedEmployees(departments, locations) {
     locationId: locations.floor1.id,
     deskX: 47.5,
     deskY: 50.2,
+    position: "Account Executive",
+    phone: "0967890123",
+    joinDate: new Date("2025-01-05T00:00:00.000Z"),
+  });
+  employees.ceo = await upsertEmployee({
+    id: FIXED_IDS.employees.ceo,
+    employeeCode: "EMP007",
+    fullName: "Nguyễn Quang Huy",
+    email: "quanghuy@company.local",
+    departmentId: departments.board.id,
+    locationId: locations.floor1.id,
+    deskX: 43.8,
+    deskY: 75.4,
+    position: "Chief Executive Officer (CEO)",
+    phone: "0901112223",
+    joinDate: new Date("2020-01-01T00:00:00.000Z"),
+  });
+  employees.cto = await upsertEmployee({
+    id: FIXED_IDS.employees.cto,
+    employeeCode: "EMP008",
+    fullName: "Phạm Minh Tuấn",
+    email: "minhtuan@company.local",
+    departmentId: departments.board.id,
+    locationId: locations.floor2.id,
+    deskX: 45.0,
+    deskY: 22.0,
+    position: "Chief Technology Officer (CTO)",
+    phone: "0902223334",
+    joinDate: new Date("2020-01-01T00:00:00.000Z"),
+  });
+  employees.hrManager = await upsertEmployee({
+    id: FIXED_IDS.employees.hrManager,
+    employeeCode: "EMP009",
+    fullName: "Vũ Thị Mai",
+    email: "thimai@company.local",
+    departmentId: departments.hr.id,
+    locationId: locations.floor1.id,
+    deskX: 38.0,
+    deskY: 39.5,
+    position: "HR Manager",
+    phone: "0978901234",
+    joinDate: new Date("2022-08-10T00:00:00.000Z"),
+  });
+  employees.sysAdmin = await upsertEmployee({
+    id: FIXED_IDS.employees.sysAdmin,
+    employeeCode: "EMP010",
+    fullName: "Lê Hoàng Long",
+    email: "hoanglong@company.local",
+    departmentId: departments.engineering.id,
+    locationId: locations.floor2.id,
+    deskX: 79.0,
+    deskY: 21.0,
+    position: "System Administrator",
+    phone: "0989012345",
+    joinDate: new Date("2023-05-20T00:00:00.000Z"),
+  });
+  employees.marketingLead = await upsertEmployee({
+    id: FIXED_IDS.employees.marketingLead,
+    employeeCode: "EMP011",
+    fullName: "Đỗ Thu Hà",
+    email: "thuha@company.local",
+    departmentId: departments.marketing.id,
+    locationId: locations.floor1.id,
+    deskX: 38.0,
+    deskY: 19.0,
+    position: "Marketing Lead",
+    phone: "0990123456",
+    joinDate: new Date("2024-03-01T00:00:00.000Z"),
+  });
+  employees.designer = await upsertEmployee({
+    id: FIXED_IDS.employees.designer,
+    employeeCode: "EMP012",
+    fullName: "Ngô Minh Trí",
+    email: "minhtri@company.local",
+    departmentId: departments.engineering.id,
+    locationId: locations.floor2.id,
+    deskX: 63.0,
+    deskY: 35.0,
+    position: "UX/UI Designer",
+    phone: "0903334445",
+    joinDate: new Date("2024-07-01T00:00:00.000Z"),
+  });
+  employees.support = await upsertEmployee({
+    id: FIXED_IDS.employees.support,
+    employeeCode: "EMP013",
+    fullName: "Bùi Thanh Thảo",
+    email: "thanhthao@company.local",
+    departmentId: departments.sales.id,
+    locationId: locations.floor1.id,
+    deskX: 56.8,
+    deskY: 50.2,
+    position: "Customer Support Specialist",
+    phone: "0904445556",
+    joinDate: new Date("2025-02-15T00:00:00.000Z"),
+  });
+  employees.security = await upsertEmployee({
+    id: FIXED_IDS.employees.security,
+    employeeCode: "EMP014",
+    fullName: "Hoàng Quốc Anh",
+    email: "quocanh@company.local",
+    departmentId: departments.engineering.id,
+    locationId: locations.floor2.id,
+    deskX: 79.0,
+    deskY: 35.0,
+    position: "Cyber Security Engineer",
+    phone: "0905556667",
+    joinDate: new Date("2024-10-01T00:00:00.000Z"),
+  });
+  employees.hrSpecialist = await upsertEmployee({
+    id: FIXED_IDS.employees.hrSpecialist,
+    employeeCode: "EMP015",
+    fullName: "Trịnh Thu Hương",
+    email: "thuhuong@company.local",
+    departmentId: departments.hr.id,
+    locationId: locations.floor1.id,
+    deskX: 38.0,
+    deskY: 50.2,
+    position: "Talent Acquisition Specialist",
+    phone: "0906667778",
+    joinDate: new Date("2025-04-01T00:00:00.000Z"),
   });
 
   return employees;
@@ -331,15 +483,19 @@ async function seedUsers(employees, hashes) {
 }
 
 async function upsertAsset({ id, assetCode, ...data }) {
+  const createData = { assetCode, ...data };
+  if (id) createData.id = id;
   return prisma.asset.upsert({
     where: { assetCode },
     update: data,
-    create: { id, assetCode, ...data },
+    create: createData,
   });
 }
 
 async function seedAssets(categories, locations) {
   const assets = {};
+
+  // Laptop
   assets.primaryLaptop = await upsertAsset({
     id: FIXED_IDS.assets.primaryLaptop,
     assetCode: "LT-001",
@@ -362,6 +518,28 @@ async function seedAssets(categories, locations) {
     status: "AVAILABLE",
     notes: "Thiết bị dự phòng sẵn sàng bàn giao.",
   });
+  assets.macbook = await upsertAsset({
+    assetCode: "LT-003",
+    name: "MacBook Pro 14 M3 Pro",
+    categoryId: categories.laptop.id,
+    serialNumber: "MBP14M3-DEMO-003",
+    purchaseDate: new Date("2025-03-01T00:00:00.000Z"),
+    value: 49500000,
+    status: "ASSIGNED",
+    notes: "Laptop cấu hình cao dành cho thiết kế/quản lý.",
+  });
+  assets.thinkpad = await upsertAsset({
+    assetCode: "LT-004",
+    name: "Lenovo ThinkPad T14 Gen 4",
+    categoryId: categories.laptop.id,
+    serialNumber: "TPT14-DEMO-004",
+    purchaseDate: new Date("2024-12-15T00:00:00.000Z"),
+    value: 24500000,
+    status: "ASSIGNED",
+    notes: "Laptop văn phòng dòng doanh nghiệp siêu bền.",
+  });
+
+  // Monitor
   assets.monitor = await upsertAsset({
     id: FIXED_IDS.assets.monitor,
     assetCode: "MN-001",
@@ -373,6 +551,28 @@ async function seedAssets(categories, locations) {
     status: "ASSIGNED",
     notes: "Màn hình làm việc 24 inch.",
   });
+  assets.monitorLG = await upsertAsset({
+    assetCode: "MN-002",
+    name: "LG UltraGear 27UP600 27\" 4K",
+    categoryId: categories.monitor.id,
+    serialNumber: "LG27-DEMO-002",
+    purchaseDate: new Date("2025-01-20T00:00:00.000Z"),
+    value: 7500000,
+    status: "ASSIGNED",
+    notes: "Màn hình đồ họa độ phân giải cao.",
+  });
+  assets.monitorDellSharp = await upsertAsset({
+    assetCode: "MN-003",
+    name: "Dell UltraSharp U2424H",
+    categoryId: categories.monitor.id,
+    serialNumber: "DP2424-DEMO-003",
+    purchaseDate: new Date("2025-02-15T00:00:00.000Z"),
+    value: 6200000,
+    status: "ASSIGNED",
+    notes: "Màn hình UltraSharp cao cấp chống mỏi mắt.",
+  });
+
+  // Printer
   assets.printer = await upsertAsset({
     id: FIXED_IDS.assets.printer,
     assetCode: "PR-001",
@@ -387,6 +587,21 @@ async function seedAssets(categories, locations) {
     locationY: 16.5,
     notes: "Máy in dùng chung khu vực hành chính.",
   });
+  assets.printerCanon = await upsertAsset({
+    assetCode: "PR-002",
+    name: "Canon imageCLASS MF272dw",
+    categoryId: categories.printer.id,
+    serialNumber: "CN272-DEMO-002",
+    purchaseDate: new Date("2024-05-10T00:00:00.000Z"),
+    value: 4800000,
+    status: "AVAILABLE",
+    locationId: locations.floor1.id,
+    locationX: 45.0,
+    locationY: 78.0,
+    notes: "Máy in/scan đa năng đặt tại phòng Admin Tầng 1.",
+  });
+
+  // Projector
   assets.projector = await upsertAsset({
     id: FIXED_IDS.assets.projector,
     assetCode: "PJ-001",
@@ -401,6 +616,21 @@ async function seedAssets(categories, locations) {
     locationY: 68.0,
     notes: "Máy chiếu phòng họp lớn.",
   });
+  assets.tvSony = await upsertAsset({
+    assetCode: "PJ-002",
+    name: "Sony Bravia 65\" 4K TV",
+    categoryId: categories.projector.id,
+    serialNumber: "SN65-DEMO-002",
+    purchaseDate: new Date("2024-03-20T00:00:00.000Z"),
+    value: 16500000,
+    status: "AVAILABLE",
+    locationId: locations.floor1.id,
+    locationX: 12.0,
+    locationY: 68.0,
+    notes: "Màn hình TV trình chiếu hội nghị phòng họp A.",
+  });
+
+  // Peripheral
   assets.keyboard = await upsertAsset({
     id: FIXED_IDS.assets.keyboard,
     assetCode: "KB-001",
@@ -412,6 +642,18 @@ async function seedAssets(categories, locations) {
     status: "BROKEN",
     notes: "Thiết bị đang chờ đánh giá sửa chữa.",
   });
+  assets.mouseLogi = await upsertAsset({
+    assetCode: "KB-002",
+    name: "Logitech Signature M650",
+    categoryId: categories.peripheral.id,
+    serialNumber: "LGM650-DEMO-002",
+    purchaseDate: new Date("2025-02-10T00:00:00.000Z"),
+    value: 850000,
+    status: "AVAILABLE",
+    notes: "Chuột không dây công thái học dự phòng.",
+  });
+
+  // Mobile
   assets.phone = await upsertAsset({
     id: FIXED_IDS.assets.phone,
     assetCode: "PH-001",
@@ -423,6 +665,16 @@ async function seedAssets(categories, locations) {
     status: "LOST",
     notes: "Đang trong quy trình xác minh thất lạc.",
   });
+  assets.iphone = await upsertAsset({
+    assetCode: "PH-002",
+    name: "iPhone 15 Pro 256GB",
+    categoryId: categories.mobile.id,
+    serialNumber: "IP15P-DEMO-002",
+    purchaseDate: new Date("2024-09-30T00:00:00.000Z"),
+    value: 28900000,
+    status: "ASSIGNED",
+    notes: "Điện thoại công tác cấp cho quản lý kinh doanh.",
+  });
   assets.tablet = await upsertAsset({
     id: FIXED_IDS.assets.tablet,
     assetCode: "TB-001",
@@ -433,6 +685,127 @@ async function seedAssets(categories, locations) {
     value: 9500000,
     status: "DISPOSED",
     notes: "Thiết bị đã thanh lý.",
+  });
+
+  // Network
+  assets.switchCisco = await upsertAsset({
+    assetCode: "NW-001",
+    name: "Cisco Catalyst 2960-L Switch",
+    categoryId: categories.network.id,
+    serialNumber: "CS2960-DEMO-001",
+    purchaseDate: new Date("2023-11-12T00:00:00.000Z"),
+    value: 18500000,
+    status: "AVAILABLE",
+    locationId: locations.floor2.id,
+    locationX: 82.0,
+    locationY: 80.0,
+    notes: "Switch mạng trung tâm tầng 2 trong tủ Rack.",
+  });
+  assets.firewallSophos = await upsertAsset({
+    assetCode: "NW-002",
+    name: "Sophos XGS 136 Firewall",
+    categoryId: categories.network.id,
+    serialNumber: "SP136-DEMO-002",
+    purchaseDate: new Date("2024-01-15T00:00:00.000Z"),
+    value: 35000000,
+    status: "AVAILABLE",
+    locationId: locations.floor2.id,
+    locationX: 82.0,
+    locationY: 72.0,
+    notes: "Thiết bị tường lửa cổng mạng chính của công ty.",
+  });
+  assets.apAruba = await upsertAsset({
+    assetCode: "NW-003",
+    name: "Aruba AP-515 Access Point",
+    categoryId: categories.network.id,
+    serialNumber: "AR515-DEMO-003",
+    purchaseDate: new Date("2024-05-18T00:00:00.000Z"),
+    value: 12000000,
+    status: "AVAILABLE",
+    locationId: locations.floor2.id,
+    locationX: 52.0,
+    locationY: 30.0,
+    notes: "Thiết bị phát Wifi 6 gắn trần Tầng 2.",
+  });
+
+  // Server
+  assets.serverDell = await upsertAsset({
+    assetCode: "SV-001",
+    name: "Dell PowerEdge R760 Server",
+    categoryId: categories.server.id,
+    serialNumber: "DPE760-DEMO-001",
+    purchaseDate: new Date("2024-06-25T00:00:00.000Z"),
+    value: 145000000,
+    status: "AVAILABLE",
+    locationId: locations.floor2.id,
+    locationX: 76.0,
+    locationY: 72.0,
+    notes: "Máy chủ Server chạy hệ thống ảo hóa dữ liệu nội bộ.",
+  });
+  assets.nasSynology = await upsertAsset({
+    assetCode: "SV-002",
+    name: "Synology NAS DS923+",
+    categoryId: categories.server.id,
+    serialNumber: "SY923-DEMO-002",
+    purchaseDate: new Date("2024-08-10T00:00:00.000Z"),
+    value: 18900000,
+    status: "AVAILABLE",
+    locationId: locations.floor2.id,
+    locationX: 76.0,
+    locationY: 80.0,
+    notes: "Ổ đĩa mạng trung tâm lưu trữ và sao lưu dữ liệu.",
+  });
+  assets.upsApc = await upsertAsset({
+    assetCode: "SV-003",
+    name: "APC Smart-UPS 1500VA",
+    categoryId: categories.server.id,
+    serialNumber: "APC1500-DEMO-003",
+    purchaseDate: new Date("2023-09-05T00:00:00.000Z"),
+    value: 11200000,
+    status: "MAINTENANCE",
+    locationId: locations.floor2.id,
+    locationX: 82.0,
+    locationY: 88.0,
+    notes: "Bộ lưu điện dự phòng cấp nguồn tủ Rack khi mất điện.",
+  });
+
+  // Office Equipment
+  assets.shredderSilicon = await upsertAsset({
+    assetCode: "OF-001",
+    name: "Silicon PS-800C Shredder",
+    categoryId: categories.office.id,
+    serialNumber: "SL800-DEMO-001",
+    purchaseDate: new Date("2024-04-12T00:00:00.000Z"),
+    value: 3200000,
+    status: "AVAILABLE",
+    locationId: locations.floor1.id,
+    locationX: 84.0,
+    notes: "Máy hủy tài liệu giấy hành chính tại quầy in.",
+  });
+  assets.scannerFujitsu = await upsertAsset({
+    assetCode: "OF-002",
+    name: "Fujitsu ScanSnap iX1600",
+    categoryId: categories.office.id,
+    serialNumber: "FJ1600-DEMO-002",
+    purchaseDate: new Date("2024-07-22T00:00:00.000Z"),
+    value: 11500000,
+    status: "AVAILABLE",
+    locationId: locations.floor1.id,
+    locationX: 38.0,
+    locationY: 78.0,
+    notes: "Máy quét tài liệu scan trực tiếp lưu cloud.",
+  });
+
+  // Meeting Room Equipment
+  assets.speakerJabra = await upsertAsset({
+    assetCode: "MT-001",
+    name: "Jabra Speak 750",
+    categoryId: categories.meeting.id,
+    serialNumber: "JB750-DEMO-001",
+    purchaseDate: new Date("2024-10-18T00:00:00.000Z"),
+    value: 6800000,
+    status: "AVAILABLE",
+    notes: "Loa và mic Bluetooth di động phục vụ họp trực tuyến.",
   });
 
   return assets;
@@ -447,7 +820,7 @@ async function seedAssignments(assets, employees) {
       assignedAt: new Date("2026-05-20T08:00:00.000Z"),
       returnedAt: null,
       status: "ACTIVE",
-      notes: "Bàn giao laptop và bộ sạc phục vụ công việc.",
+      notes: "Bàn giao laptop và bộ sạc phục vụ công việc lập trình.",
     },
     {
       id: FIXED_IDS.assignments.activeMonitor,
@@ -456,7 +829,7 @@ async function seedAssignments(assets, employees) {
       assignedAt: new Date("2026-05-22T08:30:00.000Z"),
       returnedAt: null,
       status: "ACTIVE",
-      notes: "Bàn giao màn hình tại vị trí làm việc.",
+      notes: "Bàn giao màn hình làm việc tại vị trí.",
     },
     {
       id: FIXED_IDS.assignments.returnedLaptop,
@@ -465,7 +838,7 @@ async function seedAssignments(assets, employees) {
       assignedAt: new Date("2026-03-01T08:00:00.000Z"),
       returnedAt: new Date("2026-04-30T09:00:00.000Z"),
       status: "RETURNED",
-      notes: "Đã thu hồi sau khi hoàn thành dự án.",
+      notes: "Đã thu hồi sau khi hoàn thành dự án kiểm toán tài chính năm.",
     },
     {
       id: FIXED_IDS.assignments.transferredProjector,
@@ -475,6 +848,51 @@ async function seedAssignments(assets, employees) {
       returnedAt: new Date("2026-03-15T10:00:00.000Z"),
       status: "TRANSFERRED",
       notes: "Đã chuyển khỏi phòng kinh doanh và đưa về kho.",
+    },
+    {
+      id: "20000000-0000-4000-8000-000000000005",
+      assetId: assets.macbook.id,
+      employeeId: employees.ceo.id,
+      assignedAt: new Date("2025-03-02T09:00:00.000Z"),
+      returnedAt: null,
+      status: "ACTIVE",
+      notes: "Bàn giao MacBook Pro 14 M3 Pro cấp cho CEO làm việc.",
+    },
+    {
+      id: "20000000-0000-4000-8000-000000000006",
+      assetId: assets.thinkpad.id,
+      employeeId: employees.hrManager.id,
+      assignedAt: new Date("2024-12-16T09:00:00.000Z"),
+      returnedAt: null,
+      status: "ACTIVE",
+      notes: "Bàn giao Lenovo ThinkPad T14 Gen 4 cho Trưởng phòng Nhân sự.",
+    },
+    {
+      id: "20000000-0000-4000-8000-000000000007",
+      assetId: assets.monitorDellSharp.id,
+      employeeId: employees.finance.id,
+      assignedAt: new Date("2025-02-16T08:30:00.000Z"),
+      returnedAt: null,
+      status: "ACTIVE",
+      notes: "Màn hình Dell UltraSharp bổ sung cho bàn Kế toán trưởng.",
+    },
+    {
+      id: "20000000-0000-4000-8000-000000000008",
+      assetId: assets.monitorLG.id,
+      employeeId: employees.designer.id,
+      assignedAt: new Date("2025-01-21T09:30:00.000Z"),
+      returnedAt: null,
+      status: "ACTIVE",
+      notes: "Màn hình đồ họa LG 27 inch cấp cho Designer thiết kế UI/UX.",
+    },
+    {
+      id: "20000000-0000-4000-8000-000000000009",
+      assetId: assets.iphone.id,
+      employeeId: employees.sales.id,
+      assignedAt: new Date("2024-10-01T08:00:00.000Z"),
+      returnedAt: null,
+      status: "ACTIVE",
+      notes: "Điện thoại iPhone 15 Pro cấp cho Trưởng nhóm Kinh doanh liên hệ khách hàng.",
     },
   ];
 
@@ -515,6 +933,102 @@ async function seedMaintenance(assets, employees) {
       status: "COMPLETED",
       repairCost: 1200000,
       notes: "Đã thay pin và vệ sinh hoàn tất.",
+    },
+    {
+      id: "30000000-0000-4000-8000-000000000004",
+      assetId: assets.firewallSophos.id,
+      requesterId: employees.cto.id,
+      description: "Cấu hình cổng VPN và thiết lập các quy tắc bảo mật mạng (Firewall rules) cho văn phòng làm việc mới.",
+      status: "COMPLETED",
+      repairCost: 0,
+      notes: "Phê duyệt bởi CTO.",
+      resolution: "Đã hoàn thành cấu hình VPN cho các phòng ban, mở các cổng cần thiết cho kết nối Server.",
+      completedAt: new Date("2026-04-10T17:00:00.000Z"),
+    },
+    {
+      id: "30000000-0000-4000-8000-000000000005",
+      assetId: assets.serverDell.id,
+      requesterId: employees.sysAdmin.id,
+      description: "Hệ thống RAID báo động một ổ đĩa SSD SAS 1.92TB bị hỏng cần thay thế dự phòng nóng.",
+      status: "COMPLETED",
+      repairCost: 8500000,
+      resolution: "Đã thay ổ cứng mới SSD Enterprise Dell, hệ thống RAID đã rebuilt hoàn tất 100%.",
+      completedAt: new Date("2026-05-12T11:30:00.000Z"),
+    },
+    {
+      id: "30000000-0000-4000-8000-000000000006",
+      assetId: assets.upsApc.id,
+      requesterId: employees.sysAdmin.id,
+      description: "Bộ lưu điện UPS APC báo động lỗi ắc quy (Replace Battery). Cần mua cụm ắc quy dự phòng mới và thay thế gấp.",
+      status: "IN_PROGRESS",
+      repairCost: 4500000,
+      notes: "Đã gửi đề xuất mua sắm ắc quy chính hãng APC, đang chờ duyệt chi ngân sách từ phòng kế toán.",
+    },
+    {
+      id: "30000000-0000-4000-8000-000000000007",
+      assetId: assets.macbook.id,
+      requesterId: employees.ceo.id,
+      description: "Màn hình MacBook Pro thỉnh thoảng có hiện tượng giật sọc ngang màu xanh ở cạnh dưới.",
+      status: "PENDING",
+      notes: "Cần kiểm tra xem do cáp màn hình hay lỗi card đồ họa.",
+    },
+    {
+      id: "30000000-0000-4000-8000-000000000008",
+      assetId: assets.iphone.id,
+      requesterId: employees.sales.id,
+      description: "Điện thoại bị rơi vỡ mặt kính màn hình trong quá trình đi công tác gặp gỡ khách hàng.",
+      status: "COMPLETED",
+      repairCost: 3800000,
+      resolution: "Đã ép lại mặt kính màn hình chính hãng tại trung tâm ủy quyền Apple.",
+      completedAt: new Date("2026-05-02T16:00:00.000Z"),
+    },
+    {
+      id: "30000000-0000-4000-8000-000000000009",
+      assetId: assets.printerCanon.id,
+      requesterId: employees.hrSpecialist.id,
+      description: "Máy in Canon thường xuyên bị kẹt giấy ở khay nạp và phát tiếng kêu lộc cộc.",
+      status: "COMPLETED",
+      repairCost: 350000,
+      resolution: "Vệ sinh quả lô cuốn giấy (roller) và trục ép, máy hoạt động êm trở lại.",
+      completedAt: new Date("2026-05-25T10:30:00.000Z"),
+    },
+    {
+      id: "30000000-0000-4000-8000-000000000010",
+      assetId: assets.scannerFujitsu.id,
+      requesterId: employees.hrManager.id,
+      description: "Tài liệu sau khi quét bằng khay nạp tự động ADF bị lệch góc khoảng 3-5 độ.",
+      status: "PENDING",
+      notes: "Hỗ trợ căn chỉnh lại khay dẫn giấy hoặc cài đặt lại driver.",
+    },
+    {
+      id: "30000000-0000-4000-8000-000000000011",
+      assetId: assets.apAruba.id,
+      requesterId: employees.designer.id,
+      description: "Sóng Wifi ở khu vực bàn thiết kế chập chờn, thường xuyên bị ngắt kết nối vào buổi chiều khi đông người dùng.",
+      status: "COMPLETED",
+      repairCost: 0,
+      resolution: "Đã tối ưu lại kênh phát sóng (channel bonding) và công suất phát trên controller Aruba để giảm nhiễu.",
+      completedAt: new Date("2026-06-03T15:00:00.000Z"),
+    },
+    {
+      id: "30000000-0000-4000-8000-000000000012",
+      assetId: assets.keyboard.id,
+      requesterId: employees.active.id,
+      description: "Bàn phím Logitech MX Keys bị đổ nước trà, phím Spacebar và phím Enter bị kẹt cứng bấm không nhận.",
+      status: "COMPLETED",
+      repairCost: 0,
+      resolution: "Không thể khắc phục do chập mạch phím, đã lập biên bản báo hỏng và cấp bàn phím mới thay thế.",
+      completedAt: new Date("2026-05-18T09:00:00.000Z"),
+    },
+    {
+      id: "30000000-0000-4000-8000-000000000013",
+      assetId: assets.switchCisco.id,
+      requesterId: employees.security.id,
+      description: "Cần chia thêm VLAN khách (Guest WiFi VLAN 50) để cách ly truy cập với mạng nội bộ văn phòng.",
+      status: "COMPLETED",
+      repairCost: 0,
+      resolution: "Cấu hình xong Trunk port trên Cisco Switch và cấu hình DHCP Server cấp IP riêng cho VLAN 50.",
+      completedAt: new Date("2026-05-30T14:30:00.000Z"),
     },
   ];
 
