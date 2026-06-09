@@ -1,5 +1,18 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Pencil, Plus, Trash2, MapPin } from 'lucide-react'
+import {
+  Pencil,
+  Plus,
+  Trash2,
+  MapPin,
+  Briefcase,
+  User,
+  GraduationCap,
+  FileText,
+  History,
+  UploadCloud,
+  FileCheck,
+  Download
+} from 'lucide-react'
 import { departmentApi } from '../../api/departments'
 import { employeeApi } from '../../api/employees'
 import { locationApi } from '../../api/locations'
@@ -14,12 +27,82 @@ import StatusBadge from '../../components/ui/StatusBadge'
 import Toast from '../../components/ui/Toast'
 import useAutoDismiss from '../../hooks/useAutoDismiss'
 
+const FIELD_LABELS = {
+  fullName: 'Họ và tên',
+  avatarUrl: 'Ảnh đại diện',
+  phone: 'Số điện thoại',
+  personalEmail: 'Email cá nhân',
+  dateOfBirth: 'Ngày sinh',
+  gender: 'Giới tính',
+  permanentAddress: 'Địa chỉ thường trú',
+  currentAddress: 'Địa chỉ hiện tại',
+  emergencyContact: 'Liên hệ khẩn cấp',
+  education: 'Trình độ học vấn',
+  skills: 'Kỹ năng',
+  certificates: 'Chứng chỉ',
+  hometown: 'Quê quán',
+  ethnicity: 'Dân tộc',
+  nationality: 'Quốc tịch',
+  identityCardNumber: 'Số CCCD',
+  allowProfileUpdate: 'Quyền tự cập nhật hồ sơ',
+  position: 'Chức vụ',
+  status: 'Trạng thái nhân viên',
+  departmentId: 'Phòng ban',
+  joinDate: 'Ngày vào làm'
+}
+
+function formatDate(value) {
+  if (!value) return 'Chưa cập nhật'
+  try {
+    return new Intl.DateTimeFormat('vi-VN').format(new Date(value))
+  } catch {
+    return 'Chưa cập nhật'
+  }
+}
+
+function toInputDateString(isoString) {
+  if (!isoString) return ''
+  try {
+    const d = new Date(isoString)
+    if (isNaN(d.getTime())) return ''
+    return d.toISOString().split('T')[0]
+  } catch {
+    return ''
+  }
+}
+
+function getFileTypeFromExtension(filename) {
+  const ext = filename.split('.').pop().toLowerCase()
+  if (['pdf', 'doc', 'docx'].includes(ext)) return 'CV'
+  if (['jpg', 'jpeg', 'png'].includes(ext)) return 'CCCD'
+  return 'OTHER'
+}
+
 const EMPTY_FORM = Object.freeze({
   employeeCode: '',
   fullName: '',
   email: '',
   departmentId: '',
   status: 'ACTIVE',
+  position: 'Staff',
+  joinDate: '',
+  allowProfileUpdate: true,
+  phone: '',
+  personalEmail: '',
+  dateOfBirth: '',
+  gender: 'Nam',
+  identityCardNumber: '',
+  hometown: '',
+  ethnicity: '',
+  nationality: '',
+  permanentAddress: '',
+  currentAddress: '',
+  emergencyName: '',
+  emergencyPhone: '',
+  emergencyRelation: '',
+  education: [],
+  skills: '',
+  certificates: ''
 })
 
 export default function EmployeesPage() {
@@ -28,7 +111,14 @@ export default function EmployeesPage() {
   const [filters, setFilters] = useState({ keyword: '', status: '', departmentId: '' })
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  
   const [editingEmployee, setEditingEmployee] = useState(null)
+  const [editingEmployeeDetail, setEditingEmployeeDetail] = useState(null)
+  const [editModalTab, setEditModalTab] = useState('job')
+  const [isLoadingEdit, setIsLoadingEdit] = useState(false)
+  const [attachments, setAttachments] = useState([])
+  const [logs, setLogs] = useState([])
+  
   const [deletingEmployee, setDeletingEmployee] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [formErrors, setFormErrors] = useState({})
@@ -43,6 +133,15 @@ export default function EmployeesPage() {
   const [selectedLocDetail, setSelectedLocDetail] = useState(null)
   const [pinCoords, setPinCoords] = useState(null)
   const [isSavingPin, setIsSavingPin] = useState(false)
+
+  // Attachment form state (inside modal)
+  const [attachForm, setAttachForm] = useState({
+    fileName: '',
+    fileType: 'CV',
+    fileUrl: '',
+    fileSize: '0 KB'
+  })
+  const [isUploading, setIsUploading] = useState(false)
 
   useAutoDismiss(toast, setToast)
 
@@ -73,25 +172,69 @@ export default function EmployeesPage() {
 
   function openCreateModal() {
     setEditingEmployee({ id: null })
-    setForm(EMPTY_FORM)
+    setEditingEmployeeDetail(null)
+    setForm({
+      ...EMPTY_FORM,
+      joinDate: toInputDateString(new Date())
+    })
     setFormErrors({})
   }
 
-  function openEditModal(employee) {
+  async function openEditModal(employee) {
     setEditingEmployee(employee)
-    setForm({
-      employeeCode: employee.employeeCode,
-      fullName: employee.fullName,
-      email: employee.email,
-      departmentId: employee.departmentId ? String(employee.departmentId) : '',
-      status: employee.status,
-    })
+    setEditModalTab('job')
+    setIsLoadingEdit(true)
     setFormErrors({})
+    try {
+      const detail = await employeeApi.getById(employee.id)
+      setEditingEmployeeDetail(detail)
+
+      const emergency = detail.emergencyContact || {}
+      setForm({
+        employeeCode: detail.employeeCode || '',
+        fullName: detail.fullName || '',
+        email: detail.email || '',
+        departmentId: detail.departmentId ? String(detail.departmentId) : '',
+        status: detail.status || 'ACTIVE',
+        position: detail.position || 'Staff',
+        joinDate: toInputDateString(detail.joinDate),
+        allowProfileUpdate: detail.allowProfileUpdate ?? true,
+        phone: detail.phone || '',
+        personalEmail: detail.personalEmail || '',
+        dateOfBirth: toInputDateString(detail.dateOfBirth),
+        gender: detail.gender || 'Nam',
+        identityCardNumber: detail.identityCardNumber || '',
+        hometown: detail.hometown || '',
+        ethnicity: detail.ethnicity || '',
+        nationality: detail.nationality || '',
+        permanentAddress: detail.permanentAddress || '',
+        currentAddress: detail.currentAddress || '',
+        emergencyName: emergency.name || '',
+        emergencyPhone: emergency.phone || '',
+        emergencyRelation: emergency.relation || '',
+        education: Array.isArray(detail.education) ? detail.education : [],
+        skills: Array.isArray(detail.skills) ? detail.skills.join(', ') : '',
+        certificates: Array.isArray(detail.certificates) ? detail.certificates.join(', ') : ''
+      })
+
+      const [attachList, logList] = await Promise.all([
+        employeeApi.getAttachments(employee.id),
+        employeeApi.getLogs(employee.id)
+      ])
+      setAttachments(attachList)
+      setLogs(logList)
+    } catch (err) {
+      setToast({ type: 'error', message: err.message || 'Lỗi tải chi tiết nhân viên.' })
+      setEditingEmployee(null)
+    } finally {
+      setIsLoadingEdit(false)
+    }
   }
 
   function closeFormModal() {
     if (!isSaving) {
       setEditingEmployee(null)
+      setEditingEmployeeDetail(null)
       setForm(EMPTY_FORM)
       setFormErrors({})
     }
@@ -105,7 +248,7 @@ export default function EmployeesPage() {
 
   function validateForm() {
     const nextErrors = {}
-    if (!form.employeeCode.trim()) nextErrors.employeeCode = 'Vui lòng nhập mã nhân viên.'
+    if (!editingEmployee.id && !form.employeeCode.trim()) nextErrors.employeeCode = 'Vui lòng nhập mã nhân viên.'
     if (form.fullName.trim().length < 2) nextErrors.fullName = 'Họ tên cần ít nhất 2 ký tự.'
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) nextErrors.email = 'Email không hợp lệ.'
     setFormErrors(nextErrors)
@@ -118,33 +261,59 @@ export default function EmployeesPage() {
 
     setIsSaving(true)
     try {
-      const payload = {
-        fullName: form.fullName.trim(),
-        email: form.email.trim(),
-        departmentId: form.departmentId ? Number(form.departmentId) : null,
-        status: form.status,
-      }
-
+      let payload
       if (editingEmployee.id) {
+        // Full payload for Edit
+        payload = {
+          fullName: form.fullName.trim(),
+          email: form.email.trim(),
+          departmentId: form.departmentId ? Number(form.departmentId) : null,
+          status: form.status,
+          position: form.position?.trim() || 'Staff',
+          joinDate: form.joinDate ? new Date(form.joinDate) : new Date(),
+          allowProfileUpdate: form.allowProfileUpdate,
+          phone: form.phone?.trim() || null,
+          personalEmail: form.personalEmail?.trim() || null,
+          dateOfBirth: form.dateOfBirth ? new Date(form.dateOfBirth) : null,
+          gender: form.gender || null,
+          identityCardNumber: form.identityCardNumber?.trim() || null,
+          hometown: form.hometown?.trim() || null,
+          ethnicity: form.ethnicity?.trim() || null,
+          nationality: form.nationality?.trim() || null,
+          permanentAddress: form.permanentAddress?.trim() || null,
+          currentAddress: form.currentAddress?.trim() || null,
+          emergencyContact: {
+            name: form.emergencyName?.trim() || null,
+            phone: form.emergencyPhone?.trim() || null,
+            relation: form.emergencyRelation?.trim() || null
+          },
+          education: form.education || [],
+          skills: form.skills ? form.skills.split(',').map(s => s.trim()).filter(Boolean) : [],
+          certificates: form.certificates ? form.certificates.split(',').map(c => c.trim()).filter(Boolean) : []
+        }
         await employeeApi.update(editingEmployee.id, payload)
         setToast({ type: 'success', message: 'Cập nhật nhân viên thành công.' })
       } else {
-        await employeeApi.create({
-          ...payload,
+        // Basic payload for Create
+        payload = {
+          fullName: form.fullName.trim(),
+          email: form.email.trim(),
+          departmentId: form.departmentId ? Number(form.departmentId) : null,
+          status: form.status,
           employeeCode: form.employeeCode.trim(),
-        })
+          position: form.position?.trim() || 'Staff',
+          joinDate: form.joinDate ? new Date(form.joinDate) : new Date()
+        }
+        await employeeApi.create(payload)
         setToast({ type: 'success', message: 'Thêm nhân viên thành công.' })
       }
 
       setEditingEmployee(null)
+      setEditingEmployeeDetail(null)
       setForm(EMPTY_FORM)
       await loadEmployees(filters)
     } catch (requestError) {
-      if (requestError.errorCode === 'VALIDATION_ERROR') {
-        setToast({ type: 'error', message: requestError.message })
-      } else {
-        setToast({ type: 'error', message: requestError.message })
-      }
+      setToast({ type: 'error', message: requestError.message })
     } finally {
       setIsSaving(false)
     }
@@ -343,48 +512,594 @@ export default function EmployeesPage() {
 
       {editingEmployee && (
         <Modal
-          title={editingEmployee.id ? 'Cập nhật nhân viên' : 'Thêm nhân viên'}
+          title={editingEmployee.id ? `Cập nhật nhân viên: ${form.fullName}` : 'Thêm nhân viên'}
           description="Hồ sơ nhân viên là điều kiện để tạo tài khoản USER và bàn giao tài sản."
           onClose={closeFormModal}
+          size={editingEmployee.id ? 'lg' : 'md'}
         >
-          <form className="grid gap-5" noValidate onSubmit={handleSave}>
-            <div className="grid gap-5 sm:grid-cols-2">
-              <FormField
-                label="Mã nhân viên"
-                name="employeeCode"
-                value={form.employeeCode}
-                error={formErrors.employeeCode}
-                placeholder="VD: EMP005"
-                disabled={Boolean(editingEmployee.id)}
-                onChange={updateField}
-              />
-              <FormField
-                label="Họ và tên"
-                name="fullName"
-                value={form.fullName}
-                error={formErrors.fullName}
-                placeholder="Nhập họ và tên"
-                onChange={updateField}
-              />
+          {isLoadingEdit ? (
+            <div className="grid min-h-[300px] place-items-center">
+              <div className="text-center">
+                <div className="mx-auto size-8 rounded-full border-3 border-brand-100 border-t-brand-600 animate-spin" />
+                <p className="mt-4 text-xs font-semibold text-slate-500">Đang tải thông tin chi tiết...</p>
+              </div>
             </div>
-            <FormField
-              label="Email công ty"
-              name="email"
-              type="email"
-              value={form.email}
-              error={formErrors.email}
-              placeholder="name@company.local"
-              onChange={updateField}
-            />
-            <div className="grid gap-5 sm:grid-cols-2">
-              <FormField
-                as="select"
-                label="Phòng ban"
-                name="departmentId"
-                value={form.departmentId}
-                options={departmentOptions}
-                onChange={updateField}
-              />
+          ) : editingEmployee.id ? (
+            // EDIT MODE WITH 5 TABS
+            <div className="space-y-5">
+              {/* Tab Navigation */}
+              <div className="border-b border-slate-100 bg-slate-50/50 px-4 -mx-5 -mt-5">
+                <nav className="flex space-x-6 overflow-x-auto" aria-label="Tabs">
+                  {[
+                    { id: 'job', label: 'Thông tin công việc', icon: Briefcase },
+                    { id: 'personal', label: 'Thông tin cá nhân', icon: User },
+                    { id: 'resume', label: 'Sơ yếu lý lịch', icon: GraduationCap },
+                    { id: 'attachments', label: 'Tài liệu & Đính kèm', icon: FileText },
+                    { id: 'logs', label: 'Lịch sử cập nhật', icon: History }
+                  ].map(tab => {
+                    const Icon = tab.icon
+                    const active = editModalTab === tab.id
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setEditModalTab(tab.id)}
+                        className={`flex items-center gap-2 border-b-2 py-4 text-xs font-bold transition focus:outline-none whitespace-nowrap ${
+                          active
+                            ? 'border-brand-600 text-brand-700'
+                            : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'
+                        }`}
+                      >
+                        <Icon size={15} />
+                        {tab.label}
+                      </button>
+                    )
+                  })}
+                </nav>
+              </div>
+
+              <form className="grid gap-5" noValidate onSubmit={handleSave}>
+                {/* TAB 1: Job Info */}
+                {editModalTab === 'job' && (
+                  <div className="grid gap-5">
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      <FormField
+                        label="Mã nhân viên"
+                        name="employeeCode"
+                        value={form.employeeCode}
+                        error={formErrors.employeeCode}
+                        placeholder="VD: EMP005"
+                        disabled
+                      />
+                      <FormField
+                        label="Họ và tên"
+                        name="fullName"
+                        value={form.fullName}
+                        error={formErrors.fullName}
+                        placeholder="Nhập họ và tên"
+                        onChange={updateField}
+                      />
+                    </div>
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      <FormField
+                        label="Email công ty"
+                        name="email"
+                        type="email"
+                        value={form.email}
+                        error={formErrors.email}
+                        placeholder="name@company.local"
+                        onChange={updateField}
+                      />
+                      <FormField
+                        label="Chức vụ"
+                        name="position"
+                        value={form.position}
+                        placeholder="VD: Kỹ sư phần mềm"
+                        onChange={updateField}
+                      />
+                    </div>
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      <FormField
+                        as="select"
+                        label="Phòng ban"
+                        name="departmentId"
+                        value={form.departmentId}
+                        options={departmentOptions}
+                        onChange={updateField}
+                      />
+                      <FormField
+                        label="Ngày vào làm"
+                        name="joinDate"
+                        type="date"
+                        value={form.joinDate}
+                        onChange={updateField}
+                      />
+                    </div>
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      <FormField
+                        as="select"
+                        label="Trạng thái"
+                        name="status"
+                        value={form.status}
+                        options={[
+                          { value: 'ACTIVE', label: 'Đang hoạt động' },
+                          { value: 'INACTIVE', label: 'Ngừng hoạt động' },
+                        ]}
+                        onChange={updateField}
+                      />
+                      <div className="flex items-center gap-3 pt-6">
+                        <input
+                          type="checkbox"
+                          id="allowProfileUpdate"
+                          name="allowProfileUpdate"
+                          checked={form.allowProfileUpdate}
+                          onChange={(e) => setForm(current => ({ ...current, allowProfileUpdate: e.target.checked }))}
+                          className="size-4 rounded border-slate-355 text-brand-600 focus:ring-brand-500"
+                        />
+                        <label htmlFor="allowProfileUpdate" className="text-xs font-bold text-slate-700 cursor-pointer">
+                          Cho phép nhân viên tự cập nhật thông tin cá nhân
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 2: Personal Info */}
+                {editModalTab === 'personal' && (
+                  <div className="grid gap-5">
+                    <div className="grid gap-5 sm:grid-cols-3">
+                      <FormField
+                        label="Số điện thoại"
+                        name="phone"
+                        value={form.phone}
+                        onChange={updateField}
+                      />
+                      <FormField
+                        label="Email cá nhân"
+                        name="personalEmail"
+                        type="email"
+                        value={form.personalEmail}
+                        onChange={updateField}
+                      />
+                      <FormField
+                        label="Ngày sinh"
+                        name="dateOfBirth"
+                        type="date"
+                        value={form.dateOfBirth}
+                        onChange={updateField}
+                      />
+                    </div>
+                    <div className="grid gap-5 sm:grid-cols-3">
+                      <FormField
+                        as="select"
+                        label="Giới tính"
+                        name="gender"
+                        value={form.gender}
+                        options={[
+                          { value: 'Nam', label: 'Nam' },
+                          { value: 'Nữ', label: 'Nữ' },
+                          { value: 'Khác', label: 'Khác' }
+                        ]}
+                        onChange={updateField}
+                      />
+                      <FormField
+                        label="Số CCCD"
+                        name="identityCardNumber"
+                        value={form.identityCardNumber}
+                        onChange={updateField}
+                      />
+                      <FormField
+                        label="Quê quán"
+                        name="hometown"
+                        value={form.hometown}
+                        onChange={updateField}
+                      />
+                    </div>
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      <FormField
+                        label="Dân tộc"
+                        name="ethnicity"
+                        value={form.ethnicity}
+                        onChange={updateField}
+                      />
+                      <FormField
+                        label="Quốc tịch"
+                        name="nationality"
+                        value={form.nationality}
+                        onChange={updateField}
+                      />
+                    </div>
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      <FormField
+                        as="textarea"
+                        label="Địa chỉ thường trú"
+                        name="permanentAddress"
+                        value={form.permanentAddress}
+                        onChange={updateField}
+                      />
+                      <FormField
+                        as="textarea"
+                        label="Địa chỉ hiện tại"
+                        name="currentAddress"
+                        value={form.currentAddress}
+                        onChange={updateField}
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider border-b pb-1">Người liên hệ khẩn cấp</h4>
+                      <div className="grid gap-5 sm:grid-cols-3">
+                        <FormField
+                          label="Họ tên"
+                          name="emergencyName"
+                          value={form.emergencyName}
+                          onChange={updateField}
+                        />
+                        <FormField
+                          label="Số điện thoại"
+                          name="emergencyPhone"
+                          value={form.emergencyPhone}
+                          onChange={updateField}
+                        />
+                        <FormField
+                          label="Mối quan hệ"
+                          name="emergencyRelation"
+                          value={form.emergencyRelation}
+                          onChange={updateField}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 3: Resume */}
+                {editModalTab === 'resume' && (
+                  <div className="grid gap-5">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between border-b pb-2">
+                        <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Học vấn & Trình độ</h4>
+                        <Button type="button" variant="secondary" size="sm" onClick={() => {
+                          setForm(current => ({
+                            ...current,
+                            education: [...current.education, { school: '', major: '', degree: 'Đại học', graduateYear: new Date().getFullYear() }]
+                          }))
+                        }}>
+                          <Plus size={14} /> Thêm trình độ
+                        </Button>
+                      </div>
+
+                      {form.education.length === 0 ? (
+                        <p className="text-xs text-slate-400 italic py-2 text-center">Chưa cập nhật thông tin học vấn.</p>
+                      ) : (
+                        <div className="space-y-4 max-h-[220px] overflow-y-auto pr-1">
+                          {form.education.map((item, idx) => (
+                            <div key={idx} className="relative grid gap-4 rounded-xl border border-slate-100 bg-slate-50/50 p-4 sm:grid-cols-4 items-end">
+                              <FormField
+                                label="Trường học"
+                                name={`school-${idx}`}
+                                value={item.school || ''}
+                                onChange={e => {
+                                  const nextEd = [...form.education]
+                                  nextEd[idx] = { ...nextEd[idx], school: e.target.value }
+                                  setForm(current => ({ ...current, education: nextEd }))
+                                }}
+                              />
+                              <FormField
+                                label="Chuyên ngành"
+                                name={`major-${idx}`}
+                                value={item.major || ''}
+                                onChange={e => {
+                                  const nextEd = [...form.education]
+                                  nextEd[idx] = { ...nextEd[idx], major: e.target.value }
+                                  setForm(current => ({ ...current, education: nextEd }))
+                                }}
+                              />
+                              <FormField
+                                as="select"
+                                label="Bằng cấp"
+                                name={`degree-${idx}`}
+                                value={item.degree || 'Đại học'}
+                                options={[
+                                  { value: 'Trung cấp', label: 'Trung cấp' },
+                                  { value: 'Cao đẳng', label: 'Cao đẳng' },
+                                  { value: 'Đại học', label: 'Đại học' },
+                                  { value: 'Thạc sĩ', label: 'Thạc sĩ' },
+                                  { value: 'Tiến sĩ', label: 'Tiến sĩ' },
+                                  { value: 'Khác', label: 'Khác' }
+                                ]}
+                                onChange={e => {
+                                  const nextEd = [...form.education]
+                                  nextEd[idx] = { ...nextEd[idx], degree: e.target.value }
+                                  setForm(current => ({ ...current, education: nextEd }))
+                                }}
+                              />
+                              <div className="flex gap-2 items-center">
+                                <FormField
+                                  label="Năm tốt nghiệp"
+                                  name={`graduateYear-${idx}`}
+                                  type="number"
+                                  value={item.graduateYear || ''}
+                                  onChange={e => {
+                                    const nextEd = [...form.education]
+                                    nextEd[idx] = { ...nextEd[idx], graduateYear: Number(e.target.value) }
+                                    setForm(current => ({ ...current, education: nextEd }))
+                                  }}
+                                />
+                                <button
+                                  type="button"
+                                  className="mt-6 p-2 rounded-lg text-slate-400 hover:text-red-650 transition hover:bg-red-50"
+                                  onClick={() => {
+                                    const nextEd = form.education.filter((_, i) => i !== idx)
+                                    setForm(current => ({ ...current, education: nextEd }))
+                                  }}
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="grid gap-5 sm:grid-cols-2 border-t pt-4">
+                      <FormField
+                        as="textarea"
+                        label="Kỹ năng chuyên môn"
+                        name="skills"
+                        value={form.skills}
+                        hint="Nhập các kỹ năng, phân cách bằng dấu phẩy (,)"
+                        placeholder="VD: Node.js, React, SQL..."
+                        onChange={updateField}
+                      />
+                      <FormField
+                        as="textarea"
+                        label="Chứng chỉ chuyên môn"
+                        name="certificates"
+                        value={form.certificates}
+                        hint="Nhập các chứng chỉ, phân cách bằng dấu phẩy (,)"
+                        placeholder="VD: AWS, PMP..."
+                        onChange={updateField}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 4: Attachments */}
+                {editModalTab === 'attachments' && (
+                  <div className="space-y-4">
+                    <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4 space-y-4">
+                      <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Thêm tài liệu đính kèm</h4>
+                      <div className="grid gap-4 sm:grid-cols-3 items-end">
+                        <FormField
+                          as="select"
+                          label="Loại tài liệu"
+                          name="fileType"
+                          value={attachForm.fileType}
+                          options={[
+                            { value: 'CV', label: 'CV / Sơ yếu lý lịch' },
+                            { value: 'CCCD', label: 'Căn cước công dân' },
+                            { value: 'DEGREE', label: 'Bằng cấp tốt nghiệp' },
+                            { value: 'CERTIFICATE', label: 'Chứng chỉ chuyên môn' },
+                            { value: 'OTHER', label: 'Tài liệu khác' }
+                          ]}
+                          onChange={e => setAttachForm(c => ({ ...c, fileType: e.target.value }))}
+                        />
+                        <div className="grid gap-1.5">
+                          <label className="text-xs font-bold text-slate-700">Chọn tệp tin</label>
+                          <div className="relative flex items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2 cursor-pointer hover:border-slate-400 transition min-h-11">
+                            <input
+                              type="file"
+                              className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                              onChange={(e) => {
+                                const file = e.target.files[0]
+                                if (file) {
+                                  let sizeStr = '0 KB'
+                                  if (file.size > 1024 * 1024) sizeStr = (file.size / (1024 * 1024)).toFixed(1) + ' MB'
+                                  else sizeStr = (file.size / 1024).toFixed(0) + ' KB'
+                                  setAttachForm({
+                                    fileName: file.name,
+                                    fileType: getFileTypeFromExtension(file.name),
+                                    fileUrl: `/mock-uploads/${Date.now()}_${file.name}`,
+                                    fileSize: sizeStr
+                                  })
+                                }
+                              }}
+                            />
+                            <span className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold">
+                              <UploadCloud size={16} />
+                              {attachForm.fileName ? attachForm.fileName : 'Chọn tệp...'}
+                            </span>
+                          </div>
+                        </div>
+                        <Button type="button" disabled={isUploading || !attachForm.fileName} className="w-full" onClick={async () => {
+                          setIsUploading(true)
+                          try {
+                            await employeeApi.uploadAttachment(editingEmployee.id, {
+                              fileName: attachForm.fileName,
+                              fileType: attachForm.fileType,
+                              fileUrl: attachForm.fileUrl
+                            })
+                            setToast({ type: 'success', message: 'Thêm tài liệu đính kèm thành công.' })
+                            setAttachForm({ fileName: '', fileType: 'CV', fileUrl: '', fileSize: '0 KB' })
+                            const updatedList = await employeeApi.getAttachments(editingEmployee.id)
+                            setAttachments(updatedList)
+                          } catch (err) {
+                            setToast({ type: 'error', message: err.message || 'Lỗi thêm tài liệu' })
+                          } finally {
+                            setIsUploading(false)
+                          }
+                        }}>
+                          Đính kèm tài liệu
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Attachments List */}
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Tài liệu đã đính kèm ({attachments.length})</h4>
+                      {attachments.length === 0 ? (
+                        <p className="text-xs text-slate-400 italic py-2 text-center">Chưa có tài liệu đính kèm.</p>
+                      ) : (
+                        <div className="grid gap-3 sm:grid-cols-2 max-h-[200px] overflow-y-auto pr-1">
+                          {attachments.map(file => (
+                            <div key={file.id} className="flex items-start justify-between gap-3 rounded-xl border border-slate-100 bg-white p-3 shadow-sm">
+                              <div className="flex items-start gap-2.5 min-w-0">
+                                <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-emerald-50 text-emerald-700">
+                                  <FileCheck size={16} />
+                                </span>
+                                <div className="min-w-0">
+                                  <h5 className="truncate text-xs font-bold text-slate-800" title={file.fileName}>{file.fileName}</h5>
+                                  <span className="text-[9px] text-slate-400">Tải lên: {formatDate(file.uploadedAt)}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <a
+                                  href={file.fileUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="grid size-7 place-items-center rounded-lg text-slate-400 hover:bg-slate-50 hover:text-slate-850"
+                                >
+                                  <Download size={14} />
+                                </a>
+                                <button
+                                  type="button"
+                                  className="grid size-7 place-items-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-750"
+                                  onClick={async () => {
+                                    if (!confirm('Xóa tài liệu này?')) return
+                                    try {
+                                      await employeeApi.deleteAttachment(editingEmployee.id, file.id)
+                                      setToast({ type: 'success', message: 'Xóa tài liệu thành công.' })
+                                      const updatedList = await employeeApi.getAttachments(editingEmployee.id)
+                                      setAttachments(updatedList)
+                                    } catch (err) {
+                                      setToast({ type: 'error', message: err.message || 'Lỗi xóa tài liệu' })
+                                    }
+                                  }}
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 5: Logs */}
+                {editModalTab === 'logs' && (
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Nhật ký thay đổi hồ sơ ({logs.length})</h4>
+                    {logs.length === 0 ? (
+                      <p className="text-xs text-slate-400 italic py-4 text-center">Chưa có nhật ký thay đổi nào.</p>
+                    ) : (
+                      <div className="overflow-x-auto rounded-xl border border-slate-100 max-h-[250px]">
+                        <table className="w-full text-left border-collapse text-[11px]">
+                          <thead>
+                            <tr className="bg-slate-50 text-slate-500 font-bold border-b border-slate-100 sticky top-0">
+                              <th className="p-2.5">Thời gian</th>
+                              <th className="p-2.5">Người đổi</th>
+                              <th className="p-2.5">Trường đổi</th>
+                              <th className="p-2.5">Giá trị cũ</th>
+                              <th className="p-2.5">Giá trị mới</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
+                            {logs.map(log => {
+                              const actorName = log.actor ? (log.actor.employee?.fullName || log.actor.email) : 'System'
+                              const fieldLabel = FIELD_LABELS[log.fieldName] || log.fieldName
+                              return (
+                                <tr key={log.id} className="hover:bg-slate-50/50">
+                                  <td className="p-2.5 whitespace-nowrap text-slate-400">
+                                    {new Intl.DateTimeFormat('vi-VN', {
+                                      dateStyle: 'short',
+                                      timeStyle: 'short'
+                                    }).format(new Date(log.changedAt))}
+                                  </td>
+                                  <td className="p-2.5 font-semibold">{actorName}</td>
+                                  <td className="p-2.5 font-bold text-brand-700">{fieldLabel}</td>
+                                  <td className="p-2.5 truncate max-w-[120px]" title={log.oldValue}>{log.oldValue || '-'}</td>
+                                  <td className="p-2.5 truncate max-w-[120px]" title={log.newValue}>{log.newValue || '-'}</td>
+                                </tr>
+                              )
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Footer buttons for data tabs */}
+                {['job', 'personal', 'resume'].includes(editModalTab) && (
+                  <div className="form-actions border-t pt-4">
+                    <Button type="button" variant="secondary" disabled={isSaving} onClick={closeFormModal}>
+                      Hủy
+                    </Button>
+                    <Button type="submit" disabled={isSaving}>
+                      {isSaving && <span className="size-4 animate-spin-soft rounded-full border-2 border-white/30 border-t-white" />}
+                      Lưu thay đổi
+                    </Button>
+                  </div>
+                )}
+              </form>
+            </div>
+          ) : (
+            // CREATE MODE (SIMPLE FORM)
+            <form className="grid gap-5" noValidate onSubmit={handleSave}>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <FormField
+                  label="Mã nhân viên"
+                  name="employeeCode"
+                  value={form.employeeCode}
+                  error={formErrors.employeeCode}
+                  placeholder="VD: EMP005"
+                  onChange={updateField}
+                />
+                <FormField
+                  label="Họ và tên"
+                  name="fullName"
+                  value={form.fullName}
+                  error={formErrors.fullName}
+                  placeholder="Nhập họ và tên"
+                  onChange={updateField}
+                />
+              </div>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <FormField
+                  label="Email công ty"
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  error={formErrors.email}
+                  placeholder="name@company.local"
+                  onChange={updateField}
+                />
+                <FormField
+                  label="Chức vụ"
+                  name="position"
+                  value={form.position}
+                  placeholder="VD: Kỹ sư phần mềm"
+                  onChange={updateField}
+                />
+              </div>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <FormField
+                  as="select"
+                  label="Phòng ban"
+                  name="departmentId"
+                  value={form.departmentId}
+                  options={departmentOptions}
+                  onChange={updateField}
+                />
+                <FormField
+                  label="Ngày vào làm"
+                  name="joinDate"
+                  type="date"
+                  value={form.joinDate}
+                  onChange={updateField}
+                />
+              </div>
               <FormField
                 as="select"
                 label="Trạng thái"
@@ -396,17 +1111,17 @@ export default function EmployeesPage() {
                 ]}
                 onChange={updateField}
               />
-            </div>
-            <div className="form-actions">
-              <Button type="button" variant="secondary" disabled={isSaving} onClick={closeFormModal}>
-                Hủy
-              </Button>
-              <Button type="submit" disabled={isSaving}>
-                {isSaving && <span className="size-4 animate-spin-soft rounded-full border-2 border-white/30 border-t-white" />}
-                {editingEmployee.id ? 'Lưu thay đổi' : 'Thêm nhân viên'}
-              </Button>
-            </div>
-          </form>
+              <div className="form-actions border-t pt-4">
+                <Button type="button" variant="secondary" disabled={isSaving} onClick={closeFormModal}>
+                  Hủy
+                </Button>
+                <Button type="submit" disabled={isSaving}>
+                  {isSaving && <span className="size-4 animate-spin-soft rounded-full border-2 border-white/30 border-t-white" />}
+                  Thêm nhân viên
+                </Button>
+              </div>
+            </form>
+          )}
         </Modal>
       )}
 

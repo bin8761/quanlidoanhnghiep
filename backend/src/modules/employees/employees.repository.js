@@ -14,6 +14,24 @@ const EMPLOYEE_SELECT = Object.freeze({
   deskX: true,
   deskY: true,
   status: true,
+  avatarUrl: true,
+  position: true,
+  joinDate: true,
+  phone: true,
+  personalEmail: true,
+  dateOfBirth: true,
+  gender: true,
+  permanentAddress: true,
+  currentAddress: true,
+  emergencyContact: true,
+  education: true,
+  skills: true,
+  certificates: true,
+  hometown: true,
+  ethnicity: true,
+  nationality: true,
+  identityCardNumber: true,
+  allowProfileUpdate: true,
   createdAt: true,
   updatedAt: true,
   department: {
@@ -27,6 +45,12 @@ const EMPLOYEE_SELECT = Object.freeze({
       id: true,
       name: true,
       floorPlanUrl: true,
+    },
+  },
+  user: {
+    select: {
+      role: true,
+      isActive: true,
     },
   },
 });
@@ -87,17 +111,44 @@ function createEmployeesRepository(prismaClient) {
           email: data.email,
           departmentId: data.departmentId ? Number(data.departmentId) : null,
           status: data.status ?? "ACTIVE",
+          avatarUrl: data.avatarUrl ?? null,
+          position: data.position ?? "Staff",
+          joinDate: data.joinDate ? new Date(data.joinDate) : new Date(),
+          phone: data.phone ?? null,
+          personalEmail: data.personalEmail ?? null,
+          dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
+          gender: data.gender ?? null,
+          permanentAddress: data.permanentAddress ?? null,
+          currentAddress: data.currentAddress ?? null,
+          emergencyContact: data.emergencyContact ?? null,
+          education: data.education ?? null,
+          skills: data.skills ?? null,
+          certificates: data.certificates ?? null,
+          hometown: data.hometown ?? null,
+          ethnicity: data.ethnicity ?? null,
+          nationality: data.nationality ?? null,
+          identityCardNumber: data.identityCardNumber ?? null,
+          allowProfileUpdate: data.allowProfileUpdate ?? true,
         },
         select: EMPLOYEE_SELECT,
       });
     },
 
     async update(id, data) {
-      const updateData = {
-        fullName: data.fullName,
-        email: data.email,
-        status: data.status,
-      };
+      const updateData = {};
+      const fields = [
+        "fullName", "email", "status",
+        "avatarUrl", "position", "phone", "personalEmail",
+        "gender", "permanentAddress", "currentAddress",
+        "emergencyContact", "education", "skills", "certificates",
+        "hometown", "ethnicity", "nationality", "identityCardNumber",
+        "allowProfileUpdate"
+      ];
+      for (const field of fields) {
+        if (typeof data[field] !== "undefined") {
+          updateData[field] = data[field];
+        }
+      }
 
       if (typeof data.departmentId !== "undefined") {
         updateData.departmentId = data.departmentId ? Number(data.departmentId) : null;
@@ -113,6 +164,14 @@ function createEmployeesRepository(prismaClient) {
 
       if (typeof data.deskY !== "undefined") {
         updateData.deskY = data.deskY !== null ? Number(data.deskY) : null;
+      }
+
+      if (typeof data.joinDate !== "undefined") {
+        updateData.joinDate = data.joinDate ? new Date(data.joinDate) : null;
+      }
+
+      if (typeof data.dateOfBirth !== "undefined") {
+        updateData.dateOfBirth = data.dateOfBirth ? new Date(data.dateOfBirth) : null;
       }
 
       return activePrisma.employee.update({
@@ -152,6 +211,87 @@ function createEmployeesRepository(prismaClient) {
         select: { id: true },
       });
       return Boolean(user && user.id === userId);
+    },
+
+    // Attachments methods
+    async findAttachmentsByEmployeeId(employeeId) {
+      return activePrisma.employeeAttachment.findMany({
+        where: { employeeId },
+        orderBy: { uploadedAt: "desc" },
+        include: {
+          uploadedBy: {
+            select: {
+              email: true,
+              role: true,
+            },
+          },
+        },
+      });
+    },
+
+    async findAttachmentById(id) {
+      return activePrisma.employeeAttachment.findUnique({
+        where: { id },
+      });
+    },
+
+    async createAttachment(data) {
+      return activePrisma.employeeAttachment.create({
+        data: {
+          employeeId: data.employeeId,
+          fileName: data.fileName,
+          fileType: data.fileType,
+          fileUrl: data.fileUrl,
+          uploadedById: data.uploadedById,
+        },
+        include: {
+          uploadedBy: {
+            select: {
+              email: true,
+              role: true,
+            },
+          },
+        },
+      });
+    },
+
+    async deleteAttachment(id) {
+      return activePrisma.employeeAttachment.delete({
+        where: { id },
+      });
+    },
+
+    // Logs methods
+    async findProfileLogsByEmployeeId(employeeId) {
+      return activePrisma.employeeProfileLog.findMany({
+        where: { employeeId },
+        orderBy: { changedAt: "desc" },
+        include: {
+          actor: {
+            select: {
+              email: true,
+              role: true,
+              employee: {
+                select: {
+                  fullName: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    },
+
+    async createProfileLog(data) {
+      return activePrisma.employeeProfileLog.create({
+        data: {
+          employeeId: data.employeeId,
+          actorId: data.actorId,
+          fieldName: data.fieldName,
+          oldValue: data.oldValue ? String(data.oldValue) : null,
+          newValue: data.newValue ? String(data.newValue) : null,
+        },
+      });
     },
   });
 }

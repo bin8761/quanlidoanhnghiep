@@ -38,7 +38,6 @@ router.put(
   "/:id",
   authenticate,
   passwordChangeGuard,
-  authorize(ADMIN),
   validateRequest(employeesValidators.update),
   employeesController.updateEmployee,
 );
@@ -50,6 +49,34 @@ router.delete(
   authorize(ADMIN),
   validateRequest(employeesValidators.delete),
   employeesController.deleteEmployee,
+);
+
+router.get(
+  "/:id/attachments",
+  authenticate,
+  passwordChangeGuard,
+  employeesController.getAttachments,
+);
+
+router.post(
+  "/:id/attachments",
+  authenticate,
+  passwordChangeGuard,
+  employeesController.uploadAttachment,
+);
+
+router.delete(
+  "/:id/attachments/:attachmentId",
+  authenticate,
+  passwordChangeGuard,
+  employeesController.deleteAttachment,
+);
+
+router.get(
+  "/:id/logs",
+  authenticate,
+  passwordChangeGuard,
+  employeesController.getProfileLogs,
 );
 
 module.exports = router;

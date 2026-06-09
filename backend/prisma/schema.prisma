@@ -30,6 +30,24 @@ model Employee {
   deskX               Float?               @map("desk_x")
   deskY               Float?               @map("desk_y")
   status              String               @default("ACTIVE")
+  avatarUrl           String?              @map("avatar_url") @db.Text
+  position            String               @default("Staff") @map("position")
+  joinDate            DateTime             @default(now()) @map("join_date")
+  phone               String?
+  personalEmail       String?              @map("personal_email")
+  dateOfBirth         DateTime?            @map("date_of_birth")
+  gender              String?
+  permanentAddress    String?              @map("permanent_address") @db.Text
+  currentAddress      String?              @map("current_address") @db.Text
+  emergencyContact    Json?                @map("emergency_contact")
+  education           Json?
+  skills              Json?
+  certificates        Json?
+  hometown            String?
+  ethnicity           String?
+  nationality         String?
+  identityCardNumber  String?              @map("identity_card_number")
+  allowProfileUpdate  Boolean              @default(true) @map("allow_profile_update")
   createdAt           DateTime             @default(now()) @map("created_at")
   updatedAt           DateTime             @updatedAt @map("updated_at")
 
@@ -37,7 +55,9 @@ model Employee {
   department          Department?          @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   location            Location?            @relation(fields: [locationId], references: [id], onDelete: SetNull)
   assignments         AssetAssignment[]
-  supportRequests      SupportRequest[]
+  supportRequests     SupportRequest[]
+  attachments         EmployeeAttachment[]
+  profileLogs         EmployeeProfileLog[]
 
   @@map("employees")
 }
@@ -61,6 +81,8 @@ model User {
   approvedRequests  SupportRequest[]   @relation("SupportRequestApprover")
   requestEvents     SupportRequestEvent[]
   tasks             UserTask[]
+  uploadedAttachments EmployeeAttachment[]
+  profileLogs         EmployeeProfileLog[]
 
   @@map("users")
 }
@@ -365,3 +387,32 @@ model UserTask {
   @@map("user_tasks")
 }
 
+model EmployeeAttachment {
+  id           String   @id @default(uuid()) @db.Char(36)
+  employeeId   String   @map("employee_id") @db.Char(36)
+  fileName     String   @map("file_name")
+  fileType     String   @map("file_type")
+  fileUrl      String   @map("file_url") @db.Text
+  uploadedAt   DateTime @default(now()) @map("uploaded_at")
+  uploadedById String   @map("uploaded_by_id") @db.Char(36)
+
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  uploadedBy User     @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@map("employee_attachments")
+}
+
+model EmployeeProfileLog {
+  id         String   @id @default(uuid()) @db.Char(36)
+  employeeId String   @map("employee_id") @db.Char(36)
+  actorId    String   @map("actor_id") @db.Char(36)
+  changedAt  DateTime @default(now()) @map("changed_at")
+  fieldName  String   @map("field_name")
+  oldValue   String?  @db.Text @map("old_value")
+  newValue   String?  @db.Text @map("new_value")
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  actor    User     @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@map("employee_profile_logs")
+}
