@@ -276,7 +276,7 @@ export default function DashboardPage() {
                     Xem báo cáo
                   </Link>
                 </div>
-                <p className="mt-2 text-[10px] text-white/45">Trên {summary.operationalAssets} tài sản có thể vận hành · {summary.dataQualityIssueCount} vấn đề dữ liệu</p>
+                <p className="mt-2 text-[10px] text-white/45">Trên {summary.operationalAssets} tài sản có thể vận hành · {summary.affectedAssetCount} tài sản cần chuẩn hóa dữ liệu</p>
               </div>
             </article>
           </section>

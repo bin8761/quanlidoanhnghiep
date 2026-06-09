@@ -20,9 +20,9 @@ function dateBounds(filters = {}) {
   };
 }
 
-function buildAssetWhere(filters = {}) {
+function buildAssetWhere(filters = {}, { includeRecordedAt = false } = {}) {
   const where = {};
-  if (filters.from || filters.to) {
+  if (includeRecordedAt && (filters.from || filters.to)) {
     where.createdAt = {};
     if (filters.from) where.createdAt.gte = new Date(`${filters.from}T00:00:00.000Z`);
     if (filters.to) where.createdAt.lte = new Date(`${filters.to}T23:59:59.999Z`);
@@ -50,7 +50,15 @@ function issueWhere(issue) {
     case ISSUE_TYPES.MISSING_OWNER_DEPARTMENT:
       return { ownerDepartmentId: null };
     case ISSUE_TYPES.MISSING_LOCATION:
-      return { locationId: null };
+      return {
+        locationId: null,
+        assignments: {
+          none: {
+            status: "ACTIVE",
+            employee: { locationId: { not: null } },
+          },
+        },
+      };
     case ISSUE_TYPES.MISSING_SERIAL_NUMBER:
       return { OR: [{ serialNumber: null }, { serialNumber: "" }] };
     case ISSUE_TYPES.DUPLICATE_SERIAL_NUMBER:
@@ -76,7 +84,7 @@ function createReportsRepository(prismaClient = defaultPrisma) {
   async function getSpecialIssueIds(issue, baseWhere) {
     if (issue === ISSUE_TYPES.MULTIPLE_ACTIVE_ASSIGNMENTS) {
       const groups = await prismaClient.assetAssignment.groupBy({
-        by: ["assetId"], where: { status: "ACTIVE" }, _count: { _all: true }, having: { assetId: { _count: { gt: 1 } } },
+        by: ["assetId"], where: { status: "ACTIVE", asset: baseWhere }, _count: { _all: true }, having: { assetId: { _count: { gt: 1 } } },
       });
       return groups.map((item) => item.assetId);
     }
@@ -99,13 +107,37 @@ function createReportsRepository(prismaClient = defaultPrisma) {
     return prismaClient.asset.count({ where: { AND: [baseWhere, issueWhere(type)] } });
   }
 
+  async function countAffectedAssets(baseWhere) {
+    const normalIssueFilters = [
+      ISSUE_TYPES.ASSIGNED_WITHOUT_ACTIVE_ASSIGNMENT,
+      ISSUE_TYPES.ACTIVE_ASSIGNMENT_STATUS_MISMATCH,
+      ISSUE_TYPES.INVALID_STATUS_WITH_ACTIVE_ASSIGNMENT,
+      ISSUE_TYPES.MISSING_OWNER_DEPARTMENT,
+      ISSUE_TYPES.MISSING_LOCATION,
+      ISSUE_TYPES.MISSING_SERIAL_NUMBER,
+    ].map(issueWhere);
+    const [normalAssets, multipleAssignmentIds, duplicateSerials] = await Promise.all([
+      prismaClient.asset.findMany({ where: { AND: [baseWhere, { OR: normalIssueFilters }] }, select: { id: true } }),
+      getSpecialIssueIds(ISSUE_TYPES.MULTIPLE_ACTIVE_ASSIGNMENTS, baseWhere),
+      getSpecialIssueIds(ISSUE_TYPES.DUPLICATE_SERIAL_NUMBER, baseWhere),
+    ]);
+    const duplicateAssets = duplicateSerials.length
+      ? await prismaClient.asset.findMany({ where: { AND: [baseWhere, { serialNumber: { in: duplicateSerials } }] }, select: { id: true } })
+      : [];
+    return new Set([
+      ...normalAssets.map((asset) => asset.id),
+      ...multipleAssignmentIds,
+      ...duplicateAssets.map((asset) => asset.id),
+    ]).size;
+  }
+
   return Object.freeze({
     async getSummary(filters = {}) {
       const where = buildAssetWhere(filters);
       const { to } = dateBounds(filters);
       const openRequestWhere = { status: { in: ["PENDING", "APPROVED", "IN_PROGRESS", "WAITING_USER"] } };
       const [totalAssets, assetsByStatus, valueAggregate, activeAssignments, openMaintenanceRequests, inventorySessions,
-        activeInventorySessions, overdueInventorySessions, overdueSupportRequests, dataQualityCounts] = await Promise.all([
+        activeInventorySessions, overdueInventorySessions, overdueSupportRequests, dataQualityCounts, affectedAssets] = await Promise.all([
         prismaClient.asset.count({ where }),
         prismaClient.asset.groupBy({ by: ["status"], where, _count: { _all: true } }),
         prismaClient.asset.aggregate({ where, _sum: { value: true } }),
@@ -116,6 +148,7 @@ function createReportsRepository(prismaClient = defaultPrisma) {
         prismaClient.inventorySession.count({ where: { status: { in: ["DRAFT", "IN_PROGRESS"] }, endDate: { lt: to } } }),
         prismaClient.supportRequest.count({ where: { ...openRequestWhere, createdAt: { lt: new Date(to.getTime() - 7 * 86400000) } } }),
         Promise.all(Object.values(ISSUE_TYPES).map((type) => countIssue(type, where))),
+        countAffectedAssets(where),
       ]);
       const counts = Object.fromEntries(assetsByStatus.map((item) => [item.status, item._count._all]));
       const operationalAssets = Math.max(0, totalAssets - (counts.DISPOSED || 0) - (counts.LOST || 0));
@@ -128,6 +161,7 @@ function createReportsRepository(prismaClient = defaultPrisma) {
         overdueInventorySessions, overdueSupportRequests,
         unhealthyAssets: (counts.MAINTENANCE || 0) + (counts.BROKEN || 0),
         dataQualityIssueCount: dataQualityCounts.reduce((sum, count) => sum + count, 0),
+        affectedAssetCount: affectedAssets,
         assetsByStatus: assetsByStatus.map((item) => ({ status: item.status, count: item._count._all })),
       };
     },
@@ -150,12 +184,20 @@ function createReportsRepository(prismaClient = defaultPrisma) {
         orderBy: { name: "asc" },
         select: { id: true, name: true, employees: { select: { assignments: { where: { status: "ACTIVE", asset: buildAssetWhere(filters) }, select: { id: true } } } } },
       });
-      return departments.map((department) => ({ departmentId: department.id, departmentName: department.name, count: department.employees.reduce((sum, employee) => sum + employee.assignments.length, 0) }));
+      const rows = departments.map((department) => ({ departmentId: department.id, departmentName: department.name, count: department.employees.reduce((sum, employee) => sum + employee.assignments.length, 0) }));
+      const assignedWithDepartment = rows.reduce((sum, row) => sum + row.count, 0);
+      const assignedAssets = await prismaClient.asset.count({ where: { AND: [buildAssetWhere(filters), { assignments: { some: { status: "ACTIVE" } } }] } });
+      const unassignedAssets = await prismaClient.asset.count({ where: { AND: [buildAssetWhere(filters), { assignments: { none: { status: "ACTIVE" } } }] } });
+      return [
+        ...rows.filter((row) => row.count > 0),
+        { departmentId: null, departmentName: "Người dùng chưa có phòng ban", count: Math.max(0, assignedAssets - assignedWithDepartment) },
+        { departmentId: null, departmentName: "Chưa bàn giao", count: unassignedAssets },
+      ].filter((row) => row.count > 0);
     },
 
     async getTrends(filters = {}) {
       const { from, to } = dateBounds(filters);
-      const where = buildAssetWhere(filters);
+      const where = buildAssetWhere(filters, { includeRecordedAt: true });
       where.createdAt = { gte: from, lte: to };
       const assets = await prismaClient.asset.findMany({ where, select: { createdAt: true, status: true } });
       const months = new Map();

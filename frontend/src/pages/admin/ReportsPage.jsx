@@ -18,7 +18,7 @@ const ISSUE_LABELS = {
   MULTIPLE_ACTIVE_ASSIGNMENTS: 'Có nhiều bàn giao đang hoạt động',
   INVALID_STATUS_WITH_ACTIVE_ASSIGNMENT: 'Trạng thái không hợp lệ vẫn đang bàn giao',
   MISSING_OWNER_DEPARTMENT: 'Thiếu phòng ban sở hữu',
-  MISSING_LOCATION: 'Thiếu vị trí',
+  MISSING_LOCATION: 'Thiếu vị trí cố định và vị trí người sử dụng',
   MISSING_SERIAL_NUMBER: 'Thiếu serial number',
   DUPLICATE_SERIAL_NUMBER: 'Trùng serial number',
 }
@@ -75,7 +75,7 @@ export default function ReportsPage() {
   ]
 
   return <div className="animate-fade-up">
-    <PageHeader eyebrow="Phân tích dữ liệu vận hành" title="Báo cáo tài sản" description="KPI, xu hướng và kiểm soát chất lượng dữ liệu tài sản."
+    <PageHeader eyebrow="Phân tích dữ liệu vận hành" title="Báo cáo tài sản" description="KPI snapshot hiện tại, tài sản ghi nhận mới và kiểm soát chất lượng dữ liệu."
       actions={<div className="flex gap-2"><Button variant="secondary" onClick={loadReports}><RefreshCw size={16} />Làm mới</Button><Button onClick={() => reportApi.exportCsv(filters)}><Download size={16} />Xuất CSV</Button></div>} />
     {error && <ResourceError message={error} onRetry={loadReports} />}
     <section className="surface mb-5 grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-7">
@@ -86,13 +86,14 @@ export default function ReportsPage() {
       <select className="rounded-lg border border-slate-200 p-2 text-xs" value={filters.ownerDepartmentId || ''} onChange={(e) => setFilter('ownerDepartmentId', e.target.value)}><option value="">Phòng ban sở hữu</option>{lookups.departments.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select>
       <select className="rounded-lg border border-slate-200 p-2 text-xs" value={filters.usageDepartmentId || ''} onChange={(e) => setFilter('usageDepartmentId', e.target.value)}><option value="">Phòng ban sử dụng</option>{lookups.departments.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select>
       <select className="rounded-lg border border-slate-200 p-2 text-xs" value={filters.locationId || ''} onChange={(e) => setFilter('locationId', e.target.value)}><option value="">Tất cả vị trí</option>{lookups.locations.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select>
+      <p className="text-[10px] text-slate-400 sm:col-span-2 xl:col-span-7">Khoảng ngày chỉ áp dụng cho biểu đồ tài sản được ghi nhận mới. KPI snapshot, phân bổ và chất lượng dữ liệu luôn phản ánh trạng thái hiện tại.</p>
     </section>
     {isLoading || !data ? <div className="skeleton h-64 rounded-[18px]" /> : <>
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Metric icon={Boxes} label="Tổng tài sản" value={data.summary.totalAssets} tone="bg-brand-50 text-brand-700" onClick={() => drill({ issue: '', status: '' })} />
         <Metric icon={TrendingUp} label="Tỷ lệ sử dụng" value={`${data.summary.utilizationRate}%`} note={`${data.summary.operationalAssets} tài sản có thể vận hành`} tone="bg-blue-50 text-blue-700" onClick={() => drill({ issue: '', status: 'ASSIGNED' })} />
         <Metric icon={ShieldCheck} label="Tỷ lệ khả dụng" value={`${data.summary.availabilityRate}%`} tone="bg-emerald-50 text-emerald-700" onClick={() => drill({ issue: '', status: 'AVAILABLE' })} />
-        <Metric icon={AlertTriangle} label="Vấn đề dữ liệu" value={data.summary.dataQualityIssueCount} tone="bg-amber-50 text-amber-700" />
+        <Metric icon={AlertTriangle} label="Tài sản cần chuẩn hóa dữ liệu" value={data.summary.affectedAssetCount} note={`${data.summary.dataQualityIssueCount} lỗi dữ liệu được phát hiện`} tone="bg-amber-50 text-amber-700" />
       </section>
       <section className="mt-5 grid gap-5 xl:grid-cols-3">
         <article className="surface p-5"><h3 className="mb-5 text-sm font-extrabold">Theo danh mục</h3><BarList rows={data.categories} nameKey="categoryName" /></article>
@@ -100,7 +101,7 @@ export default function ReportsPage() {
         <article className="surface p-5"><h3 className="mb-5 text-sm font-extrabold">Phòng ban sử dụng</h3><BarList rows={data.usage} nameKey="departmentName" /></article>
       </section>
       <section className="mt-5 grid gap-5 xl:grid-cols-2">
-        <article className="surface p-5"><h3 className="mb-5 text-sm font-extrabold">Xu hướng tài sản theo tháng</h3><BarList rows={data.trends.map((v) => ({ ...v, count: v.added }))} nameKey="month" /></article>
+        <article className="surface p-5"><h3 className="mb-1 text-sm font-extrabold">Tài sản được ghi nhận mới theo tháng</h3><p className="mb-5 text-xs text-slate-500">Tính theo thời điểm tài sản được tạo trong hệ thống, không phải ngày mua hoặc ngày thanh lý.</p><BarList rows={data.trends.map((v) => ({ ...v, count: v.added }))} nameKey="month" /></article>
         <article className="surface p-5"><h3 className="mb-4 text-sm font-extrabold">Chất lượng dữ liệu</h3><div className="grid gap-2">{data.quality.map((item) => <button className="flex justify-between rounded-xl border border-slate-100 p-3 text-left text-xs hover:bg-amber-50" key={item.type} onClick={() => drill({ issue: item.type, page: 1 })}><span>{ISSUE_LABELS[item.type]}</span><strong>{item.count}</strong></button>)}</div></article>
       </section>
       <div className="mt-5">
