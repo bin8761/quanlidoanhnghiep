@@ -41,7 +41,7 @@ function errorHandler(error, req, res, next) {
 
   const normalizedError = normalizeError(error);
 
-  logError(normalizedError, req);
+  logError(error, req);
 
   return sendError(res, {
     statusCode: normalizedError.statusCode,

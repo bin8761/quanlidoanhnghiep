@@ -111,7 +111,7 @@ export default function EmployeeAssetDetailPage() {
                   <p className="mt-0.5 text-sm font-semibold text-brand-700">{asset.code}</p>
                 </div>
               </div>
-              <StatusBadge status={asset.status === 'Đang sử dụng' ? 'ASSIGNED' : 'AVAILABLE'} />
+              <StatusBadge status={asset.status} />
             </div>
 
             <dl className="grid gap-px bg-slate-100 sm:grid-cols-2">

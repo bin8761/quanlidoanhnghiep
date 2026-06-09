@@ -2,13 +2,9 @@ import { Boxes, CalendarDays, Hash, Laptop, Search, Tag } from 'lucide-react'
 import { useMemo, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import PageHeader from '../../components/ui/PageHeader'
+import StatusBadge from '../../components/ui/StatusBadge'
 import { getMyAssets } from '../../services/employee.service'
 
-const statusLabel = {
-  ASSIGNED: 'Đang sử dụng',
-  MAINTENANCE: 'Đang bảo trì',
-  AVAILABLE: 'Sẵn dùng',
-}
 
 export default function EmployeeAssetsPage() {
   const [query, setQuery] = useState('')
@@ -62,9 +58,7 @@ export default function EmployeeAssetsPage() {
                   <Laptop size={22} />
                 </span>
 
-                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-extrabold text-emerald-700">
-                  {statusLabel[item.asset?.status] || item.asset?.status}
-                </span>
+                <StatusBadge status={item.asset?.status} />
               </div>
 
               <div className="p-5">
