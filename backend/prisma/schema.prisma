@@ -60,6 +60,7 @@ model User {
   assignedRequests  SupportRequest[]   @relation("SupportRequestAssignee")
   approvedRequests  SupportRequest[]   @relation("SupportRequestApprover")
   requestEvents     SupportRequestEvent[]
+  tasks             UserTask[]
 
   @@map("users")
 }
@@ -321,3 +322,46 @@ model Location {
 
   @@map("locations")
 }
+
+enum TaskType {
+  INVENTORY_CONFIRMATION
+  ASSET_RECEIPT_CONFIRMATION
+  MAINTENANCE_FEEDBACK
+  ASSET_PERIODIC_CHECK
+}
+
+enum TaskStatus {
+  PENDING
+  COMPLETED
+  OVERDUE
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model UserTask {
+  id          String       @id @default(uuid()) @db.Char(36)
+  userId      String       @map("user_id") @db.Char(36)
+  type        TaskType
+  title       String       @db.VarChar(255)
+  description String?      @db.Text
+  priority    TaskPriority @default(MEDIUM)
+  status      TaskStatus   @default(PENDING)
+  actionUrl   String       @map("action_url") @db.VarChar(512)
+  referenceId String?      @map("reference_id") @db.VarChar(36)
+  dueAt       DateTime?    @map("due_at")
+  completedAt DateTime?    @map("completed_at")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([dueAt, status])
+  @@map("user_tasks")
+}
+

@@ -63,6 +63,30 @@ function createSupportRequestsService({ supportRepository = repository, notifica
     }
   }
 
+  async function syncSupportRequestTask(request) {
+    try {
+      const tasksService = require("../tasks/tasks.service");
+      const requesterUserId = request?.requester?.user?.id;
+      if (!requesterUserId) return;
+
+      if (request.status === "WAITING_USER") {
+        await tasksService.createTask({
+          userId: requesterUserId,
+          type: "MAINTENANCE_FEEDBACK",
+          title: `Cần phản hồi yêu cầu hỗ trợ ${request.asset?.name || "thiết bị"}`,
+          description: `Yêu cầu hỗ trợ của bạn cần được bổ sung thông tin: ${request.notes || ""}`,
+          priority: "MEDIUM",
+          actionUrl: `/employee/requests?requestId=${request.id}`,
+          referenceId: request.id,
+        });
+      } else {
+        await tasksService.completeTask(requesterUserId, "MAINTENANCE_FEEDBACK", request.id);
+      }
+    } catch (error) {
+      logger.error({ err: error, requestId: request.id }, "Failed to sync user task for support request");
+    }
+  }
+
   return Object.freeze({
     async getAll(filters = {}, context = {}) {
       if (context.authenticatedUser?.role === ADMIN) {
@@ -146,6 +170,7 @@ function createSupportRequestsService({ supportRepository = repository, notifica
       );
 
       await notifyUpdated(updated);
+      await syncSupportRequestTask(updated);
       return updated;
     },
 
@@ -172,6 +197,7 @@ function createSupportRequestsService({ supportRepository = repository, notifica
           { actorUserId: context.authenticatedUser?.userId },
         );
         await notifyUpdated(updated);
+        await syncSupportRequestTask(updated);
         return updated;
       } catch (error) {
         wrapWorkflowError(error);

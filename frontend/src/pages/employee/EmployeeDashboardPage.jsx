@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import {
   ArrowRight,
   Boxes,
@@ -7,20 +8,41 @@ import {
   Headphones,
   Laptop,
   Sparkles,
+  ClipboardCheck,
+  Wrench,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../auth/auth-context'
 import PageHeader from '../../components/ui/PageHeader'
+import { getMyTasks } from '../../services/employee.service'
 import { employeeAssets, initialEmployeeRequests } from './employeeData'
 
-const tasks = [
-  { title: 'Xác nhận kiểm kê quý II', due: 'Hạn 07/06/2026', icon: CalendarCheck },
-  { title: 'Cập nhật tình trạng laptop LT-0248', due: 'Hạn hôm nay', icon: Laptop },
-]
+const getTaskIcon = (type) => {
+  switch (type) {
+    case 'INVENTORY_CONFIRMATION':
+      return ClipboardCheck
+    case 'ASSET_RECEIPT_CONFIRMATION':
+      return Laptop
+    case 'MAINTENANCE_FEEDBACK':
+      return Wrench
+    default:
+      return ClipboardCheck
+  }
+}
 
 export default function EmployeeDashboardPage() {
   const { user } = useAuth()
+  const [tasks, setTasks] = useState([])
   const activeRequests = initialEmployeeRequests.filter((item) => item.status !== 'Hoàn thành')
+
+  useEffect(() => {
+    getMyTasks()
+      .then(setTasks)
+      .catch((err) => {
+        console.error('Failed to load tasks:', err)
+        setTasks([])
+      })
+  }, [])
 
   return (
     <div className="animate-fade-up">
@@ -89,17 +111,34 @@ export default function EmployeeDashboardPage() {
           <h3 className="text-sm font-extrabold text-slate-900">Việc cần hoàn thành</h3>
           <p className="mt-1 text-xs text-slate-500">Các đầu việc liên quan đến tài sản</p>
           <div className="mt-5 grid gap-3">
-            {tasks.map(({ title, due, icon: Icon }) => (
-              <div className="flex gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3.5" key={title}>
-                <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-white text-brand-700 shadow-sm">
-                  <Icon size={17} />
-                </span>
-                <span className="min-w-0">
-                  <strong className="block text-xs font-bold text-slate-800">{title}</strong>
-                  <span className="mt-1 block text-[10px] font-semibold text-amber-600">{due}</span>
-                </span>
-              </div>
-            ))}
+            {tasks.length ? (
+              tasks.map((task) => {
+                const Icon = getTaskIcon(task.type)
+                const formattedDue = task.dueAt
+                  ? `Hạn ${new Date(task.dueAt).toLocaleDateString('vi-VN')}`
+                  : 'Không có hạn chót'
+
+                return (
+                  <Link
+                    to={task.actionUrl}
+                    className="flex gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3.5 hover:bg-slate-100/80 transition"
+                    key={task.id}
+                  >
+                    <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-white text-brand-700 shadow-sm">
+                      <Icon size={17} />
+                    </span>
+                    <span className="min-w-0">
+                      <strong className="block text-xs font-bold text-slate-800">{task.title}</strong>
+                      <span className="mt-1 block text-[10px] font-semibold text-amber-600">
+                        {formattedDue}
+                      </span>
+                    </span>
+                  </Link>
+                )
+              })
+            ) : (
+              <p className="text-xs text-slate-400 italic py-4 text-center">Không có việc cần hoàn thành.</p>
+            )}
           </div>
         </article>
       </section>

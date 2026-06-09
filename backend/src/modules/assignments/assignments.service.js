@@ -47,6 +47,24 @@ function createAssignmentsService({ repository = assignmentsRepository, notifica
         logger.error({ err: error, assignmentId: assignment.id }, "Failed to publish asset assignment notification");
       }
 
+      try {
+        const tasksService = require("../tasks/tasks.service");
+        const recipientUserId = assignment?.employee?.user?.id;
+        if (recipientUserId) {
+          await tasksService.createTask({
+            userId: recipientUserId,
+            type: "ASSET_RECEIPT_CONFIRMATION",
+            title: `Xác nhận bàn giao ${assignment.asset?.name || "thiết bị"}`,
+            description: `Bạn vừa được bàn giao thiết bị ${assignment.asset?.name} (${assignment.asset?.assetCode}). Vui lòng xác nhận bàn giao.`,
+            priority: "HIGH",
+            actionUrl: `/employee/assets/${assignment.asset?.assetCode}`,
+            referenceId: assignment.id,
+          });
+        }
+      } catch (error) {
+        logger.error({ err: error, assignmentId: assignment.id }, "Failed to create user task for asset assignment");
+      }
+
       return assignment;
     },
 
@@ -54,11 +72,23 @@ function createAssignmentsService({ repository = assignmentsRepository, notifica
       const activeAssignment = await repository.findActiveAssignmentByAssetId(data.assetId);
       if (!activeAssignment) throw workflowError("Active assignment not found for asset", 404);
 
-      return repository.returnAsset(activeAssignment.id, {
+      const assignment = await repository.returnAsset(activeAssignment.id, {
         returnedAt: data.returnedAt,
         notes: data.notes,
         assetStatus: data.assetStatus,
       });
+
+      try {
+        const tasksService = require("../tasks/tasks.service");
+        const recipientUserId = activeAssignment?.employee?.user?.id;
+        if (recipientUserId) {
+          await tasksService.cancelTask(recipientUserId, "ASSET_RECEIPT_CONFIRMATION", activeAssignment.id);
+        }
+      } catch (error) {
+        logger.error({ err: error, assignmentId: activeAssignment.id }, "Failed to cancel user task for asset return");
+      }
+
+      return assignment;
     },
 
     async transferAsset(data) {

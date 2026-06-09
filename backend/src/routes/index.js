@@ -13,6 +13,7 @@ const inventoryRouter = require("../modules/inventory/inventory.route");
 const reportsRouter = require("../modules/reports/reports.route");
 const notificationsRouter = require("../modules/notifications/notifications.route");
 const locationsRouter = require("../modules/locations/locations.route");
+const tasksRouter = require("../modules/tasks/tasks.route");
 
 const rootRouter = express.Router();
 const apiRouter = express.Router();
@@ -30,6 +31,7 @@ apiRouter.use("/", inventoryRouter);
 apiRouter.use("/reports", reportsRouter);
 apiRouter.use("/notifications", notificationsRouter);
 apiRouter.use("/locations", locationsRouter);
+apiRouter.use("/tasks", tasksRouter);
 
 rootRouter.use("/api", apiRouter);
 

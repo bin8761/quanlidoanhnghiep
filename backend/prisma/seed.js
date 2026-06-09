@@ -556,6 +556,41 @@ async function seedInventory(departments, assets) {
   }
 }
 
+async function seedTasks(users) {
+  const activeUserId = users.active.id;
+
+  await prisma.userTask.deleteMany({
+    where: { userId: activeUserId },
+  });
+
+  const task1 = {
+    userId: activeUserId,
+    type: "INVENTORY_CONFIRMATION",
+    title: "Xác nhận kiểm kê quý II/2026",
+    description: "Nhân viên xác nhận tình trạng thực tế của laptop Dell Latitude 5440 (LT-001) trong đợt kiểm kê.",
+    priority: "HIGH",
+    status: "PENDING",
+    actionUrl: "/employee/assets/LT-001",
+    dueAt: new Date("2026-06-15T00:00:00.000Z"),
+    referenceId: FIXED_IDS.inventorySessions.active,
+  };
+
+  const task2 = {
+    userId: activeUserId,
+    type: "ASSET_PERIODIC_CHECK",
+    title: "Cập nhật tình trạng laptop LT-001",
+    description: "Kiểm tra định kỳ tình trạng hoạt động của laptop Dell Latitude 5440.",
+    priority: "MEDIUM",
+    status: "PENDING",
+    actionUrl: "/employee/assets/LT-001",
+    dueAt: new Date("2026-06-10T00:00:00.000Z"),
+  };
+
+  await prisma.userTask.createMany({
+    data: [task1, task2],
+  });
+}
+
 async function main() {
   const hashes = await buildPasswordHashes();
   const departments = await seedDepartments();
@@ -567,6 +602,7 @@ async function main() {
   await seedAssignments(assets, employees);
   await seedMaintenance(assets, employees);
   await seedInventory(departments, assets);
+  await seedTasks(users);
 
   const counts = await Promise.all([
     prisma.department.count(),

@@ -13,8 +13,6 @@ import StatusBadge from '../../components/ui/StatusBadge'
 import { useEffect, useState } from 'react'
 import { getMaintenanceByAsset, getMyAssets } from '../../services/employee.service'
 
-const statusLabel = { IN_PROGRESS: 'Đang xử lý', COMPLETED: 'Hoàn thành', PENDING: 'Chờ tiếp nhận' }
-
 export default function EmployeeAssetDetailPage() {
   const { code } = useParams()
   const [asset, setAsset] = useState(null)
@@ -198,21 +196,54 @@ export default function EmployeeAssetDetailPage() {
           </div>
         </header>
         {history.length ? (
-          <div className="divide-y divide-slate-100">
-            {history.map((item) => (
-              <article className="grid gap-3 px-5 py-4 md:grid-cols-[1fr_110px_110px_100px]" key={item.id}>
-                <div>
-                  <strong className="text-xs font-bold text-brand-700">{item.code}</strong>
-                  <p className="mt-0.5 text-xs text-slate-600">{item.issue}</p>
-                </div>
-                <span className="text-[11px] text-slate-500">{item.createdAt}</span>
-                <span className="text-[11px] text-slate-500">{item.resolvedAt || '—'}</span>
-                <span className={`w-fit rounded-full border px-2.5 py-1 text-[10px] font-bold ${item.status === 'COMPLETED' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-blue-200 bg-blue-50 text-blue-700'}`}>
-                  {statusLabel[item.status]}
-                </span>
-              </article>
-            ))}
-          </div>
+          <>
+            <div className="divide-y divide-slate-100">
+              {history.slice(0, 5).map((item) => {
+                const ticketCode = `REQ-${item.id.slice(0, 8).toUpperCase()}`
+                const formattedCreated = new Date(item.createdAt).toLocaleDateString('vi-VN')
+                const formattedCompleted = item.completedAt
+                  ? new Date(item.completedAt).toLocaleDateString('vi-VN')
+                  : '—'
+                const assigneeName = item.assignee?.employee?.fullName || item.assignee?.email || 'Chưa phân công'
+
+                return (
+                  <Link
+                    to={`/employee/requests?requestId=${item.id}`}
+                    className="grid gap-3 px-5 py-4 md:grid-cols-[1fr_110px_110px_100px] items-center hover:bg-slate-50/50 transition block"
+                    key={item.id}
+                  >
+                    <div>
+                      <strong className="text-xs font-bold text-brand-700">{ticketCode}</strong>
+                      <p className="mt-0.5 text-xs text-slate-600">{item.description}</p>
+                      {item.resolution && (
+                        <p className="mt-1.5 text-[10px] italic text-slate-500 font-semibold bg-slate-50/80 p-1.5 rounded-lg border border-slate-100/80">
+                          <span className="text-brand-700 font-bold">Khắc phục:</span> {item.resolution}
+                        </p>
+                      )}
+                      <span className="mt-1.5 block text-[10px] text-slate-400 font-medium">
+                        Phụ trách: {assigneeName}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-slate-500 font-semibold">{formattedCreated}</span>
+                    <span className="text-[11px] text-slate-500 font-semibold">{formattedCompleted}</span>
+                    <span className="w-fit">
+                      <StatusBadge status={item.status} />
+                    </span>
+                  </Link>
+                )
+              })}
+            </div>
+            {history.length > 5 && (
+              <div className="border-t border-slate-100 p-3 text-center bg-slate-50/50">
+                <Link
+                  to="/employee/requests"
+                  className="text-xs font-bold text-brand-700 hover:text-brand-800 transition hover:underline"
+                >
+                  Xem tất cả {history.length} lần bảo trì
+                </Link>
+              </div>
+            )}
+          </>
         ) : (
           <div className="grid min-h-40 place-items-center text-center px-5 py-8">
             <Wrench className="mx-auto text-slate-300" size={28} />

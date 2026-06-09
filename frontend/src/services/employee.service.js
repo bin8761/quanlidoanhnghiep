@@ -69,3 +69,12 @@ export async function getMaintenanceByAsset(assetId) {
   const response = await apiClient.get(`/support-requests?assetId=${assetId}`)
   return response.data
 }
+
+/**
+ * Lấy danh sách nhiệm vụ của user hiện tại.
+ * GET /api/tasks
+ */
+export async function getMyTasks() {
+  const response = await apiClient.get('/tasks')
+  return response.data
+}
