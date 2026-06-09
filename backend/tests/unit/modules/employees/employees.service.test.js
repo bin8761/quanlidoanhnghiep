@@ -16,6 +16,7 @@ describe("employees.service", () => {
       countAssignments: jest.fn(),
       hasUserAccount: jest.fn(),
       isEmployeeLinkedToUser: jest.fn(),
+      getNextEmployeeCode: jest.fn(),
       ...repositoryOverrides,
     };
 
@@ -124,6 +125,30 @@ describe("employees.service", () => {
       statusCode: 400,
       errorCode: "VALIDATION_ERROR",
     });
+  });
+
+  test("createEmployee auto-generates employeeCode if missing or empty", async () => {
+    const data = { fullName: "Jane Doe", email: "jane@company.com" };
+    const generatedCode = "EMP007";
+    const { employeesService, repository } = loadEmployeesService({
+      repositoryOverrides: {
+        getNextEmployeeCode: jest.fn().mockResolvedValue(generatedCode),
+        findByEmployeeCode: jest.fn().mockResolvedValue(null),
+        findByEmail: jest.fn().mockResolvedValue(null),
+        create: jest.fn().mockImplementation((input) => Promise.resolve({ id: EMPLOYEE_ID, ...input })),
+      },
+    });
+
+    const result = await employeesService.createEmployee(data);
+    expect(repository.getNextEmployeeCode).toHaveBeenCalled();
+    expect(result.employeeCode).toBe(generatedCode);
+    expect(repository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        employeeCode: generatedCode,
+        fullName: "Jane Doe",
+        email: "jane@company.com",
+      })
+    );
   });
 
   test("deleteEmployee throws validation error if employee has a user account", async () => {

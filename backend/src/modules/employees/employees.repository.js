@@ -293,6 +293,35 @@ function createEmployeesRepository(prismaClient) {
         },
       });
     },
+
+    async getNextEmployeeCode() {
+      const employees = await activePrisma.employee.findMany({
+        where: {
+          employeeCode: {
+            startsWith: "EMP",
+          },
+        },
+        select: {
+          employeeCode: true,
+        },
+      });
+
+      let maxNum = 0;
+      const regex = /^EMP(\d+)$/;
+      for (const emp of employees) {
+        const match = emp.employeeCode.match(regex);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (num > maxNum) {
+            maxNum = num;
+          }
+        }
+      }
+
+      const nextNum = maxNum + 1;
+      const paddedNum = String(nextNum).padStart(3, "0");
+      return `EMP${paddedNum}`;
+    },
   });
 }
 

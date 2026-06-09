@@ -15,7 +15,7 @@ const employeesValidators = Object.freeze({
   }),
   create: Object.freeze({
     body: z.object({
-      employeeCode: trimmedRequiredString("Employee code").max(50, "Employee code must not exceed 50 characters"),
+      employeeCode: z.string().trim().max(50, "Employee code must not exceed 50 characters").optional().nullable(),
       fullName: trimmedRequiredString("Full name").max(100, "Full name must not exceed 100 characters"),
       email: trimmedRequiredString("Email").email("Email must be a valid email address"),
       departmentId: z.coerce.number().int().positive("Department ID must be a positive integer").optional().nullable(),
