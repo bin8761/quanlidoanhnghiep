@@ -16,6 +16,7 @@ import {
 import { departmentApi } from '../../api/departments'
 import { employeeApi } from '../../api/employees'
 import { locationApi } from '../../api/locations'
+import { API_BASE_URL } from '../../api/client'
 import { ResourceError, ResourceTableSkeleton } from '../../components/admin/ResourceFeedback'
 import Button from '../../components/ui/Button'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
@@ -25,7 +26,11 @@ import Modal from '../../components/ui/Modal'
 import PageHeader from '../../components/ui/PageHeader'
 import StatusBadge from '../../components/ui/StatusBadge'
 import Toast from '../../components/ui/Toast'
+import VietnamAddressSelector from '../../components/ui/VietnamAddressSelector'
+import SearchableSelect from '../../components/ui/SearchableSelect'
+import { VIETNAMESE_ETHNICITIES, NATIONALITIES } from '../../data/vietnam-static'
 import useAutoDismiss from '../../hooks/useAutoDismiss'
+import AvatarUpload from '../../components/ui/AvatarUpload'
 
 const FIELD_LABELS = {
   fullName: 'Họ và tên',
@@ -78,6 +83,42 @@ function getFileTypeFromExtension(filename) {
   return 'OTHER'
 }
 
+function getFullImageUrl(url) {
+  if (!url) return ''
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url
+  // API_BASE_URL = 'http://localhost:5000/api' -> strip '/api' to get base host
+  const baseHost = API_BASE_URL.replace(/\/api$/, '')
+  return `${baseHost}${url}`
+}
+
+function EmployeeAvatar({ avatarUrl, fullName }) {
+  const [imgError, setImgError] = useState(false)
+  useEffect(() => {
+    setImgError(false)
+  }, [avatarUrl])
+
+  if (avatarUrl && !imgError) {
+    return (
+      <img
+        src={getFullImageUrl(avatarUrl)}
+        alt={fullName}
+        className="size-8 shrink-0 rounded-full object-cover border border-slate-200"
+        onError={() => setImgError(true)}
+      />
+    )
+  }
+
+  const initials = fullName
+    ? fullName.split(' ').slice(-2).map(p => p[0]).join('').toUpperCase()
+    : '?'
+
+  return (
+    <span className="grid size-8 shrink-0 place-items-center rounded-full bg-brand-100 text-[10px] font-extrabold text-brand-700 border border-brand-200">
+      {initials}
+    </span>
+  )
+}
+
 const EMPTY_FORM = Object.freeze({
   employeeCode: '',
   fullName: '',
@@ -87,6 +128,7 @@ const EMPTY_FORM = Object.freeze({
   position: 'Staff',
   joinDate: '',
   allowProfileUpdate: true,
+  avatarUrl: '',
   phone: '',
   personalEmail: '',
   dateOfBirth: '',
@@ -199,6 +241,7 @@ export default function EmployeesPage() {
         position: detail.position || 'Staff',
         joinDate: toInputDateString(detail.joinDate),
         allowProfileUpdate: detail.allowProfileUpdate ?? true,
+        avatarUrl: detail.avatarUrl || '',
         phone: detail.phone || '',
         personalEmail: detail.personalEmail || '',
         dateOfBirth: toInputDateString(detail.dateOfBirth),
@@ -271,6 +314,7 @@ export default function EmployeesPage() {
           position: form.position?.trim() || 'Staff',
           joinDate: form.joinDate ? new Date(form.joinDate) : new Date(),
           allowProfileUpdate: form.allowProfileUpdate,
+          avatarUrl: form.avatarUrl || null,
           phone: form.phone?.trim() || null,
           personalEmail: form.personalEmail?.trim() || null,
           dateOfBirth: form.dateOfBirth ? new Date(form.dateOfBirth) : null,
@@ -405,7 +449,16 @@ export default function EmployeesPage() {
 
   const columns = [
     { key: 'employeeCode', label: 'Mã nhân viên' },
-    { key: 'fullName', label: 'Họ tên' },
+    {
+      key: 'fullName',
+      label: 'Họ tên',
+      render: (value, employee) => (
+        <div className="flex items-center gap-2.5">
+          <EmployeeAvatar avatarUrl={employee.avatarUrl} fullName={value} />
+          <span className="font-semibold text-slate-800">{value}</span>
+        </div>
+      )
+    },
     { key: 'email', label: 'Email' },
     {
       key: 'department',
@@ -560,6 +613,25 @@ export default function EmployeesPage() {
                 {/* TAB 1: Job Info */}
                 {editModalTab === 'job' && (
                   <div className="grid gap-5">
+                    {/* Avatar row */}
+                    <div className="flex items-center gap-5 rounded-xl border border-slate-100 bg-slate-50/60 p-4">
+                      <AvatarUpload
+                        value={form.avatarUrl}
+                        onChange={val => setForm(c => ({ ...c, avatarUrl: val }))}
+                        name={form.fullName}
+                        size="md"
+                        showLabel={true}
+                      />
+                      <div className="flex-1 space-y-1">
+                        <p className="text-xs font-bold text-slate-700">'Ảnh đại diện nhân viên</p>
+                        <p className="text-[11px] text-slate-400">Chấp nhận PNG, JPG, WEBP tối đa 5MB. Ảnh sẽ được tự động cắt và tối ưu.</p>
+                        {form.avatarUrl && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                            ✓ Đã có ảnh đại diện
+                          </span>
+                        )}
+                      </div>
+                    </div>
                     <div className="grid gap-5 sm:grid-cols-2">
                       <FormField
                         label="Mã nhân viên"
@@ -686,41 +758,66 @@ export default function EmployeesPage() {
                         value={form.identityCardNumber}
                         onChange={updateField}
                       />
-                      <FormField
-                        label="Quê quán"
-                        name="hometown"
+                      {/* Quê quán - dropdown tỉnh/thành */}
+                      <SearchableSelect
+                        label="Quê quán (Tỉnh/Thành phố)"
+                        options={[
+                          { value: '', label: '-- Chưa chọn --' },
+                          ...[
+                            'Hà Nội','TP Hồ Chí Minh','Đà Nẵng','Hải Phòng','Cần Thơ',
+                            'An Giang','Bà Rịa - Vũng Tàu','Bắc Giang','Bắc Kạn','Bạc Liêu',
+                            'Bắc Ninh','Bến Tre','Bình Định','Bình Dương','Bình Phước',
+                            'Bình Thuận','Cà Mau','Cao Bằng','Đắk Lắk','Đắk Nông',
+                            'Điện Biên','Đồng Nai','Đồng Tháp','Gia Lai','Hà Giang',
+                            'Hà Nam','Hà Tĩnh','Hải Dương','Hậu Giang','Hòa Bình',
+                            'Hưng Yên','Khánh Hòa','Kiên Giang','Kon Tum','Lai Châu',
+                            'Lâm Đồng','Lạng Sơn','Lào Cai','Long An','Nam Định',
+                            'Nghệ An','Ninh Bình','Ninh Thuận','Phú Thọ','Phú Yên',
+                            'Quảng Bình','Quảng Nam','Quảng Ngãi','Quảng Ninh','Quảng Trị',
+                            'Sóc Trăng','Sơn La','Tây Ninh','Thái Bình','Thái Nguyên',
+                            'Thanh Hóa','Thừa Thiên Huế','Tiền Giang','Trà Vinh','Tuyên Quang',
+                            'Vĩnh Long','Vĩnh Phúc','Yên Bái'
+                          ].map(t => ({ value: t, label: t }))
+                        ]}
                         value={form.hometown}
-                        onChange={updateField}
+                        onChange={val => setForm(c => ({ ...c, hometown: val }))}
+                        placeholder="Chọn tỉnh/thành"
                       />
                     </div>
                     <div className="grid gap-5 sm:grid-cols-2">
-                      <FormField
+                      {/* Dân tộc - dropdown 54 dân tộc */}
+                      <SearchableSelect
                         label="Dân tộc"
-                        name="ethnicity"
+                        options={[
+                          { value: '', label: '-- Chưa chọn --' },
+                          ...VIETNAMESE_ETHNICITIES.map(e => ({ value: e, label: e }))
+                        ]}
                         value={form.ethnicity}
-                        onChange={updateField}
+                        onChange={val => setForm(c => ({ ...c, ethnicity: val }))}
+                        placeholder="Chọn dân tộc"
                       />
-                      <FormField
+                      {/* Quốc tịch - searchable autocomplete */}
+                      <SearchableSelect
                         label="Quốc tịch"
-                        name="nationality"
+                        options={[{ value: '', label: '-- Chưa chọn --' }, ...NATIONALITIES]}
                         value={form.nationality}
-                        onChange={updateField}
+                        onChange={val => setForm(c => ({ ...c, nationality: val }))}
+                        placeholder="Tìm và chọn quốc tịch"
                       />
                     </div>
+                    {/* Địa chỉ bằng API cấp hành chính */}
                     <div className="grid gap-5 sm:grid-cols-2">
-                      <FormField
-                        as="textarea"
+                      <VietnamAddressSelector
                         label="Địa chỉ thường trú"
-                        name="permanentAddress"
                         value={form.permanentAddress}
-                        onChange={updateField}
+                        onChange={val => setForm(c => ({ ...c, permanentAddress: val }))}
+                        includeStreet={true}
                       />
-                      <FormField
-                        as="textarea"
+                      <VietnamAddressSelector
                         label="Địa chỉ hiện tại"
-                        name="currentAddress"
                         value={form.currentAddress}
-                        onChange={updateField}
+                        onChange={val => setForm(c => ({ ...c, currentAddress: val }))}
+                        includeStreet={true}
                       />
                     </div>
                     <div className="space-y-3">
