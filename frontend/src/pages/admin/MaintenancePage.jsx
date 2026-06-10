@@ -13,6 +13,7 @@ import PageHeader from '../../components/ui/PageHeader'
 import StatusBadge from '../../components/ui/StatusBadge'
 import Toast from '../../components/ui/Toast'
 import useAutoDismiss from '../../hooks/useAutoDismiss'
+import { useLanguage } from '../../hooks/useLanguage'
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Tất cả trạng thái' },
@@ -76,14 +77,15 @@ function Metric({ icon: Icon, label, value, tone }) {
     <article className="metric-card flex items-center gap-4 p-4">
       <span className={`grid size-11 place-items-center rounded-xl ${tone}`}><Icon size={20} /></span>
       <div>
-        <strong className="block text-2xl font-extrabold text-slate-950">{value}</strong>
-        <span className="text-xs font-semibold text-slate-500">{label}</span>
+        <strong className="block text-2xl font-extrabold text-slate-950 dark:text-slate-50">{value}</strong>
+        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{label}</span>
       </div>
     </article>
   )
 }
 
 export default function MaintenancePage() {
+  const { t } = useLanguage()
   const [searchParams, setSearchParams] = useSearchParams()
   const [requests, setRequests] = useState([])
   const [assets, setAssets] = useState([])
@@ -326,10 +328,10 @@ export default function MaintenancePage() {
   return (
     <div className="animate-fade-up">
       <PageHeader
-        eyebrow="Vận hành hỗ trợ"
-        title="Yêu cầu hỗ trợ"
-        description="Tiếp nhận, duyệt, xử lý và hoàn tất ticket theo đúng nghiệp vụ."
-        actions={<Button className="w-full sm:w-auto" type="button" onClick={openCreate}><Plus size={17} />Tạo yêu cầu</Button>}
+        eyebrow={t('Vận hành hỗ trợ')}
+        title={t('Yêu cầu hỗ trợ')}
+        description={t('Tiếp nhận, duyệt, xử lý và hoàn tất ticket theo đúng nghiệp vụ.')}
+        actions={<Button className="w-full sm:w-auto" type="button" onClick={openCreate}><Plus size={17} />{t('Tạo yêu cầu')}</Button>}
       />
 
       <section className="mb-5 grid gap-3 sm:grid-cols-3">
@@ -422,17 +424,17 @@ export default function MaintenancePage() {
               ['Ngày hoàn tất', formatDate(selected.completedAt)],
               REPAIR_TYPES.includes(selected.type) && ['Chi phí', formatMoney(selected.repairCost)],
             ].filter(Boolean).map(([label, value]) => (
-              <div className="rounded-xl bg-slate-50 p-4" key={label}>
+              <div className="rounded-xl bg-slate-50 p-4 dark:bg-slate-900/40" key={label}>
                 <dt className="text-xs font-semibold text-slate-400">{label}</dt>
                 <dd className="mt-1 font-bold text-slate-800">{value || 'Chưa cập nhật'}</dd>
               </div>
             ))}
           </dl>
-          {selected.resolution && <p className="mt-4 rounded-xl border border-slate-200 p-4 text-sm text-slate-600">{selected.resolution}</p>}
+          {selected.resolution && <p className="mt-4 rounded-xl border border-slate-200 p-4 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">{selected.resolution}</p>}
           {!!selected.events?.length && (
             <ol className="mt-4 space-y-2">
               {selected.events.map((event) => (
-                <li className="rounded-lg border border-slate-100 px-3 py-2 text-xs text-slate-600" key={event.id}>
+                <li className="rounded-lg border border-slate-100 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:text-slate-300" key={event.id}>
                   <strong className="text-slate-800">{event.type}</strong> · {formatDate(event.createdAt)} · {event.message}
                 </li>
               ))}

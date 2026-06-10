@@ -18,6 +18,19 @@ const assetStatusSchema = z.enum([
   "DISPOSED",
 ]);
 
+const assetImportRowSchema = z.object({
+  rowNumber: z.coerce.number().int().positive(),
+  assetCode: trimmedRequiredString("Asset code").max(50),
+  name: trimmedRequiredString("Asset name").max(100),
+  categoryId: z.coerce.number().int().positive(),
+  ownerDepartmentId: z.coerce.number().int().positive().optional().nullable(),
+  serialNumber: z.string().trim().max(100).optional().nullable(),
+  purchaseDate: z.string().datetime().optional().nullable(),
+  value: z.coerce.number().nonnegative().optional().nullable(),
+  status: assetStatusSchema.optional(),
+  notes: z.string().trim().max(1000).optional().nullable(),
+});
+
 const assetsValidators = Object.freeze({
   getById: Object.freeze({
     params: uuidParamSchema,
@@ -37,6 +50,11 @@ const assetsValidators = Object.freeze({
       status: assetStatusSchema.optional(),
       imageUrl: z.string().trim().max(1000).optional().nullable(),
       notes: z.string().trim().max(1000).optional().nullable(),
+    }),
+  }),
+  import: Object.freeze({
+    body: z.object({
+      rows: z.array(assetImportRowSchema).min(1).max(500),
     }),
   }),
   update: Object.freeze({

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 .Toastify__toast-container {
   width: min(380px, calc(100vw - 32px));
@@ -73,13 +74,15 @@
 }
 
 html.dark {
-  --app-bg: #0b1310;
-  --surface: #121d19;
-  --surface-muted: #162420;
-  --border: #1f332c;
-  --border-strong: #2a473d;
-  --ink: #f2f7f5;
-  --muted: #8ea197;
+  color-scheme: dark;
+  --app-bg: #0d1512;
+  --surface: #14201b;
+  --surface-muted: #192822;
+  --border: #2a3d35;
+  --border-strong: #3a5549;
+  --ink: #edf5f1;
+  --muted: #9eb0a7;
+  --sidebar: #071f18;
 }
 
 * {
@@ -98,6 +101,12 @@ body {
   margin: 0;
   background:
     radial-gradient(circle at 48% -10%, rgba(36, 148, 102, 0.075), transparent 28rem),
+    var(--app-bg);
+}
+
+html.dark body {
+  background:
+    radial-gradient(circle at 48% -10%, rgba(52, 211, 153, 0.08), transparent 30rem),
     var(--app-bg);
 }
 
@@ -166,7 +175,7 @@ a {
   }
 
   .page-title {
-    color: #0f172a;
+    color: var(--ink);
     font-size: 28px;
     font-weight: 800;
     line-height: 1.16;
@@ -181,9 +190,9 @@ a {
   }
 
   .surface {
-    border: 1px solid rgba(213, 224, 219, 0.9);
+    border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    background: rgba(255, 255, 255, 0.94);
+    background: color-mix(in srgb, var(--surface) 96%, transparent);
     box-shadow: var(--shadow-soft);
   }
 
@@ -192,9 +201,9 @@ a {
     gap: 14px;
     margin-bottom: 18px;
     padding: 16px;
-    border: 1px solid rgba(213, 224, 219, 0.9);
+    border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    background: rgba(255, 255, 255, 0.94);
+    background: color-mix(in srgb, var(--surface) 96%, transparent);
     box-shadow: var(--shadow-soft);
   }
 
@@ -202,9 +211,9 @@ a {
     position: relative;
     min-width: 0;
     overflow: hidden;
-    border: 1px solid rgba(213, 224, 219, 0.9);
+    border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    background: rgba(255, 255, 255, 0.96);
+    background: color-mix(in srgb, var(--surface) 98%, transparent);
     box-shadow: var(--shadow-soft);
     transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
   }
@@ -235,8 +244,8 @@ a {
     place-items: center;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    background: white;
-    color: #64748b;
+    background: var(--surface);
+    color: var(--muted);
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
     transition: border-color 160ms ease, background 160ms ease, color 160ms ease, transform 160ms ease;
   }
@@ -245,7 +254,7 @@ a {
     transform: translateY(-1px);
     border-color: var(--border-strong);
     background: var(--surface-muted);
-    color: #0f172a;
+    color: var(--ink);
   }
 
   .form-actions {
@@ -253,8 +262,142 @@ a {
     justify-content: flex-end;
     gap: 8px;
     padding-top: 20px;
-    border-top: 1px solid #edf2ef;
+    border-top: 1px solid var(--border);
   }
+
+  .form-input {
+    min-height: 44px;
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    padding: 10px 14px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+  }
+
+  .form-input::placeholder {
+    color: var(--muted);
+  }
+
+  .form-input:hover {
+    border-color: var(--border-strong);
+  }
+
+  .form-input:focus {
+    border-color: var(--color-brand-500);
+    box-shadow: 0 0 0 4px rgba(36, 148, 102, 0.12);
+  }
+}
+
+html.dark .app-shell {
+  background:
+    radial-gradient(circle at 70% 0%, rgba(52, 211, 153, 0.055), transparent 32rem),
+    var(--app-bg);
+}
+
+html.dark .page-eyebrow {
+  color: #6ee7b7;
+}
+
+html.dark .surface,
+html.dark .filter-panel,
+html.dark .metric-card {
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.2);
+}
+
+html.dark .metric-card::after {
+  background: rgba(52, 211, 153, 0.04);
+}
+
+html.dark .icon-button {
+  box-shadow: none;
+}
+
+/* Keep legacy admin modules readable while they migrate to semantic theme tokens. */
+html.dark :where(.app-shell) :where(
+  [class~="text-slate-950"],
+  [class~="text-slate-900"],
+  [class~="text-slate-800"]
+) {
+  color: #f1f5f3;
+}
+
+html.dark :where(.app-shell) :where([class~="text-slate-700"]) {
+  color: #c3d0ca;
+}
+
+html.dark :where(.app-shell) :where([class~="text-slate-600"]) {
+  color: #a9bbb2;
+}
+
+html.dark :where(.app-shell) :where([class~="text-slate-500"]) {
+  color: #91a49a;
+}
+
+html.dark .admin-floor-plan :where([class~="bg-white"]) {
+  background-color: var(--surface);
+}
+
+html.dark .admin-floor-plan :where(
+  [class~="bg-slate-50"],
+  [class~="bg-slate-50/50"],
+  [class~="bg-slate-100"]
+) {
+  background-color: var(--surface-muted);
+}
+
+html.dark .admin-floor-plan :where(
+  [class~="border-slate-100"],
+  [class~="border-slate-150"],
+  [class~="border-slate-200"],
+  [class~="border-slate-200/80"]
+) {
+  border-color: var(--border);
+}
+
+html.dark .admin-floor-plan input,
+html.dark .admin-floor-plan select {
+  border-color: var(--border);
+  background: #101b17;
+  color: var(--ink);
+}
+
+html.dark .admin-floor-plan :where([class~="bg-emerald-50/40"]) {
+  background-color: rgba(16, 185, 129, 0.12);
+}
+
+html.dark .admin-floor-plan :where([class~="bg-blue-50"], [class~="bg-blue-50/65"]) {
+  background-color: rgba(59, 130, 246, 0.12);
+}
+
+html.dark .admin-floor-plan :where([class~="bg-orange-50/60"]) {
+  background-color: rgba(249, 115, 22, 0.12);
+}
+
+html.dark .admin-floor-plan img {
+  filter: brightness(0.88) contrast(1.04);
+}
+
+html.dark .skeleton {
+  background: #22332c;
+}
+
+html.dark .skeleton::after {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+}
+
+html.dark .eam-toast {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #3b5147;
+  background-clip: padding-box;
 }
 
 ::selection {

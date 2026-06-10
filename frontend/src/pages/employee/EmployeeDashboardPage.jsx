@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import {
   ArrowRight,
   Boxes,
-  CalendarCheck,
   CheckCircle2,
   Clock3,
   Headphones,
@@ -69,13 +68,13 @@ export default function EmployeeDashboardPage() {
             key={label}
           >
             <div className="flex items-start justify-between">
-              <span className="text-xs font-bold text-slate-500">{label}</span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{label}</span>
               <span className={`grid size-10 place-items-center rounded-xl ${tone}`}>
                 <Icon size={19} />
               </span>
             </div>
-            <strong className="mt-5 block text-3xl font-extrabold text-slate-950">{value}</strong>
-            <span className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600">
+            <strong className="mt-5 block text-3xl font-extrabold text-slate-950 dark:text-slate-50">{value}</strong>
+            <span className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
               <CheckCircle2 size={13} />
               Dữ liệu đã cập nhật
             </span>
@@ -85,16 +84,16 @@ export default function EmployeeDashboardPage() {
 
       <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(300px,0.7fr)]">
         <article className="surface overflow-hidden">
-          <header className="flex items-center justify-between border-b border-slate-100 px-5 py-4 sm:px-6">
+          <header className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-700/70 sm:px-6">
             <div>
-              <h3 className="text-sm font-extrabold text-slate-900">Tài sản gần đây</h3>
-              <p className="mt-1 text-xs text-slate-500">Thiết bị đang được bàn giao cho bạn</p>
+              <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">Tài sản gần đây</h3>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Thiết bị đang được bàn giao cho bạn</p>
             </div>
             <Link className="flex items-center gap-1 text-xs font-bold text-brand-700" to="/employee/assets">
               Xem tất cả <ArrowRight size={14} />
             </Link>
           </header>
-          <div className="divide-y divide-slate-100 px-5 sm:px-6">
+          <div className="divide-y divide-slate-100 px-5 dark:divide-slate-700/70 sm:px-6">
             {assets.length ? (
               assets.slice(0, 3).map((item) => (
                 <div className="flex items-center gap-3 py-4" key={item.id}>
@@ -102,8 +101,8 @@ export default function EmployeeDashboardPage() {
                     <Laptop size={18} />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <strong className="block truncate text-xs font-bold text-slate-800">{item.asset?.name}</strong>
-                    <span className="mt-1 block text-[11px] text-slate-500">{item.asset?.assetCode} · {item.asset?.category?.name || 'Chưa phân loại'}</span>
+                    <strong className="block truncate text-xs font-bold text-slate-800 dark:text-slate-100">{item.asset?.name}</strong>
+                    <span className="mt-1 block text-[11px] text-slate-500 dark:text-slate-400">{item.asset?.assetCode} · {item.asset?.category?.name || 'Chưa phân loại'}</span>
                   </span>
                   <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700">
                     {item.notes || 'Tốt'}
@@ -117,8 +116,8 @@ export default function EmployeeDashboardPage() {
         </article>
 
         <article className="surface p-5 sm:p-6">
-          <h3 className="text-sm font-extrabold text-slate-900">Việc cần hoàn thành</h3>
-          <p className="mt-1 text-xs text-slate-500">Các đầu việc liên quan đến tài sản</p>
+          <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">Việc cần hoàn thành</h3>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Các đầu việc liên quan đến tài sản</p>
           <div className="mt-5 grid gap-3">
             {tasks.length ? (
               tasks.map((task) => {
@@ -130,14 +129,14 @@ export default function EmployeeDashboardPage() {
                 return (
                   <Link
                     to={task.actionUrl}
-                    className="flex gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3.5 hover:bg-slate-100/80 transition"
+                    className="flex gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3.5 transition hover:bg-slate-100/80 dark:border-slate-700 dark:bg-slate-900/35 dark:hover:bg-slate-800/60"
                     key={task.id}
                   >
                     <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-white text-brand-700 shadow-sm">
                       <Icon size={17} />
                     </span>
                     <span className="min-w-0">
-                      <strong className="block text-xs font-bold text-slate-800">{task.title}</strong>
+                      <strong className="block text-xs font-bold text-slate-800 dark:text-slate-100">{task.title}</strong>
                       <span className="mt-1 block text-[10px] font-semibold text-amber-600">
                         {formattedDue}
                       </span>

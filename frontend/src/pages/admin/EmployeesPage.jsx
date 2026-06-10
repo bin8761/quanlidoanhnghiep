@@ -11,7 +11,8 @@ import {
   History,
   UploadCloud,
   FileCheck,
-  Download
+  Download,
+  FileSpreadsheet
 } from 'lucide-react'
 import { departmentApi } from '../../api/departments'
 import { employeeApi } from '../../api/employees'
@@ -26,6 +27,8 @@ import PageHeader from '../../components/ui/PageHeader'
 import StatusBadge from '../../components/ui/StatusBadge'
 import Toast from '../../components/ui/Toast'
 import useAutoDismiss from '../../hooks/useAutoDismiss'
+import ExcelImportModal from '../../components/admin/ExcelImportModal'
+import { EMPLOYEE_TEMPLATE, buildEmployeeImportRow } from '../../utils/excelImport'
 
 const FIELD_LABELS = {
   fullName: 'Họ và tên',
@@ -125,6 +128,7 @@ export default function EmployeesPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [toast, setToast] = useState(null)
+  const [showImport, setShowImport] = useState(false)
 
   // Pinning desk states
   const [pinningEmployee, setPinningEmployee] = useState(null)
@@ -454,10 +458,16 @@ export default function EmployeesPage() {
         title="Quản lý nhân viên"
         description="Quản lý hồ sơ nhân viên và liên kết với phòng ban trong doanh nghiệp."
         actions={(
-          <Button className="w-full sm:w-auto" type="button" onClick={openCreateModal}>
-            <Plus size={17} />
-            Thêm nhân viên
-          </Button>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <Button className="w-full sm:w-auto" variant="secondary" type="button" onClick={() => setShowImport(true)}>
+              <FileSpreadsheet size={17} />
+              Nhập Excel
+            </Button>
+            <Button className="w-full sm:w-auto" type="button" onClick={openCreateModal}>
+              <Plus size={17} />
+              Thêm nhân viên
+            </Button>
+          </div>
         )}
       />
 
@@ -505,6 +515,30 @@ export default function EmployeesPage() {
           searchValue={filters.keyword}
           onSearchChange={(value) => updateFilter('keyword', value)}
           searchPlaceholder="Tìm theo mã, tên hoặc email..."
+        />
+      )}
+
+      {showImport && (
+        <ExcelImportModal
+          title="Nhập nhân viên từ Excel"
+          description="Kiểm tra mã nhân viên, email và phòng ban trước khi tạo hàng loạt hồ sơ."
+          entityLabel="nhân viên"
+          template={EMPLOYEE_TEMPLATE}
+          lookups={{ departments }}
+          buildRow={buildEmployeeImportRow}
+          duplicateKeys={[
+            { key: 'employeeCode', label: 'Mã nhân viên', optional: true },
+            { key: 'email', label: 'Email' },
+          ]}
+          onImport={employeeApi.importRows}
+          onImported={async (result) => {
+            await loadEmployees(filters)
+            setToast({
+              type: result.failed ? 'warning' : 'success',
+              message: `Đã nhập thành công ${result.imported}/${result.total} nhân viên.`,
+            })
+          }}
+          onClose={() => setShowImport(false)}
         />
       )}
 

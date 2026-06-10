@@ -15,6 +15,7 @@ import { reportApi } from '../../api/reports'
 import { ResourceError } from '../../components/admin/ResourceFeedback'
 import PageHeader from '../../components/ui/PageHeader'
 import StatusBadge from '../../components/ui/StatusBadge'
+import { useLanguage } from '../../hooks/useLanguage'
 
 const STATUS_LABELS = {
   AVAILABLE: 'Sẵn sàng',
@@ -58,13 +59,13 @@ function MetricCard({ label, value, note, icon: Icon, accent, href }) {
       to={href}
     >
       <div className="flex items-start justify-between gap-3">
-        <span className="text-xs font-bold text-slate-500">{label}</span>
+        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{label}</span>
         <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${accent}`}>
           <Icon size={19} />
         </span>
       </div>
-      <div className="mt-4 text-[28px] leading-none font-extrabold text-slate-950">{value}</div>
-      <div className="mt-3 flex items-center justify-between gap-2 text-[11px] font-medium text-slate-500">
+      <div className="mt-4 text-[28px] leading-none font-extrabold text-slate-950 dark:text-slate-50">{value}</div>
+      <div className="mt-3 flex items-center justify-between gap-2 text-[11px] font-medium text-slate-500 dark:text-slate-400">
         <span>{note}</span>
         <ArrowRight className="text-brand-600 transition group-hover:translate-x-0.5" size={14} />
       </div>
@@ -73,6 +74,7 @@ function MetricCard({ label, value, note, icon: Icon, accent, href }) {
 }
 
 export default function DashboardPage() {
+  const { t, locale } = useLanguage()
   const [summary, setSummary] = useState(null)
   const [assignments, setAssignments] = useState([])
   const [sessions, setSessions] = useState([])
@@ -108,33 +110,33 @@ export default function DashboardPage() {
   const metrics = summary
     ? [
         {
-          label: 'Tổng tài sản',
+          label: t('Tổng tài sản'),
           value: summary.totalAssets,
-          note: 'Xem danh sách tài sản',
+          note: t('Xem danh sách tài sản'),
           icon: Boxes,
           accent: 'bg-brand-50 text-brand-700',
           href: '/admin/assets',
         },
         {
-          label: 'Đang bàn giao',
+          label: t('Đang bàn giao'),
           value: summary.activeAssignments,
-          note: 'Quản lý người sử dụng',
+          note: t('Quản lý người sử dụng'),
           icon: PackageCheck,
           accent: 'bg-blue-50 text-blue-700',
           href: '/admin/assignments',
         },
         {
-          label: 'Bảo trì cần xử lý',
+          label: t('Bảo trì cần xử lý'),
           value: summary.openMaintenanceRequests,
-          note: 'Mở hàng đợi bảo trì',
+          note: t('Mở hàng đợi bảo trì'),
           icon: Wrench,
           accent: 'bg-amber-50 text-amber-700',
           href: '/admin/maintenance',
         },
         {
-          label: 'Phiên kiểm kê',
+          label: t('Phiên kiểm kê'),
           value: summary.inventorySessions,
-          note: 'Theo dõi tiến độ',
+          note: t('Theo dõi tiến độ'),
           icon: ClipboardCheck,
           accent: 'bg-violet-50 text-violet-700',
           href: '/admin/inventory',
@@ -146,11 +148,11 @@ export default function DashboardPage() {
     () =>
       (summary?.assetsByStatus || []).map((item) => ({
         ...item,
-        label: STATUS_LABELS[item.status] || item.status,
+        label: t(STATUS_LABELS[item.status] || item.status),
         percent: summary.totalAssets ? Math.round((item.count / summary.totalAssets) * 100) : 0,
         color: STATUS_COLORS[item.status] || 'bg-slate-400',
       })),
-    [summary],
+    [summary, t],
   )
 
   const recentActivities = useMemo(() => {
@@ -183,19 +185,19 @@ export default function DashboardPage() {
   return (
     <div className="animate-fade-up">
       <PageHeader
-        eyebrow="Tổng quan vận hành"
-        title={`${getGreeting()}, Quản trị viên`}
-        description="Số liệu được tổng hợp trực tiếp từ hoạt động quản lý tài sản."
+        eyebrow={t('Tổng quan vận hành')}
+        title={`${t(getGreeting())}, ${t('Quản trị viên')}`}
+        description={t('Số liệu được tổng hợp trực tiếp từ hoạt động quản lý tài sản.')}
         icon={Sparkles}
         actions={(
           <button
-            className="flex min-h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 disabled:opacity-60"
+            className="flex min-h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-slate-700"
             type="button"
             disabled={isLoading}
             onClick={loadDashboard}
           >
             <RefreshCw className={isLoading ? 'animate-spin' : ''} size={14} />
-            {syncedAt ? `Cập nhật ${formatDateTime(syncedAt)}` : 'Làm mới dữ liệu'}
+            {syncedAt ? `${t('Cập nhật')} ${new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'vi-VN', { dateStyle: 'short', timeStyle: 'short' }).format(syncedAt)}` : t('Làm mới dữ liệu')}
           </button>
         )}
       />
@@ -216,18 +218,18 @@ export default function DashboardPage() {
 
           <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.75fr)]">
             <article className="surface overflow-hidden">
-              <header className="flex min-h-18 items-center justify-between gap-4 border-b border-slate-100 px-5 py-4 sm:px-6">
+              <header className="flex min-h-18 items-center justify-between gap-4 border-b border-slate-100 px-5 py-4 dark:border-slate-700/70 sm:px-6">
                 <div>
-                  <h3 className="text-sm font-extrabold text-slate-900">Hoạt động gần đây</h3>
-                  <p className="mt-1 text-xs text-slate-500">Bàn giao và kiểm kê mới nhất</p>
+                  <h3 className="text-sm font-extrabold text-slate-900">{t('Hoạt động gần đây')}</h3>
+                  <p className="mt-1 text-xs text-slate-500">{t('Bàn giao và kiểm kê mới nhất')}</p>
                 </div>
                 <Link className="flex items-center gap-1 text-xs font-bold text-brand-700 hover:text-brand-800" to="/admin/assignments">
-                  Xem lịch sử <ArrowRight size={14} />
+                  {t('Xem lịch sử')} <ArrowRight size={14} />
                 </Link>
               </header>
               <div className="px-5 sm:px-6">
                 {recentActivities.length ? recentActivities.map(({ id, icon: Icon, title, detail, date, tone, status }) => (
-                  <div className="grid grid-cols-[42px_minmax(0,1fr)] items-center gap-3 border-b border-slate-100 py-4 last:border-b-0 sm:grid-cols-[42px_minmax(0,1fr)_auto]" key={id}>
+                  <div className="grid grid-cols-[42px_minmax(0,1fr)] items-center gap-3 border-b border-slate-100 py-4 last:border-b-0 dark:border-slate-700/70 sm:grid-cols-[42px_minmax(0,1fr)_auto]" key={id}>
                     <span className={`grid size-10 place-items-center rounded-xl ${tone}`}><Icon size={17} /></span>
                     <span className="min-w-0">
                       <strong className="block truncate text-xs font-bold text-slate-800">{title}</strong>
@@ -242,8 +244,8 @@ export default function DashboardPage() {
                   <div className="grid min-h-64 place-items-center text-center">
                     <div>
                       <PackageCheck className="mx-auto text-slate-300" size={28} />
-                      <p className="mt-3 text-sm font-bold text-slate-700">Chưa có hoạt động</p>
-                      <p className="mt-1 text-xs text-slate-500">Các lượt bàn giao và kiểm kê sẽ xuất hiện tại đây.</p>
+                      <p className="mt-3 text-sm font-bold text-slate-700">{t('Chưa có hoạt động')}</p>
+                      <p className="mt-1 text-xs text-slate-500">{t('Các lượt bàn giao và kiểm kê sẽ xuất hiện tại đây.')}</p>
                     </div>
                   </div>
                 )}
@@ -252,8 +254,8 @@ export default function DashboardPage() {
 
             <article className="surface p-5 sm:p-6">
               <header className="mb-6">
-                <h3 className="text-sm font-extrabold text-slate-900">Trạng thái tài sản</h3>
-                <p className="mt-1 text-xs text-slate-500">Phân bổ theo dữ liệu hiện tại</p>
+                <h3 className="text-sm font-extrabold text-slate-900">{t('Trạng thái tài sản')}</h3>
+                <p className="mt-1 text-xs text-slate-500">{t('Phân bổ theo dữ liệu hiện tại')}</p>
               </header>
               <div className="grid gap-5">
                 {health.map((item) => (
@@ -262,18 +264,18 @@ export default function DashboardPage() {
                       <span className="text-xs font-semibold text-slate-700">{item.label}</span>
                       <span className="text-xs font-extrabold text-slate-900">{item.count}</span>
                     </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                    <div className="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                       <div className={`h-full rounded-full ${item.color}`} style={{ width: `${item.percent}%` }} />
                     </div>
                   </div>
                 ))}
               </div>
               <div className="mt-7 rounded-2xl bg-slate-950 p-4 text-white">
-                <p className="text-[11px] text-white/55">Tỷ lệ tài sản đang sử dụng</p>
+                <p className="text-[11px] text-white/55">{t('Tỷ lệ tài sản đang sử dụng')}</p>
                 <div className="mt-2 flex items-end justify-between">
                   <strong className="text-2xl font-extrabold">{assignedPercent}%</strong>
                   <Link className="text-[10px] font-semibold text-emerald-300 hover:text-emerald-200" to="/admin/reports">
-                    Xem báo cáo
+                    {t('Xem báo cáo')}
                   </Link>
                 </div>
                 <p className="mt-2 text-[10px] text-white/45">Trên {summary.operationalAssets} tài sản có thể vận hành · {summary.affectedAssetCount} tài sản cần chuẩn hóa dữ liệu</p>

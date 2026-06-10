@@ -10,6 +10,7 @@ import Button from '../../components/ui/Button'
 import DataTable from '../../components/ui/DataTable'
 import PageHeader from '../../components/ui/PageHeader'
 import StatusBadge from '../../components/ui/StatusBadge'
+import { useLanguage } from '../../hooks/useLanguage'
 
 const STATUS_OPTIONS = ['', 'AVAILABLE', 'ASSIGNED', 'MAINTENANCE', 'BROKEN', 'LOST', 'DISPOSED']
 const ISSUE_LABELS = {
@@ -26,8 +27,8 @@ const ISSUE_LABELS = {
 function Metric({ icon: Icon, label, value, note, tone, onClick }) {
   return <button className="metric-card p-4 text-left sm:p-5" type="button" onClick={onClick}>
     <span className={`grid size-10 place-items-center rounded-xl ${tone}`}><Icon size={19} /></span>
-    <strong className="mt-4 block text-3xl font-extrabold text-slate-950">{value}</strong>
-    <span className="mt-1 block text-xs font-semibold text-slate-500">{label}</span>
+    <strong className="mt-4 block text-3xl font-extrabold text-slate-950 dark:text-slate-50">{value}</strong>
+    <span className="mt-1 block text-xs font-semibold text-slate-500 dark:text-slate-400">{label}</span>
     {note && <span className="mt-2 block text-[10px] text-slate-400">{note}</span>}
   </button>
 }
@@ -36,11 +37,12 @@ function BarList({ rows, nameKey }) {
   const maximum = Math.max(...rows.map((row) => row.count), 1)
   return <div className="grid gap-4">{rows.map((row) => <div key={`${row[nameKey]}-${row.count}`}>
     <div className="mb-2 flex justify-between gap-3 text-xs"><span className="truncate font-semibold text-slate-700">{row[nameKey]}</span><strong>{row.count}</strong></div>
-    <div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-brand-600" style={{ width: `${(row.count / maximum) * 100}%` }} /></div>
+    <div className="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"><div className="h-full rounded-full bg-brand-600" style={{ width: `${(row.count / maximum) * 100}%` }} /></div>
   </div>)}</div>
 }
 
 export default function ReportsPage() {
+  const { t } = useLanguage()
   const [searchParams, setSearchParams] = useSearchParams()
   const filters = useMemo(() => Object.fromEntries(searchParams.entries()), [searchParams])
   const [data, setData] = useState(null)
@@ -75,11 +77,11 @@ export default function ReportsPage() {
   ]
 
   return <div className="animate-fade-up">
-    <PageHeader eyebrow="Phân tích dữ liệu vận hành" title="Báo cáo tài sản" description="KPI snapshot hiện tại, tài sản ghi nhận mới và kiểm soát chất lượng dữ liệu."
+    <PageHeader eyebrow={t('Phân tích dữ liệu vận hành')} title={t('Báo cáo tài sản')} description={t('KPI snapshot hiện tại, tài sản ghi nhận mới và kiểm soát chất lượng dữ liệu.')}
       actions={
         <div className="flex flex-wrap gap-2">
           <Button variant="secondary" onClick={loadReports}>
-            <RefreshCw size={16} />Làm mới
+            <RefreshCw size={16} />{t('Làm mới')}
           </Button>
           <Button variant="secondary" onClick={() => reportApi.exportCsv(filters)}>
             <Download size={16} />CSV
@@ -95,30 +97,30 @@ export default function ReportsPage() {
     />
     {error && <ResourceError message={error} onRetry={loadReports} />}
     <section className="surface mb-5 grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-7">
-      <input className="rounded-lg border border-slate-200 p-2 text-xs" type="date" value={filters.from || ''} onChange={(e) => setFilter('from', e.target.value)} />
-      <input className="rounded-lg border border-slate-200 p-2 text-xs" type="date" value={filters.to || ''} onChange={(e) => setFilter('to', e.target.value)} />
-      <select className="rounded-lg border border-slate-200 p-2 text-xs" value={filters.status || ''} onChange={(e) => setFilter('status', e.target.value)}>{STATUS_OPTIONS.map((v) => <option key={v} value={v}>{v || 'Tất cả trạng thái'}</option>)}</select>
-      <select className="rounded-lg border border-slate-200 p-2 text-xs" value={filters.categoryId || ''} onChange={(e) => setFilter('categoryId', e.target.value)}><option value="">Tất cả danh mục</option>{lookups.categories.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select>
-      <select className="rounded-lg border border-slate-200 p-2 text-xs" value={filters.ownerDepartmentId || ''} onChange={(e) => setFilter('ownerDepartmentId', e.target.value)}><option value="">Phòng ban sở hữu</option>{lookups.departments.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select>
-      <select className="rounded-lg border border-slate-200 p-2 text-xs" value={filters.usageDepartmentId || ''} onChange={(e) => setFilter('usageDepartmentId', e.target.value)}><option value="">Phòng ban sử dụng</option>{lookups.departments.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select>
-      <select className="rounded-lg border border-slate-200 p-2 text-xs" value={filters.locationId || ''} onChange={(e) => setFilter('locationId', e.target.value)}><option value="">Tất cả vị trí</option>{lookups.locations.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select>
+      <input className="form-input min-h-10 rounded-lg p-2 text-xs" type="date" value={filters.from || ''} onChange={(e) => setFilter('from', e.target.value)} />
+      <input className="form-input min-h-10 rounded-lg p-2 text-xs" type="date" value={filters.to || ''} onChange={(e) => setFilter('to', e.target.value)} />
+      <select className="form-input min-h-10 rounded-lg p-2 text-xs" value={filters.status || ''} onChange={(e) => setFilter('status', e.target.value)}>{STATUS_OPTIONS.map((v) => <option key={v} value={v}>{v || t('Tất cả trạng thái')}</option>)}</select>
+      <select className="form-input min-h-10 rounded-lg p-2 text-xs" value={filters.categoryId || ''} onChange={(e) => setFilter('categoryId', e.target.value)}><option value="">{t('Tất cả danh mục')}</option>{lookups.categories.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select>
+      <select className="form-input min-h-10 rounded-lg p-2 text-xs" value={filters.ownerDepartmentId || ''} onChange={(e) => setFilter('ownerDepartmentId', e.target.value)}><option value="">Phòng ban sở hữu</option>{lookups.departments.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select>
+      <select className="form-input min-h-10 rounded-lg p-2 text-xs" value={filters.usageDepartmentId || ''} onChange={(e) => setFilter('usageDepartmentId', e.target.value)}><option value="">Phòng ban sử dụng</option>{lookups.departments.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select>
+      <select className="form-input min-h-10 rounded-lg p-2 text-xs" value={filters.locationId || ''} onChange={(e) => setFilter('locationId', e.target.value)}><option value="">{t('Tất cả vị trí')}</option>{lookups.locations.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}</select>
       <p className="text-[10px] text-slate-400 sm:col-span-2 xl:col-span-7">Khoảng ngày chỉ áp dụng cho biểu đồ tài sản được ghi nhận mới. KPI snapshot, phân bổ và chất lượng dữ liệu luôn phản ánh trạng thái hiện tại.</p>
     </section>
     {isLoading || !data ? <div className="skeleton h-64 rounded-[18px]" /> : <>
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Metric icon={Boxes} label="Tổng tài sản" value={data.summary.totalAssets} tone="bg-brand-50 text-brand-700" onClick={() => drill({ issue: '', status: '' })} />
-        <Metric icon={TrendingUp} label="Tỷ lệ sử dụng" value={`${data.summary.utilizationRate}%`} note={`${data.summary.operationalAssets} tài sản có thể vận hành`} tone="bg-blue-50 text-blue-700" onClick={() => drill({ issue: '', status: 'ASSIGNED' })} />
-        <Metric icon={ShieldCheck} label="Tỷ lệ khả dụng" value={`${data.summary.availabilityRate}%`} tone="bg-emerald-50 text-emerald-700" onClick={() => drill({ issue: '', status: 'AVAILABLE' })} />
-        <Metric icon={AlertTriangle} label="Tài sản cần chuẩn hóa dữ liệu" value={data.summary.affectedAssetCount} note={`${data.summary.dataQualityIssueCount} lỗi dữ liệu được phát hiện`} tone="bg-amber-50 text-amber-700" />
+        <Metric icon={Boxes} label={t('Tổng tài sản')} value={data.summary.totalAssets} tone="bg-brand-50 text-brand-700" onClick={() => drill({ issue: '', status: '' })} />
+        <Metric icon={TrendingUp} label={t('Tỷ lệ sử dụng')} value={`${data.summary.utilizationRate}%`} note={`${data.summary.operationalAssets} tài sản có thể vận hành`} tone="bg-blue-50 text-blue-700" onClick={() => drill({ issue: '', status: 'ASSIGNED' })} />
+        <Metric icon={ShieldCheck} label={t('Tỷ lệ khả dụng')} value={`${data.summary.availabilityRate}%`} tone="bg-emerald-50 text-emerald-700" onClick={() => drill({ issue: '', status: 'AVAILABLE' })} />
+        <Metric icon={AlertTriangle} label={t('Tài sản cần chuẩn hóa dữ liệu')} value={data.summary.affectedAssetCount} note={`${data.summary.dataQualityIssueCount} lỗi dữ liệu được phát hiện`} tone="bg-amber-50 text-amber-700" />
       </section>
       <section className="mt-5 grid gap-5 xl:grid-cols-3">
-        <article className="surface p-5"><h3 className="mb-5 text-sm font-extrabold">Theo danh mục</h3><BarList rows={data.categories} nameKey="categoryName" /></article>
-        <article className="surface p-5"><h3 className="mb-5 text-sm font-extrabold">Phòng ban sở hữu</h3><BarList rows={data.owners} nameKey="departmentName" /></article>
-        <article className="surface p-5"><h3 className="mb-5 text-sm font-extrabold">Phòng ban sử dụng</h3><BarList rows={data.usage} nameKey="departmentName" /></article>
+        <article className="surface p-5"><h3 className="mb-5 text-sm font-extrabold">{t('Theo danh mục')}</h3><BarList rows={data.categories} nameKey="categoryName" /></article>
+        <article className="surface p-5"><h3 className="mb-5 text-sm font-extrabold">{t('Phòng ban sở hữu')}</h3><BarList rows={data.owners} nameKey="departmentName" /></article>
+        <article className="surface p-5"><h3 className="mb-5 text-sm font-extrabold">{t('Phòng ban sử dụng')}</h3><BarList rows={data.usage} nameKey="departmentName" /></article>
       </section>
       <section className="mt-5 grid gap-5 xl:grid-cols-2">
-        <article className="surface p-5"><h3 className="mb-1 text-sm font-extrabold">Tài sản được ghi nhận mới theo tháng</h3><p className="mb-5 text-xs text-slate-500">Tính theo thời điểm tài sản được tạo trong hệ thống, không phải ngày mua hoặc ngày thanh lý.</p><BarList rows={data.trends.map((v) => ({ ...v, count: v.added }))} nameKey="month" /></article>
-        <article className="surface p-5"><h3 className="mb-4 text-sm font-extrabold">Chất lượng dữ liệu</h3><div className="grid gap-2">{data.quality.map((item) => <button className="flex justify-between rounded-xl border border-slate-100 p-3 text-left text-xs hover:bg-amber-50" key={item.type} onClick={() => drill({ issue: item.type, page: 1 })}><span>{ISSUE_LABELS[item.type]}</span><strong>{item.count}</strong></button>)}</div></article>
+        <article className="surface p-5"><h3 className="mb-1 text-sm font-extrabold">{t('Tài sản được ghi nhận mới theo tháng')}</h3><p className="mb-5 text-xs text-slate-500">Tính theo thời điểm tài sản được tạo trong hệ thống, không phải ngày mua hoặc ngày thanh lý.</p><BarList rows={data.trends.map((v) => ({ ...v, count: v.added }))} nameKey="month" /></article>
+        <article className="surface p-5"><h3 className="mb-4 text-sm font-extrabold">{t('Chất lượng dữ liệu')}</h3><div className="grid gap-2">{data.quality.map((item) => <button className="flex justify-between rounded-xl border border-slate-100 p-3 text-left text-xs transition hover:bg-amber-50 dark:border-slate-700 dark:hover:bg-amber-400/10" key={item.type} onClick={() => drill({ issue: item.type, page: 1 })}><span>{ISSUE_LABELS[item.type]}</span><strong>{item.count}</strong></button>)}</div></article>
       </section>
       <div className="mt-5">
         <DataTable columns={columns} rows={data.assets.items} searchValue="" onSearchChange={() => {}} searchPlaceholder={filters.issue ? ISSUE_LABELS[filters.issue] : 'Danh sách tài sản theo bộ lọc'} />

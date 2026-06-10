@@ -26,6 +26,15 @@ router.get(
 );
 
 router.post(
+  "/import",
+  authenticate,
+  passwordChangeGuard,
+  authorize(ADMIN),
+  validateRequest(employeesValidators.import),
+  employeesController.importEmployees,
+);
+
+router.post(
   "/",
   authenticate,
   passwordChangeGuard,

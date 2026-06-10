@@ -65,14 +65,15 @@ export default function Sidebar({ open, onClose }) {
         <button
           className="ml-auto grid size-9 place-items-center rounded-xl text-white/55 transition hover:bg-white/10 hover:text-white lg:hidden"
           type="button"
-          title="Đóng menu"
+          aria-label={t('Đóng menu')}
+          title={t('Đóng menu')}
           onClick={onClose}
         >
           <X size={18} />
         </button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Điều hướng quản trị">
+      <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label={t('Điều hướng quản trị')}>
         <p className="px-3 pb-2 text-[9px] font-extrabold tracking-[0.14em] text-white/35 uppercase">
           {t("Không gian quản trị")}
         </p>
@@ -130,7 +131,8 @@ export default function Sidebar({ open, onClose }) {
             <button
               className="grid size-9 place-items-center rounded-xl text-white/45 transition hover:bg-red-500/15 hover:text-red-300"
               type="button"
-              title="Đăng xuất"
+              aria-label={t('Đăng xuất')}
+              title={t('Đăng xuất')}
               onClick={logout}
             >
               <LogOut size={17} />

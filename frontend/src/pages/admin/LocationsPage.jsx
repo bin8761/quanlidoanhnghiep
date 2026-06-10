@@ -21,10 +21,12 @@ import Modal from '../../components/ui/Modal'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import Toast from '../../components/ui/Toast'
 import useAutoDismiss from '../../hooks/useAutoDismiss'
+import { useLanguage } from '../../hooks/useLanguage'
 
 const EMPTY_FORM = Object.freeze({ name: '', description: '', floorPlanUrl: '' })
 
 export default function LocationsPage() {
+  const { t } = useLanguage()
   const [locations, setLocations] = useState([])
   const [selectedLocation, setSelectedLocation] = useState(null)
   const [locationDetails, setLocationDetails] = useState(null)
@@ -343,20 +345,20 @@ export default function LocationsPage() {
   }
 
   return (
-    <div className="animate-fade-up">
+    <div className="admin-floor-plan animate-fade-up">
       <div className="flex flex-col gap-6 md:flex-row md:items-start">
         {/* Left Side: Floor Plan list */}
         <div className="w-full md:w-80 shrink-0 flex flex-col gap-4">
           <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-bold text-slate-800">Sơ đồ mặt bằng</h2>
+              <h2 className="text-sm font-bold text-slate-800">{t('Sơ đồ mặt bằng')}</h2>
               <button
                 className="flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-xs font-bold text-emerald-700 transition hover:bg-emerald-100"
                 type="button"
                 onClick={openCreateModal}
               >
                 <Plus size={14} />
-                Thêm sơ đồ
+                {t('Thêm sơ đồ')}
               </button>
             </div>
             
@@ -365,7 +367,7 @@ export default function LocationsPage() {
               <Search className="absolute left-3 top-2.5 text-slate-400" size={15} />
               <input
                 className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-4 text-xs focus:border-emerald-500 focus:bg-white focus:outline-none"
-                placeholder="Tìm sơ đồ..."
+                placeholder={t('Tìm sơ đồ...')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -392,7 +394,7 @@ export default function LocationsPage() {
                       onClick={() => handleLocationSelect(loc)}
                       className={`group flex items-center justify-between cursor-pointer rounded-xl border p-3 transition ${
                         isActive
-                          ? 'border-emerald-500 bg-emerald-50/40 text-emerald-900 shadow-sm'
+                          ? 'border-emerald-500 bg-emerald-50/40 text-emerald-900 shadow-sm dark:border-emerald-400/70 dark:text-emerald-300'
                           : 'border-slate-150 bg-slate-50/50 hover:bg-slate-100/50'
                       }`}
                     >
@@ -431,7 +433,7 @@ export default function LocationsPage() {
           {mode === 'edit-pins' && selectedLocation && (
             <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm animate-fade-up">
               <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-3">
-                <h3 className="text-xs font-bold text-slate-800">Cấu hình ghim vị trí</h3>
+                <h3 className="text-xs font-bold text-slate-800">{t('Cấu hình ghim vị trí')}</h3>
                 <button
                   className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg"
                   type="button"
@@ -497,7 +499,7 @@ export default function LocationsPage() {
                         }}
                         className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition ${
                           isSelected
-                            ? 'bg-blue-50 text-blue-900 border border-blue-200'
+                            ? 'bg-blue-50 text-blue-900 border border-blue-200 dark:border-blue-400/40 dark:text-blue-200'
                             : 'hover:bg-slate-50 border border-transparent'
                         }`}
                       >
@@ -548,7 +550,7 @@ export default function LocationsPage() {
                         }}
                         className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition ${
                           isSelected
-                            ? 'bg-orange-50/60 text-orange-950 border border-orange-200'
+                            ? 'bg-orange-50/60 text-orange-950 border border-orange-200 dark:border-orange-400/40 dark:text-orange-200'
                             : 'hover:bg-slate-50 border border-transparent'
                         }`}
                       >
@@ -616,13 +618,13 @@ export default function LocationsPage() {
           ) : !selectedLocation ? (
             <div className="flex-1 flex flex-col items-center justify-center py-20 text-center">
               <MapPin size={48} className="text-slate-300 stroke-[1.2]" />
-              <h3 className="text-sm font-bold text-slate-700 mt-4">Chưa có sơ đồ văn phòng nào</h3>
+              <h3 className="text-sm font-bold text-slate-700 mt-4">{t('Chưa có sơ đồ văn phòng nào')}</h3>
               <p className="text-xs text-slate-400 max-w-sm mt-1.5">
                 Vui lòng tạo sơ đồ văn phòng và tải lên hình ảnh sơ đồ mặt bằng (Floor Plan) để bắt đầu sử dụng bản đồ tương tác định vị thiết bị.
               </p>
               <Button className="mt-4" type="button" onClick={openCreateModal}>
                 <Plus size={16} />
-                Thêm sơ đồ ngay
+                {t('Thêm sơ đồ ngay')}
               </Button>
             </div>
           ) : (
@@ -644,7 +646,7 @@ export default function LocationsPage() {
                     onClick={() => setMode('view')}
                   >
                     <Eye size={14} />
-                    Xem bản đồ
+                    {t('Xem bản đồ')}
                   </button>
                   <button
                     className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
@@ -655,7 +657,7 @@ export default function LocationsPage() {
                     onClick={() => setMode('edit-pins')}
                   >
                     <Settings size={14} />
-                    Ghim vị trí
+                    {t('Ghim vị trí')}
                   </button>
                 </div>
               </div>

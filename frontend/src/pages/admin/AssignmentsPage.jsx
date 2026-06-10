@@ -20,6 +20,7 @@ import PageHeader from '../../components/ui/PageHeader'
 import StatusBadge from '../../components/ui/StatusBadge'
 import Toast from '../../components/ui/Toast'
 import useAutoDismiss from '../../hooks/useAutoDismiss'
+import { useLanguage } from '../../hooks/useLanguage'
 
 const EMPTY_ASSIGN_FORM = Object.freeze({
   assetId: '',
@@ -88,14 +89,15 @@ function SummaryCard({ icon: Icon, label, value, tone }) {
         <Icon size={20} />
       </span>
       <div>
-        <p className="text-2xl font-extrabold text-slate-950">{value}</p>
-        <p className="mt-0.5 text-xs font-semibold text-slate-500">{label}</p>
+        <p className="text-2xl font-extrabold text-slate-950 dark:text-slate-50">{value}</p>
+        <p className="mt-0.5 text-xs font-semibold text-slate-500 dark:text-slate-400">{label}</p>
       </div>
     </article>
   )
 }
 
 export default function AssignmentsPage() {
+  const { t } = useLanguage()
   const [history, setHistory] = useState([])
   const [assets, setAssets] = useState([])
   const [employees, setEmployees] = useState([])
@@ -318,7 +320,7 @@ export default function AssignmentsPage() {
       label: 'Tài sản',
       render: (asset) => (
         <div>
-          <strong className="block text-slate-900">{asset?.assetCode}</strong>
+          <strong className="block text-slate-900 dark:text-slate-100">{asset?.assetCode}</strong>
           <span className="mt-0.5 block text-xs text-slate-500">{asset?.name}</span>
         </div>
       ),
@@ -328,7 +330,7 @@ export default function AssignmentsPage() {
       label: 'Nhân viên',
       render: (employee) => (
         <div>
-          <strong className="block text-slate-800">{employee?.fullName}</strong>
+          <strong className="block text-slate-800 dark:text-slate-100">{employee?.fullName}</strong>
           <span className="mt-0.5 block text-xs text-slate-500">
             {employee?.employeeCode} · {employee?.department?.name || 'Chưa có phòng ban'}
           </span>
@@ -387,9 +389,9 @@ export default function AssignmentsPage() {
   return (
     <div className="animate-fade-up">
       <PageHeader
-        eyebrow="Vòng đời sử dụng tài sản"
-        title="Quản lý bàn giao"
-        description="Bàn giao, thu hồi, chuyển người sử dụng và truy vết toàn bộ lịch sử tài sản."
+        eyebrow={t('Vòng đời sử dụng tài sản')}
+        title={t('Quản lý bàn giao')}
+        description={t('Bàn giao, thu hồi, chuyển người sử dụng và truy vết toàn bộ lịch sử tài sản.')}
         actions={(
           <Button
             className="w-full sm:w-auto"
@@ -398,15 +400,15 @@ export default function AssignmentsPage() {
             onClick={openAssignModal}
           >
             <Plus size={17} />
-            Tạo bàn giao
+            {t('Tạo bàn giao')}
           </Button>
         )}
       />
 
       <section className="mb-5 grid gap-3 sm:grid-cols-3">
-        <SummaryCard icon={PackageCheck} label="Đang bàn giao" value={activeAssignments.length} tone="emerald" />
-        <SummaryCard icon={History} label="Tổng lượt bàn giao" value={history.length} tone="blue" />
-        <SummaryCard icon={UserRound} label="Nhân viên đang sử dụng" value={new Set(activeAssignments.map((item) => item.employeeId)).size} tone="slate" />
+        <SummaryCard icon={PackageCheck} label={t('Đang bàn giao')} value={activeAssignments.length} tone="emerald" />
+        <SummaryCard icon={History} label={t('Tổng lượt bàn giao')} value={history.length} tone="blue" />
+        <SummaryCard icon={UserRound} label={t('Nhân viên đang sử dụng')} value={new Set(activeAssignments.map((item) => item.employeeId)).size} tone="slate" />
       </section>
 
       <section className="filter-panel sm:grid-cols-2 xl:grid-cols-4">

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Eye, Pencil, Plus, Trash2, MapPin } from 'lucide-react'
+import { Eye, FileSpreadsheet, Pencil, Plus, Trash2, MapPin } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { assetApi } from '../../api/assets'
 import { categoryApi } from '../../api/categories'
@@ -17,6 +17,8 @@ import Toast from '../../components/ui/Toast'
 import useAutoDismiss from '../../hooks/useAutoDismiss'
 import ImageUpload from '../../components/ui/ImageUpload'
 import { API_BASE_URL } from '../../api/client'
+import ExcelImportModal from '../../components/admin/ExcelImportModal'
+import { ASSET_TEMPLATE, buildAssetImportRow } from '../../utils/excelImport'
 
 const ASSET_STATUSES = [
   { value: 'AVAILABLE', label: 'Sẵn sàng' },
@@ -86,6 +88,7 @@ export default function AssetsPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [toast, setToast] = useState(null)
+  const [showImport, setShowImport] = useState(false)
 
   // Pinning states
   const [pinningAsset, setPinningAsset] = useState(null)
@@ -347,10 +350,16 @@ export default function AssetsPage() {
         title="Quản lý tài sản"
         description="Theo dõi thông tin, trạng thái và người đang sử dụng từng tài sản."
         actions={(
-          <Button className="w-full sm:w-auto" type="button" onClick={openCreateModal}>
-            <Plus size={17} />
-            Thêm tài sản
-          </Button>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <Button className="w-full sm:w-auto" variant="secondary" type="button" onClick={() => setShowImport(true)}>
+              <FileSpreadsheet size={17} />
+              Nhập Excel
+            </Button>
+            <Button className="w-full sm:w-auto" type="button" onClick={openCreateModal}>
+              <Plus size={17} />
+              Thêm tài sản
+            </Button>
+          </div>
         )}
       />
 
@@ -371,6 +380,27 @@ export default function AssetsPage() {
         <ResourceTableSkeleton columns={6} />
       ) : (
         <DataTable columns={columns} rows={assets} searchValue={filters.keyword} onSearchChange={(value) => updateFilter('keyword', value)} searchPlaceholder="Tìm theo mã, tên hoặc serial..." />
+      )}
+
+      {showImport && (
+        <ExcelImportModal
+          title="Nhập tài sản từ Excel"
+          description="Xem trước và kiểm tra dữ liệu trước khi thêm hàng loạt tài sản vào hệ thống."
+          entityLabel="tài sản"
+          template={ASSET_TEMPLATE}
+          lookups={{ categories, departments }}
+          buildRow={buildAssetImportRow}
+          duplicateKeys={[{ key: 'assetCode', label: 'Mã tài sản' }]}
+          onImport={assetApi.importRows}
+          onImported={async (result) => {
+            await loadAssets(filters)
+            setToast({
+              type: result.failed ? 'warning' : 'success',
+              message: `Đã nhập thành công ${result.imported}/${result.total} tài sản.`,
+            })
+          }}
+          onClose={() => setShowImport(false)}
+        />
       )}
 
       {editingAsset && (

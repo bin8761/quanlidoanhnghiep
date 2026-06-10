@@ -4,8 +4,10 @@ import { Outlet, useLocation } from 'react-router-dom'
 import EmployeeSidebar from '../components/layout/EmployeeSidebar'
 import NotificationBell from '../components/layout/NotificationBell'
 import SyncStatusBadge from '../components/layout/SyncStatusBadge'
+import ThemeToggle from '../components/layout/ThemeToggle'
 import QrScannerModal from '../components/ui/QrScannerModal'
 import { useNotifications } from '../notifications/notifications-context'
+import { useLanguage } from '../hooks/useLanguage'
 
 const PAGE_TITLES = {
   '/employee/dashboard': 'Tổng quan',
@@ -22,6 +24,7 @@ export default function EmployeeLayout() {
   const [qrOpen, setQrOpen] = useState(false)
   const location = useLocation()
   const { connectionStatus } = useNotifications()
+  const { t } = useLanguage()
 
   return (
     <div className="app-shell lg:grid lg:grid-cols-[256px_minmax(0,1fr)]">
@@ -30,35 +33,36 @@ export default function EmployeeLayout() {
         <button
           className="fixed inset-0 z-30 border-0 bg-slate-950/45 backdrop-blur-sm lg:hidden"
           type="button"
-          aria-label="Đóng menu"
+          aria-label={t('Đóng menu')}
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       <main className="min-w-0 lg:col-start-2">
-        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/88 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/88 px-4 backdrop-blur-xl transition-colors dark:border-slate-700/70 dark:bg-[#111d18]/92 sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <button
               className="icon-button lg:hidden"
               type="button"
-              aria-label="Mở menu"
-              title="Mở menu"
+              aria-label={t('Mở menu')}
+              title={t('Mở menu')}
               onClick={() => setSidebarOpen(true)}
             >
               <Menu size={19} />
             </button>
             <div className="min-w-0">
-              <p className="hidden text-[10px] font-bold tracking-wide text-slate-400 uppercase sm:block">
-                Cổng thông tin nhân viên
+              <p className="hidden text-[10px] font-bold tracking-wide text-slate-400 uppercase dark:text-slate-500 sm:block">
+                {t('Cổng thông tin nhân viên')}
               </p>
-              <h1 className="truncate text-base font-bold text-slate-900 sm:text-lg">
-                {PAGE_TITLES[location.pathname] || 'EAM Workspace'}
+              <h1 className="truncate text-base font-bold text-slate-900 dark:text-slate-100 sm:text-lg">
+                {t(PAGE_TITLES[location.pathname] || 'EAM Workspace')}
               </h1>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <SyncStatusBadge status={connectionStatus} />
+            <ThemeToggle />
             <NotificationBell />
             <button
               className="icon-button"

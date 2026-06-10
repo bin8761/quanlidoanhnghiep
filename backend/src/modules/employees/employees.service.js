@@ -5,6 +5,44 @@ const AppError = require("../../shared/errors/AppError");
 const ERROR_CODES = require("../../shared/errors/errorCodes");
 
 function createEmployeesService({ repository = employeesRepository, deptRepository = departmentsRepository, locRepository = locationsRepository } = {}) {
+  async function createEmployee(data) {
+    const normalizedData = { ...data };
+    if (!normalizedData.employeeCode || normalizedData.employeeCode.trim() === "") {
+      normalizedData.employeeCode = await repository.getNextEmployeeCode();
+    }
+
+    const existingCode = await repository.findByEmployeeCode(normalizedData.employeeCode);
+    if (existingCode) {
+      throw new AppError({
+        message: "Employee code already exists",
+        statusCode: 400,
+        errorCode: ERROR_CODES.VALIDATION_ERROR,
+      });
+    }
+
+    const existingEmail = await repository.findByEmail(normalizedData.email);
+    if (existingEmail) {
+      throw new AppError({
+        message: "Employee email already exists",
+        statusCode: 400,
+        errorCode: ERROR_CODES.VALIDATION_ERROR,
+      });
+    }
+
+    if (normalizedData.departmentId) {
+      const dept = await deptRepository.findById(normalizedData.departmentId);
+      if (!dept) {
+        throw new AppError({
+          message: "Department not found",
+          statusCode: 404,
+          errorCode: "DEPARTMENT_NOT_FOUND",
+        });
+      }
+    }
+
+    return repository.create(normalizedData);
+  }
+
   return Object.freeze({
     async getAllEmployees(filters = {}) {
       return repository.findAll(filters);
@@ -34,41 +72,36 @@ function createEmployeesService({ repository = employeesRepository, deptReposito
       return employee;
     },
 
-    async createEmployee(data) {
-      if (!data.employeeCode || data.employeeCode.trim() === "") {
-        data.employeeCode = await repository.getNextEmployeeCode();
-      }
+    createEmployee,
 
-      const existingCode = await repository.findByEmployeeCode(data.employeeCode);
-      if (existingCode) {
-        throw new AppError({
-          message: "Employee code already exists",
-          statusCode: 400,
-          errorCode: ERROR_CODES.VALIDATION_ERROR,
-        });
-      }
+    async importEmployees(rows) {
+      const results = [];
 
-      const existingEmail = await repository.findByEmail(data.email);
-      if (existingEmail) {
-        throw new AppError({
-          message: "Employee email already exists",
-          statusCode: 400,
-          errorCode: ERROR_CODES.VALIDATION_ERROR,
-        });
-      }
-
-      if (data.departmentId) {
-        const dept = await deptRepository.findById(data.departmentId);
-        if (!dept) {
-          throw new AppError({
-            message: "Department not found",
-            statusCode: 404,
-            errorCode: "DEPARTMENT_NOT_FOUND",
+      for (const row of rows) {
+        try {
+          const created = await createEmployee(row);
+          results.push({
+            rowNumber: row.rowNumber,
+            success: true,
+            id: created.id,
+            code: created.employeeCode,
+          });
+        } catch (error) {
+          results.push({
+            rowNumber: row.rowNumber,
+            success: false,
+            code: row.employeeCode || null,
+            message: error.message || "Unable to import employee",
           });
         }
       }
 
-      return repository.create(data);
+      return {
+        total: results.length,
+        imported: results.filter((item) => item.success).length,
+        failed: results.filter((item) => !item.success).length,
+        results,
+      };
     },
 
     async updateEmployee(id, data, authenticatedUser) {

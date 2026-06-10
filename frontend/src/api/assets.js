@@ -24,6 +24,11 @@ export const assetApi = Object.freeze({
     return response.data
   },
 
+  async importRows(rows) {
+    const response = await apiClient.post('/assets/import', { rows })
+    return response.data
+  },
+
   async update(assetId, payload) {
     const response = await apiClient.put(`/assets/${assetId}`, payload)
     return response.data

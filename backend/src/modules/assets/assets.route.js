@@ -35,6 +35,15 @@ router.get(
 );
 
 router.post(
+  "/import",
+  authenticate,
+  passwordChangeGuard,
+  authorize(ADMIN),
+  validateRequest(assetsValidators.import),
+  assetsController.importAssets,
+);
+
+router.post(
   "/",
   authenticate,
   passwordChangeGuard,
