@@ -76,7 +76,23 @@ export default function ReportsPage() {
 
   return <div className="animate-fade-up">
     <PageHeader eyebrow="Phân tích dữ liệu vận hành" title="Báo cáo tài sản" description="KPI snapshot hiện tại, tài sản ghi nhận mới và kiểm soát chất lượng dữ liệu."
-      actions={<div className="flex gap-2"><Button variant="secondary" onClick={loadReports}><RefreshCw size={16} />Làm mới</Button><Button onClick={() => reportApi.exportCsv(filters)}><Download size={16} />Xuất CSV</Button></div>} />
+      actions={
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" onClick={loadReports}>
+            <RefreshCw size={16} />Làm mới
+          </Button>
+          <Button variant="secondary" onClick={() => reportApi.exportCsv(filters)}>
+            <Download size={16} />CSV
+          </Button>
+          <Button variant="secondary" onClick={() => reportApi.exportXlsx(filters)}>
+            <Download size={16} />Excel
+          </Button>
+          <Button onClick={() => reportApi.exportPdf(filters)}>
+            <Download size={16} />PDF
+          </Button>
+        </div>
+      } 
+    />
     {error && <ResourceError message={error} onRetry={loadReports} />}
     <section className="surface mb-5 grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-7">
       <input className="rounded-lg border border-slate-200 p-2 text-xs" type="date" value={filters.from || ''} onChange={(e) => setFilter('from', e.target.value)} />

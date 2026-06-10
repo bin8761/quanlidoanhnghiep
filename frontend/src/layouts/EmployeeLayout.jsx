@@ -14,6 +14,7 @@ const PAGE_TITLES = {
   '/employee/history': 'Lịch sử hoạt động',
   '/employee/profile': 'Hồ sơ cá nhân',
   '/employee/change-password': 'Đổi mật khẩu',
+  '/employee/settings': 'Cài đặt',
 }
 
 export default function EmployeeLayout() {

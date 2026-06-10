@@ -9,22 +9,27 @@ import {
   X,
   LockKeyhole,
   History,
+  Settings,
 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../auth/auth-context'
+import { useLanguage } from '../../hooks/useLanguage'
 
-const navItems = [
-  { to: '/employee/dashboard', label: 'Tổng quan', icon: Gauge },
-  { to: '/employee/assets', label: 'Tài sản của tôi', icon: Boxes },
-  { to: '/employee/requests', label: 'Yêu cầu hỗ trợ', icon: Headphones },
-  { to: '/employee/profile', label: 'Hồ sơ cá nhân', icon: CircleUserRound },
-  { to: '/employee/change-password', label: 'Đổi mật khẩu', icon: LockKeyhole },
-  { to: '/employee/history', label: 'Lịch sử', icon: History },
+const navItemDefs = [
+  { to: '/employee/dashboard', labelKey: 'Tổng quan', icon: Gauge },
+  { to: '/employee/assets', labelKey: 'Tài sản của tôi', icon: Boxes },
+  { to: '/employee/requests', labelKey: 'Yêu cầu hỗ trợ', icon: Headphones },
+  { to: '/employee/profile', labelKey: 'Hồ sơ cá nhân', icon: CircleUserRound },
+  { to: '/employee/change-password', labelKey: 'Đổi mật khẩu', icon: LockKeyhole },
+  { to: '/employee/history', labelKey: 'Lịch sử', icon: History },
+  { to: '/employee/settings', labelKey: 'Cài đặt', icon: Settings },
 ]
 
 export default function EmployeeSidebar({ open, onClose }) {
   const { user, logout } = useAuth()
+  const { t } = useLanguage()
   const initials = user?.email?.slice(0, 2).toUpperCase() || 'NV'
+  const navItems = navItemDefs.map(item => ({ ...item, label: t(item.labelKey) }))
 
   return (
     <aside
@@ -38,7 +43,7 @@ export default function EmployeeSidebar({ open, onClose }) {
         </span>
         <span className="min-w-0">
           <strong className="block truncate text-sm font-extrabold">EAM Workspace</strong>
-          <span className="block truncate text-[10px] text-white/45">Cổng thông tin nhân viên</span>
+          <span className="block truncate text-[10px] text-white/45">{t('Cổng thông tin nhân viên')}</span>
         </span>
         <button
           className="ml-auto grid size-9 place-items-center rounded-xl text-white/55 transition hover:bg-white/10 hover:text-white lg:hidden"
@@ -52,7 +57,7 @@ export default function EmployeeSidebar({ open, onClose }) {
 
       <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Điều hướng nhân viên">
         <p className="px-3 pb-2 text-[10px] font-extrabold tracking-[0.14em] text-white/35 uppercase">
-          Không gian cá nhân
+          {t('Không gian cá nhân')}
         </p>
         <div className="grid gap-1">
           {navItems.map(({ to, label, icon: Icon }) => (
@@ -95,7 +100,7 @@ export default function EmployeeSidebar({ open, onClose }) {
               {initials}
             </span>
             <span className="min-w-0 flex-1">
-              <strong className="block truncate text-xs font-bold">Nhân viên</strong>
+              <strong className="block truncate text-xs font-bold">{t('Nhân viên')}</strong>
               <span className="mt-0.5 block truncate text-[10px] text-white/45">{user?.email}</span>
             </span>
             <button

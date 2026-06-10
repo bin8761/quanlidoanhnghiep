@@ -72,6 +72,16 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+html.dark {
+  --app-bg: #0b1310;
+  --surface: #121d19;
+  --surface-muted: #162420;
+  --border: #1f332c;
+  --border-strong: #2a473d;
+  --ink: #f2f7f5;
+  --muted: #8ea197;
+}
+
 * {
   box-sizing: border-box;
 }

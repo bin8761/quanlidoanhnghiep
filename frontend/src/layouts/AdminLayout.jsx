@@ -11,6 +11,11 @@ import { managementPages } from '../pages/admin/managementData'
 
 const PAGE_TITLES = {
   '/admin/dashboard': 'Tổng quan',
+  '/admin/settings': 'Cài đặt hệ thống',
+  '/admin/faq-management': 'Quản lý FAQ',
+  '/admin/feedbacks': 'Góp ý & Phản hồi',
+  '/admin/attendance': 'Lịch sử chấm công',
+  '/admin/login-histories': 'Lịch sử đăng nhập',
   ...Object.fromEntries(
     Object.entries(managementPages).map(([path, page]) => [`/admin/${path}`, page.title]),
   ),

@@ -10,6 +10,17 @@ function queryString(filters = {}) {
   return query ? `?${query}` : ''
 }
 
+async function downloadFile(url, filename) {
+  const response = await fetch(url, { headers: { Authorization: `Bearer ${getAccessToken()}` } })
+  if (!response.ok) throw new Error('Không thể xuất báo cáo')
+  const blob = await response.blob()
+  const anchor = document.createElement('a')
+  anchor.href = URL.createObjectURL(blob)
+  anchor.download = filename
+  anchor.click()
+  URL.revokeObjectURL(anchor.href)
+}
+
 export const reportApi = Object.freeze({
   async summary(filters) {
     const response = await apiClient.get(`/reports/summary${queryString(filters)}`)
@@ -37,17 +48,14 @@ export const reportApi = Object.freeze({
     const response = await apiClient.get(`/reports/assets${queryString(filters)}`)
     return response.data
   },
-  async exportCsv(filters) {
-    const response = await fetch(`${API_BASE_URL}/reports/export.csv${queryString(filters)}`, {
-      headers: { Authorization: `Bearer ${getAccessToken()}` },
-    })
-    if (!response.ok) throw new Error('Không thể xuất báo cáo CSV')
-    const blob = await response.blob()
-    const url = URL.createObjectURL(blob)
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.download = 'asset-report.csv'
-    anchor.click()
-    URL.revokeObjectURL(url)
+  exportCsv(filters) {
+    return downloadFile(`${API_BASE_URL}/reports/export.csv${queryString(filters)}`, 'asset-report.csv')
+  },
+  exportXlsx(filters) {
+    return downloadFile(`${API_BASE_URL}/reports/export.xlsx${queryString(filters)}`, 'asset-report.xlsx')
+  },
+  exportPdf(filters) {
+    return downloadFile(`${API_BASE_URL}/reports/export.pdf${queryString(filters)}`, 'asset-report.pdf')
   },
 })
+

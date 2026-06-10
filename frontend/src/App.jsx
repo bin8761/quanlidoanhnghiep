@@ -4,26 +4,32 @@ import 'react-toastify/dist/ReactToastify.css'
 import { AuthProvider } from './auth/AuthContext'
 import { NotificationsProvider } from './notifications/NotificationsContext'
 import AppRoutes from './routes/AppRoutes'
+import { ThemeProvider } from './hooks/useTheme'
+import { LanguageProvider } from './hooks/useLanguage'
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <NotificationsProvider>
-          <AppRoutes />
-          <ToastContainer
-            position="bottom-right"
-            autoClose={3500}
-            newestOnTop
-            closeOnClick
-            pauseOnFocusLoss
-            pauseOnHover
-            draggable
-            limit={3}
-            theme="light"
-            toastClassName="eam-toast"
-            progressClassName="eam-toast-progress"
-          />
+          <ThemeProvider>
+            <LanguageProvider>
+              <AppRoutes />
+              <ToastContainer
+                position="bottom-right"
+                autoClose={3500}
+                newestOnTop
+                closeOnClick
+                pauseOnFocusLoss
+                pauseOnHover
+                draggable
+                limit={3}
+                theme="light"
+                toastClassName="eam-toast"
+                progressClassName="eam-toast-progress"
+              />
+            </LanguageProvider>
+          </ThemeProvider>
         </NotificationsProvider>
       </AuthProvider>
     </BrowserRouter>

@@ -13,9 +13,15 @@ import {
   UsersRound,
   Wrench,
   X,
+  HelpCircle,
+  MessageSquare,
+  CalendarCheck,
+  ShieldAlert,
+  Settings
 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../auth/auth-context'
+import { useLanguage } from '../../hooks/useLanguage'
 
 const navItems = [
   { to: '/admin/dashboard', label: 'Tổng quan', icon: Gauge },
@@ -28,10 +34,16 @@ const navItems = [
   { to: '/admin/inventory', label: 'Kiểm kê', icon: ClipboardCheck },
   { to: '/admin/reports', label: 'Báo cáo', icon: ChartNoAxesCombined },
   { to: '/admin/locations', label: 'Sơ đồ mặt bằng', icon: Map },
+  { to: '/admin/faq-management', label: 'Quản lý FAQ', icon: HelpCircle },
+  { to: '/admin/feedbacks', label: 'Góp ý & Phản hồi', icon: MessageSquare },
+  { to: '/admin/attendance', label: 'Lịch sử chấm công', icon: CalendarCheck },
+  { to: '/admin/login-histories', label: 'Lịch sử đăng nhập', icon: ShieldAlert },
+  { to: '/admin/settings', label: 'Cài đặt', icon: Settings },
 ]
 
 export default function Sidebar({ open, onClose }) {
   const { user, logout } = useAuth()
+  const { t } = useLanguage()
   const initials = user?.email?.slice(0, 2).toUpperCase() || 'AD'
 
   return (
@@ -62,7 +74,7 @@ export default function Sidebar({ open, onClose }) {
 
       <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Điều hướng quản trị">
         <p className="px-3 pb-2 text-[9px] font-extrabold tracking-[0.14em] text-white/35 uppercase">
-          Không gian quản trị
+          {t("Không gian quản trị")}
         </p>
         <div className="grid gap-1">
           {navItems.map(({ to, label, icon: Icon }) => (
@@ -86,7 +98,7 @@ export default function Sidebar({ open, onClose }) {
                   />
                   {isActive && <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-emerald-300" />}
                   <span className={isActive ? 'text-white' : 'text-white/72'}>
-                    {label}
+                    {t(label)}
                   </span>
                   <ChevronRight
                     className={`ml-auto transition ${
@@ -110,7 +122,7 @@ export default function Sidebar({ open, onClose }) {
               {initials}
             </span>
             <span className="min-w-0 flex-1">
-              <strong className="block truncate text-xs font-bold">Quản trị viên</strong>
+              <strong className="block truncate text-xs font-bold">{t("Quản trị viên")}</strong>
               <span className="mt-0.5 block truncate text-[10px] text-white/45">
                 {user?.email}
               </span>

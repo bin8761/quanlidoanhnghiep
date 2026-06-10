@@ -16,6 +16,11 @@ import ManagementPage from '../pages/admin/ManagementPage'
 import { managementPages } from '../pages/admin/managementData'
 import ReportsPage from '../pages/admin/ReportsPage'
 import LocationsPage from '../pages/admin/LocationsPage'
+import SettingsPage from '../pages/SettingsPage'
+import FaqManagementPage from '../pages/admin/FaqManagementPage'
+import FeedbackPortalPage from '../pages/admin/FeedbackPortalPage'
+import AttendanceHistoryPage from '../pages/admin/AttendanceHistoryPage'
+import AdminLoginHistoryPage from '../pages/admin/AdminLoginHistoryPage'
 import EmployeeAssetsPage from '../pages/employee/EmployeeAssetsPage'
 import EmployeeDashboardPage from '../pages/employee/EmployeeDashboardPage'
 import EmployeeProfilePage from '../pages/employee/EmployeeProfilePage'
@@ -96,6 +101,11 @@ export default function AppRoutes() {
         <Route path="inventory" element={<InventoryPage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="locations" element={<LocationsPage />} />
+        <Route path="settings" element={<SettingsPage />} />
+        <Route path="faq-management" element={<FaqManagementPage />} />
+        <Route path="feedbacks" element={<FeedbackPortalPage />} />
+        <Route path="attendance" element={<AttendanceHistoryPage />} />
+        <Route path="login-histories" element={<AdminLoginHistoryPage />} />
         {Object.entries(managementPages)
           .filter(([path]) => ![
             'assets',
@@ -106,6 +116,11 @@ export default function AppRoutes() {
             'maintenance',
             'inventory',
             'reports',
+            'settings',
+            'faq-management',
+            'feedbacks',
+            'attendance',
+            'login-histories'
           ].includes(path))
           .map(([path, config]) => (
           <Route key={path} path={path} element={<ManagementPage config={config} />} />
@@ -119,6 +134,7 @@ export default function AppRoutes() {
         <Route path="profile" element={<EmployeeProfilePage />} />
         <Route path="change-password" element={<EmployeeChangePasswordPage />} />
         <Route path="history" element={<EmployeeHistoryPage />} />
+        <Route path="settings" element={<SettingsPage />} />
         <Route path="assets/:code" element={<EmployeeAssetDetailPage />} />  {/* Demo nên đang dùng: assets/:code |  Có thể thay sang: assets/:id */}
       </Route>
       <Route path="/" element={<Navigate to="/login" replace />} />
@@ -126,3 +142,4 @@ export default function AppRoutes() {
     </Routes>
   )
 }
+

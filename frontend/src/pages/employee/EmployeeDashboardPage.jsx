@@ -15,6 +15,8 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../../auth/auth-context'
 import PageHeader from '../../components/ui/PageHeader'
 import { getMyTasks, getMyAssets, getMyRequests } from '../../services/employee.service'
+import AttendanceWidget from '../../components/layout/AttendanceWidget'
+
 
 const getTaskIcon = (type) => {
   switch (type) {
@@ -148,6 +150,8 @@ export default function EmployeeDashboardPage() {
             )}
           </div>
         </article>
+
+        <AttendanceWidget />
       </section>
     </div>
   )

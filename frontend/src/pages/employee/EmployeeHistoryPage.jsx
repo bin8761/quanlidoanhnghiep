@@ -1,176 +1,82 @@
-import { ArrowRightLeft, CalendarDays, Clock, Wrench } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
+import { attendanceApi } from '../../api/attendance'
 import PageHeader from '../../components/ui/PageHeader'
-import { getMyAssignmentHistory, getMyMaintenanceHistory } from '../../services/employee.service'
-
-const allocationStatusTone = {
-  ACTIVE: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-  RETURNED: 'border-slate-200 bg-slate-50 text-slate-600',
-  TRANSFERRED: 'border-blue-200 bg-blue-50 text-blue-700',
-}
-
-const maintenanceStatusTone = {
-  IN_PROGRESS: 'border-blue-200 bg-blue-50 text-blue-700',
-  COMPLETED: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-  PENDING: 'border-amber-200 bg-amber-50 text-amber-700',
-  CANCELLED: 'border-slate-200 bg-slate-50 text-slate-500',
-}
-
-const maintenanceStatusLabel = {
-  IN_PROGRESS: 'Đang xử lý',
-  COMPLETED: 'Hoàn thành',
-  PENDING: 'Chờ tiếp nhận',
-  CANCELLED: 'Đã hủy',
-}
-
-const tabs = [
-  { key: 'allocation', label: 'Lịch sử bàn giao', icon: ArrowRightLeft },
-  { key: 'maintenance', label: 'Lịch sử bảo trì', icon: Wrench },
-]
+import { toast } from 'react-toastify'
+import { History, CalendarDays, Clock } from 'lucide-react'
+import { useLanguage } from '../../hooks/useLanguage'
 
 export default function EmployeeHistoryPage() {
-  const [activeTab, setActiveTab] = useState('allocation')
-  const [allocationHistory, setAllocationHistory] = useState([])
-  const [maintenanceHistory, setMaintenanceHistory] = useState([])
-  const [loadError, setLoadError] = useState('')
+  const { t } = useLanguage()
+  const [history, setHistory] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    Promise.all([getMyAssignmentHistory(), getMyMaintenanceHistory()])
-      .then(([alloc, maint]) => {
-        setAllocationHistory(alloc)
-        setMaintenanceHistory(maint)
-      })
-      .catch((err) => {
-        setLoadError(err.message)
-      })
+    fetchHistory()
   }, [])
+
+  const fetchHistory = async () => {
+    try {
+      const data = await attendanceApi.getMyHistory()
+      setHistory(data)
+    } catch (error) {
+      toast.error('Không thể tải lịch sử chấm công')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="animate-fade-up">
       <PageHeader
-        eyebrow="Nhật ký cá nhân"
-        title="Lịch sử hoạt động"
-        description="Toàn bộ lịch sử bàn giao tài sản và yêu cầu bảo trì của bạn."
+        eyebrow="Nhật ký chấm công"
+        title={t('attendanceHistory')}
+        description="Theo dõi toàn bộ lịch sử chấm công Check-In và Check-Out hàng ngày của bạn."
       />
 
-      {loadError && (
-        <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700">
-          {loadError}
-        </div>
-      )}
-
-      <div className="mb-5 flex gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
-        {tabs.map(({ key, label, icon: Icon }) => (
-          <button
-            key={key}
-            type="button"
-            className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all ${
-              activeTab === key
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-            onClick={() => setActiveTab(key)}
-          >
-            <Icon size={16} />
-            <span className="hidden sm:inline">{label}</span>
-            <span className="sm:hidden">{label.split(' ')[1]}</span>
-          </button>
-        ))}
+      <div className="mt-6">
+        {loading ? (
+          <div className="skeleton h-64 rounded-[18px]" />
+        ) : (
+          <div className="surface overflow-hidden">
+            <div className="hidden grid-cols-4 gap-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 px-5 py-3 text-[10px] font-extrabold text-slate-500 uppercase md:grid sm:px-6">
+              <span>{t('time').split(' ')[0]}</span>
+              <span>{t('checkIn')}</span>
+              <span>{t('checkOut')}</span>
+              <span>{t('totalHours')}</span>
+            </div>
+            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              {history.map((item) => (
+                <div
+                  key={item.id}
+                  className="grid gap-2 px-5 py-4 sm:px-6 md:grid-cols-4 md:items-center md:gap-4"
+                >
+                  <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                    <CalendarDays size={14} className="text-slate-400" />
+                    {new Date(item.date).toLocaleDateString('vi-VN')}
+                  </span>
+                  <span className="text-xs text-slate-600 dark:text-slate-300">
+                    {item.checkIn ? new Date(item.checkIn).toLocaleTimeString('vi-VN') : '--:--'}
+                  </span>
+                  <span className="text-xs text-slate-600 dark:text-slate-300">
+                    {item.checkOut ? new Date(item.checkOut).toLocaleTimeString('vi-VN') : '--:--'}
+                  </span>
+                  <span className="text-xs font-bold text-brand-700 dark:text-emerald-300">
+                    {item.totalHours ? `${Number(item.totalHours).toFixed(2)} giờ` : '0.00 giờ'}
+                  </span>
+                </div>
+              ))}
+              {!history.length && (
+                <div className="grid min-h-56 place-items-center text-center">
+                  <div>
+                    <History className="mx-auto text-slate-300" size={30} />
+                    <p className="mt-3 text-xs text-slate-500 italic">{t('noAttendanceData')}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
-
-      {activeTab === 'allocation' && (
-        <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-soft">
-          <div className="hidden grid-cols-[120px_minmax(180px,1fr)_100px_110px_minmax(120px,1fr)_100px] gap-4 border-b border-slate-100 bg-slate-50 px-5 py-3 text-[10px] font-extrabold text-slate-500 uppercase md:grid sm:px-6">
-            <span>Mã tài sản</span>
-            <span>Tên tài sản</span>
-            <span>Loại</span>
-            <span>Ngày</span>
-            <span>Ghi chú</span>
-            <span>Trạng thái</span>
-          </div>
-          <div className="divide-y divide-slate-100">
-            {allocationHistory.map((item) => (
-              <article
-                key={item.id}
-                className="grid gap-2 px-5 py-4 sm:px-6 md:grid-cols-[120px_minmax(180px,1fr)_100px_110px_minmax(120px,1fr)_100px] md:items-center md:gap-4"
-              >
-                <strong className="text-xs font-bold text-brand-700">{item.asset?.assetCode || '—'}</strong>
-                <span className="text-xs font-semibold text-slate-700">{item.asset?.name || '—'}</span>
-                <span className="flex items-center gap-1.5 text-xs text-slate-600">
-                  <ArrowRightLeft size={13} className="text-slate-400" />
-                  {item.status === 'ACTIVE' ? 'Nhận bàn giao' : item.status === 'RETURNED' ? 'Hoàn trả' : 'Chuyển giao'}
-                </span>
-                <span className="flex items-center gap-1.5 text-[11px] text-slate-500">
-                  <CalendarDays size={13} />
-                  {new Date(item.status === 'ACTIVE' ? item.assignedAt : item.returnedAt || item.assignedAt).toLocaleDateString('vi-VN')}
-                </span>
-                <span className="text-xs text-slate-500 italic">
-                  {item.notes || '—'}
-                </span>
-                <span
-                  className={`w-fit rounded-full border px-2.5 py-1 text-[10px] font-bold ${
-                    allocationStatusTone[item.status] || 'border-slate-200 bg-slate-50 text-slate-600'
-                  }`}
-                >
-                  {item.status === 'ACTIVE' ? 'Đang giữ' : item.status === 'RETURNED' ? 'Đã thu hồi' : 'Chuyển giao'}
-                </span>
-              </article>
-            ))}
-          </div>
-          {!allocationHistory.length && (
-            <div className="grid min-h-56 place-items-center text-center">
-              <div>
-                <Clock className="mx-auto text-slate-300" size={30} />
-                <p className="mt-3 text-sm text-slate-500">Chưa có lịch sử bàn giao.</p>
-              </div>
-            </div>
-          )}
-        </section>
-      )}
-
-      {activeTab === 'maintenance' && (
-        <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-soft">
-          <div className="hidden grid-cols-[100px_120px_minmax(200px,1fr)_110px_110px_110px] gap-4 border-b border-slate-100 bg-slate-50 px-5 py-3 text-[10px] font-extrabold text-slate-500 uppercase md:grid sm:px-6">
-            <span>Mã YC</span>
-            <span>Tài sản</span>
-            <span>Sự cố</span>
-            <span>Ngày tạo</span>
-            <span>Ngày xong</span>
-            <span>Trạng thái</span>
-          </div>
-          <div className="divide-y divide-slate-100">
-            {maintenanceHistory.map((item) => (
-              <article
-                key={item.id}
-                className="grid gap-2 px-5 py-4 sm:px-6 md:grid-cols-[100px_120px_minmax(200px,1fr)_110px_110px_110px] md:items-center md:gap-4"
-              >
-                <strong className="text-xs font-bold text-brand-700">MR-{item.id.slice(0, 8).toUpperCase()}</strong>
-                <span className="text-xs font-semibold text-slate-700">{item.asset?.assetCode || '—'}</span>
-                <span className="text-xs text-slate-600">{item.description}</span>
-                <span className="text-[11px] text-slate-500">{new Date(item.createdAt).toLocaleDateString('vi-VN')}</span>
-                <span className="text-[11px] text-slate-500">
-                  {item.status === 'COMPLETED' ? new Date(item.updatedAt).toLocaleDateString('vi-VN') : '—'}
-                </span>
-                <span
-                  className={`w-fit rounded-full border px-2.5 py-1 text-[10px] font-bold ${
-                    maintenanceStatusTone[item.status] || 'border-slate-200 bg-slate-50 text-slate-600'
-                  }`}
-                >
-                  {maintenanceStatusLabel[item.status] || item.status}
-                </span>
-              </article>
-            ))}
-          </div>
-          {!maintenanceHistory.length && (
-            <div className="grid min-h-56 place-items-center text-center">
-              <div>
-                <Wrench className="mx-auto text-slate-300" size={30} />
-                <p className="mt-3 text-sm text-slate-500">Chưa có yêu cầu bảo trì nào.</p>
-              </div>
-            </div>
-          )}
-        </section>
-      )}
     </div>
   )
 }

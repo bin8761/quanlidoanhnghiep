@@ -29,4 +29,25 @@ module.exports = Object.freeze({
       return next(error);
     }
   },
+  async exportXlsx(req, res, next) {
+    try {
+      const buffer = await service.exportXlsx(req.query);
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", 'attachment; filename="asset-report.xlsx"');
+      return res.status(200).send(buffer);
+    } catch (error) {
+      return next(error);
+    }
+  },
+  async exportPdf(req, res, next) {
+    try {
+      const buffer = await service.exportPdf(req.query);
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", 'attachment; filename="asset-report.pdf"');
+      return res.status(200).send(buffer);
+    } catch (error) {
+      return next(error);
+    }
+  },
 });
+
