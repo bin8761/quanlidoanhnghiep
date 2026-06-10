@@ -13,6 +13,7 @@ import {
   UsersRound,
   Wrench,
   X,
+  MessageSquareMore,
 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../auth/auth-context'
@@ -28,6 +29,7 @@ const navItems = [
   { to: '/admin/inventory', label: 'Kiểm kê', icon: ClipboardCheck },
   { to: '/admin/reports', label: 'Báo cáo', icon: ChartNoAxesCombined },
   { to: '/admin/locations', label: 'Sơ đồ mặt bằng', icon: Map },
+  { to: '/admin/support-chat', label: 'Hỗ trợ trực tuyến', icon: MessageSquareMore },
 ]
 
 export default function Sidebar({ open, onClose }) {

@@ -23,6 +23,7 @@ import EmployeeRequestsPage from '../pages/employee/EmployeeRequestsPage'
 import EmployeeChangePasswordPage from '../pages/employee/EmployeeChangePasswordPage'
 import EmployeeHistoryPage from '../pages/employee/EmployeeHistoryPage'
 import EmployeeAssetDetailPage from '../pages/employee/EmployeeAssetDetailPage'
+import SupportChatPage from '../pages/admin/SupportChatPage'
 
 function ProtectedAdminRoute() {
   const { user, isBootstrapping } = useAuth()
@@ -96,6 +97,7 @@ export default function AppRoutes() {
         <Route path="inventory" element={<InventoryPage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="locations" element={<LocationsPage />} />
+        <Route path="support-chat" element={<SupportChatPage />} />
         {Object.entries(managementPages)
           .filter(([path]) => ![
             'assets',

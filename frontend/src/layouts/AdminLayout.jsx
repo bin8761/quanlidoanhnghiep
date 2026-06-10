@@ -11,6 +11,7 @@ import { managementPages } from '../pages/admin/managementData'
 
 const PAGE_TITLES = {
   '/admin/dashboard': 'Tổng quan',
+  '/admin/support-chat': 'Hỗ trợ trực tuyến',
   ...Object.fromEntries(
     Object.entries(managementPages).map(([path, page]) => [`/admin/${path}`, page.title]),
   ),

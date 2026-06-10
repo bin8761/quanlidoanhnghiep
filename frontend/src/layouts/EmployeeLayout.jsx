@@ -5,6 +5,7 @@ import EmployeeSidebar from '../components/layout/EmployeeSidebar'
 import NotificationBell from '../components/layout/NotificationBell'
 import SyncStatusBadge from '../components/layout/SyncStatusBadge'
 import QrScannerModal from '../components/ui/QrScannerModal'
+import SupportChatbox from '../components/chat/SupportChatbox'
 import { useNotifications } from '../notifications/notifications-context'
 
 const PAGE_TITLES = {
@@ -75,6 +76,7 @@ export default function EmployeeLayout() {
         </div>
       </main>
       {qrOpen && <QrScannerModal onClose={() => setQrOpen(false)} />}
+      <SupportChatbox />
     </div>
   )
 }
