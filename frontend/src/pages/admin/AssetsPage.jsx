@@ -15,6 +15,8 @@ import PageHeader from '../../components/ui/PageHeader'
 import StatusBadge from '../../components/ui/StatusBadge'
 import Toast from '../../components/ui/Toast'
 import useAutoDismiss from '../../hooks/useAutoDismiss'
+import ImageUpload from '../../components/ui/ImageUpload'
+import { API_BASE_URL } from '../../api/client'
 
 const ASSET_STATUSES = [
   { value: 'AVAILABLE', label: 'Sẵn sàng' },
@@ -29,6 +31,7 @@ const EMPTY_FORM = Object.freeze({
   assetCode: '',
   name: '',
   categoryId: '',
+  ownerDepartmentId: '',
   serialNumber: '',
   purchaseDate: '',
   value: '',
@@ -44,6 +47,14 @@ function toDateInputValue(value) {
 function formatCurrency(value) {
   if (value === null || typeof value === 'undefined') return 'Chưa cập nhật'
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value))
+}
+
+function getFullImageUrl(url) {
+  if (!url) return ''
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url
+  }
+  return `${API_BASE_URL.replace('/api', '')}${url}`
 }
 
 export default function AssetsPage() {
@@ -131,6 +142,7 @@ export default function AssetsPage() {
       assetCode: asset.assetCode,
       name: asset.name,
       categoryId: String(asset.categoryId),
+      ownerDepartmentId: asset.ownerDepartmentId ? String(asset.ownerDepartmentId) : '',
       serialNumber: asset.serialNumber || '',
       purchaseDate: toDateInputValue(asset.purchaseDate),
       value: asset.value === null ? '' : String(asset.value),
@@ -161,7 +173,9 @@ export default function AssetsPage() {
     if (form.name.trim().length < 2) nextErrors.name = 'Tên tài sản cần ít nhất 2 ký tự.'
     if (!form.categoryId) nextErrors.categoryId = 'Vui lòng chọn danh mục.'
     if (form.value !== '' && Number(form.value) < 0) nextErrors.value = 'Giá trị không được nhỏ hơn 0.'
-    if (form.imageUrl && !/^https?:\/\/.+/i.test(form.imageUrl)) nextErrors.imageUrl = 'URL hình ảnh không hợp lệ.'
+    if (form.imageUrl && !form.imageUrl.startsWith('/uploads/') && !/^https?:\/\/.+/i.test(form.imageUrl)) {
+      nextErrors.imageUrl = 'URL hình ảnh không hợp lệ.'
+    }
     setFormErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
   }
@@ -175,6 +189,7 @@ export default function AssetsPage() {
       const payload = {
         name: form.name.trim(),
         categoryId: Number(form.categoryId),
+        ownerDepartmentId: form.ownerDepartmentId ? Number(form.ownerDepartmentId) : null,
         serialNumber: form.serialNumber.trim() || null,
         purchaseDate: form.purchaseDate ? `${form.purchaseDate}T00:00:00.000Z` : null,
         value: form.value === '' ? null : Number(form.value),
@@ -365,11 +380,20 @@ export default function AssetsPage() {
               <FormField label="Mã tài sản" name="assetCode" value={form.assetCode} error={formErrors.assetCode} placeholder="VD: LT-0249" disabled={Boolean(editingAsset.id)} onChange={updateField} />
               <FormField label="Tên tài sản" name="name" value={form.name} error={formErrors.name} placeholder="VD: Dell Latitude 5440" onChange={updateField} />
               <FormField as="select" label="Danh mục" name="categoryId" value={form.categoryId} error={formErrors.categoryId} options={categoryOptions} onChange={updateField} />
+              <FormField as="select" label="Phòng ban sở hữu" name="ownerDepartmentId" value={form.ownerDepartmentId} options={[{ value: '', label: 'Chưa xác định' }, ...departments.map((department) => ({ value: String(department.id), label: department.name }))]} onChange={updateField} />
               <FormField label="Số serial" name="serialNumber" value={form.serialNumber} placeholder="Nhập số serial" onChange={updateField} />
               <FormField label="Ngày mua" name="purchaseDate" type="date" value={form.purchaseDate} onChange={updateField} />
               <FormField label="Giá trị (VND)" name="value" type="number" min="0" value={form.value} error={formErrors.value} placeholder="VD: 25000000" onChange={updateField} />
               <FormField as="select" label="Trạng thái" name="status" value={form.status} options={ASSET_STATUSES} onChange={updateField} />
-              <FormField label="URL hình ảnh" name="imageUrl" type="url" value={form.imageUrl} error={formErrors.imageUrl} placeholder="https://..." onChange={updateField} />
+              <ImageUpload
+                label="Hình ảnh tài sản"
+                value={form.imageUrl}
+                onChange={(val) => {
+                  setForm((current) => ({ ...current, imageUrl: val }))
+                  setFormErrors((current) => ({ ...current, imageUrl: undefined }))
+                }}
+                error={formErrors.imageUrl}
+              />
             </div>
             <FormField as="textarea" label="Ghi chú" name="notes" value={form.notes} hint={`${form.notes.length}/1000`} maxLength={1000} placeholder="Thông tin bổ sung về tài sản" onChange={updateField} />
             <div className="form-actions">
@@ -385,9 +409,23 @@ export default function AssetsPage() {
 
       {viewingAsset && (
         <Modal title={viewingAsset.name} description={`Mã tài sản: ${viewingAsset.assetCode}`} onClose={() => setViewingAsset(null)}>
+          {viewingAsset.imageUrl && (
+            <div className="mb-5 flex justify-center rounded-2xl border border-slate-200/80 bg-slate-50/50 p-3 overflow-hidden max-h-[200px]">
+              <img
+                src={getFullImageUrl(viewingAsset.imageUrl)}
+                alt={viewingAsset.name}
+                className="max-h-[174px] rounded-xl object-contain shadow-soft"
+                onError={(e) => {
+                  e.target.onerror = null
+                  e.target.src = 'https://placehold.co/600x400?text=Loi+hien+thi+anh'
+                }}
+              />
+            </div>
+          )}
           <dl className="grid gap-4 text-sm sm:grid-cols-2">
             {[
               ['Danh mục', viewingAsset.category?.name || 'Chưa phân loại'],
+              ['Phòng ban sở hữu', viewingAsset.ownerDepartment?.name || 'Chưa xác định'],
               ['Serial', viewingAsset.serialNumber || 'Chưa cập nhật'],
               ['Ngày mua', viewingAsset.purchaseDate ? new Intl.DateTimeFormat('vi-VN').format(new Date(viewingAsset.purchaseDate)) : 'Chưa cập nhật'],
               ['Giá trị', formatCurrency(viewingAsset.value)],

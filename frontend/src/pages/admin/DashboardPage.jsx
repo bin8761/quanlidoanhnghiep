@@ -178,9 +178,7 @@ export default function DashboardPage() {
       .slice(0, 6)
   }, [assignments, sessions])
 
-  const assignedPercent = summary?.totalAssets
-    ? Math.round((summary.activeAssignments / summary.totalAssets) * 100)
-    : 0
+  const assignedPercent = summary?.utilizationRate || 0
 
   return (
     <div className="animate-fade-up">
@@ -278,6 +276,7 @@ export default function DashboardPage() {
                     Xem báo cáo
                   </Link>
                 </div>
+                <p className="mt-2 text-[10px] text-white/45">Trên {summary.operationalAssets} tài sản có thể vận hành · {summary.affectedAssetCount} tài sản cần chuẩn hóa dữ liệu</p>
               </div>
             </article>
           </section>

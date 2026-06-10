@@ -1,6 +1,11 @@
+const fs = require("fs");
+const path = require("path");
+const sharp = require("sharp");
+const crypto = require("crypto");
 const assetsRepository = require("./assets.repository");
 const categoriesRepository = require("../categories/categories.repository");
 const locationsRepository = require("../locations/locations.repository");
+const departmentsRepository = require("../departments/departments.repository");
 const AppError = require("../../shared/errors/AppError");
 const ERROR_CODES = require("../../shared/errors/errorCodes");
 
@@ -47,7 +52,8 @@ function resolveAssetLocation(asset) {
 function createAssetsService({
   repository = assetsRepository,
   catRepository = categoriesRepository,
-  locRepository = locationsRepository
+  locRepository = locationsRepository,
+  deptRepository = departmentsRepository,
 } = {}) {
   return Object.freeze({
     async getAllAssets(filters = {}) {
@@ -96,6 +102,16 @@ function createAssetsService({
           });
         }
       }
+      if (data.ownerDepartmentId) {
+        const department = await deptRepository.findById(data.ownerDepartmentId);
+        if (!department) {
+          throw new AppError({
+            message: "Owner department not found",
+            statusCode: 404,
+            errorCode: "DEPARTMENT_NOT_FOUND",
+          });
+        }
+      }
 
       const created = await repository.create(data);
       return resolveAssetLocation(created);
@@ -129,6 +145,16 @@ function createAssetsService({
             message: "Location not found",
             statusCode: 404,
             errorCode: "LOCATION_NOT_FOUND",
+          });
+        }
+      }
+      if (data.ownerDepartmentId) {
+        const department = await deptRepository.findById(data.ownerDepartmentId);
+        if (!department) {
+          throw new AppError({
+            message: "Owner department not found",
+            statusCode: 404,
+            errorCode: "DEPARTMENT_NOT_FOUND",
           });
         }
       }
@@ -168,6 +194,42 @@ function createAssetsService({
       }
 
       return repository.delete(id);
+    },
+
+    async uploadImage(file) {
+      if (!file) {
+        throw new AppError({
+          message: "Không tìm thấy tệp tải lên",
+          statusCode: 400,
+          errorCode: ERROR_CODES.VALIDATION_ERROR,
+        });
+      }
+
+      const uploadDir = path.join(__dirname, "../../../uploads/assets");
+
+      // Tạo thư mục nếu chưa tồn tại
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      const fileName = `${crypto.randomUUID()}.webp`;
+      const filePath = path.join(uploadDir, fileName);
+
+      try {
+        await sharp(file.buffer)
+          .rotate()
+          .resize({ width: 1000, withoutEnlargement: true })
+          .webp({ quality: 80 })
+          .toFile(filePath);
+      } catch (err) {
+        throw new AppError({
+          message: `Lỗi xử lý hình ảnh: ${err.message}`,
+          statusCode: 500,
+          errorCode: "IMAGE_PROCESSING_ERROR",
+        });
+      }
+
+      return `/uploads/assets/${fileName}`;
     },
   });
 }

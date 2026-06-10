@@ -77,6 +77,19 @@ const assetsController = {
       return next(error);
     }
   },
+
+  async uploadAssetImage(req, res, next) {
+    try {
+      const imageUrl = await assetsService.uploadImage(req.file);
+      return sendSuccess(res, {
+        statusCode: 200,
+        message: "Image uploaded successfully",
+        data: { imageUrl },
+      });
+    } catch (error) {
+      return next(error);
+    }
+  },
 };
 
 module.exports = assetsController;

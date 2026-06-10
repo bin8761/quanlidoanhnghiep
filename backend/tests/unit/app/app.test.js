@@ -11,6 +11,7 @@ describe('app/app', () => {
     const expressFn = jest.fn(() => appInstance);
     expressFn.json = jest.fn(() => 'json-middleware');
     expressFn.urlencoded = jest.fn(() => 'urlencoded-middleware');
+    expressFn.static = jest.fn(() => 'static-middleware');
 
     jest.doMock('express', () => expressFn);
     jest.doMock('cors', () => jest.fn(() => 'cors-middleware'));
@@ -39,6 +40,7 @@ describe('app/app', () => {
       expect.arrayContaining([
         'request-id-middleware',
         'request-logger-middleware',
+        'static-middleware',
         'routes-middleware',
         'error-handler-middleware',
       ]),
