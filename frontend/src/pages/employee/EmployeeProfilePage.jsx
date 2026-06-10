@@ -398,7 +398,7 @@ export default function EmployeeProfilePage() {
               </div>
               <div>
                 <h3 className="text-xl font-extrabold">{profile.fullName}</h3>
-                <p className="mt-1 text-sm text-white/60">{profile.position || 'Staff'} · {profile.department?.name || 'Chưa phân phòng'}</p>
+                <p className="mt-1 text-sm text-white/60">{profile.position || 'Nhân viên'} · {profile.department?.name || 'Chưa phân phòng'}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <span className="inline-flex rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[10px] font-bold text-emerald-300">
                     {profile.status === 'ACTIVE' ? 'Đang hoạt động' : 'Ngừng hoạt động'}
@@ -492,7 +492,7 @@ export default function EmployeeProfilePage() {
                   </div>
                   <div>
                     <span className="text-[10px] font-bold text-slate-400 block uppercase">Chức vụ</span>
-                    <span className="text-sm font-semibold text-slate-800">{profile.position || 'Staff'}</span>
+                    <span className="text-sm font-semibold text-slate-800">{profile.position || 'Nhân viên'}</span>
                   </div>
                   <div>
                     <span className="text-[10px] font-bold text-slate-400 block uppercase">Ngày vào làm</span>

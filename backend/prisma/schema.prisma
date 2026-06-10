@@ -31,7 +31,7 @@ model Employee {
   deskY               Float?               @map("desk_y")
   status              String               @default("ACTIVE")
   avatarUrl           String?              @map("avatar_url") @db.Text
-  position            String               @default("Staff") @map("position")
+  position            String               @default("Nhân viên") @map("position")
   joinDate            DateTime             @default(now()) @map("join_date")
   phone               String?
   personalEmail       String?              @map("personal_email")
@@ -58,6 +58,7 @@ model Employee {
   supportRequests     SupportRequest[]
   attachments         EmployeeAttachment[]
   profileLogs         EmployeeProfileLog[]
+  managedDepartments  Department[]         @relation("DepartmentManager")
 
   @@map("employees")
 }
@@ -83,6 +84,7 @@ model User {
   tasks             UserTask[]
   uploadedAttachments EmployeeAttachment[]
   profileLogs         EmployeeProfileLog[]
+  departmentAuditLogs DepartmentAuditLog[]
 
   @@map("users")
 }
@@ -122,24 +124,39 @@ model PasswordResetOtp {
 
 model Department {
   id                Int                @id @default(autoincrement())
+  code              String             @unique @db.VarChar(50)
   name              String             @unique
   description       String?            @db.Text
+  managerId         String?            @map("manager_id") @db.Char(36)
+  email             String?            @db.VarChar(255)
+  phone             String?            @db.VarChar(50)
+  establishedDate   DateTime?          @map("established_date")
+  branch            String?            @db.VarChar(100)
+  status            String             @default("ACTIVE")
+  parentId          Int?               @map("parent_id")
+  annualBudget      Decimal            @default(0.00) @map("annual_budget") @db.Decimal(15, 2)
   createdAt         DateTime           @default(now()) @map("created_at")
   updatedAt         DateTime           @updatedAt @map("updated_at")
   employees         Employee[]
   inventorySessions InventorySession[]
-  ownedAssets        Asset[]             @relation("AssetOwnerDepartment")
+  ownedAssets       Asset[]            @relation("AssetOwnerDepartment")
+  manager           Employee?          @relation("DepartmentManager", fields: [managerId], references: [id], onDelete: SetNull)
+  parent            Department?        @relation("DepartmentHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children          Department[]       @relation("DepartmentHierarchy")
+  quotas            DepartmentAssetQuota[]
+  auditLogs         DepartmentAuditLog[]
 
   @@map("departments")
 }
 
 model AssetCategory {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
-  description String?  @db.Text
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  assets      Asset[]
+  id               Int                    @id @default(autoincrement())
+  name             String                 @unique
+  description      String?                @db.Text
+  createdAt        DateTime               @default(now()) @map("created_at")
+  updatedAt        DateTime               @updatedAt @map("updated_at")
+  assets           Asset[]
+  departmentQuotas DepartmentAssetQuota[]
 
   @@map("asset_categories")
 }
@@ -424,4 +441,29 @@ model EmployeeProfileLog {
   actor    User     @relation(fields: [actorId], references: [id], onDelete: Restrict)
 
   @@map("employee_profile_logs")
+}
+
+model DepartmentAssetQuota {
+  id           Int           @id @default(autoincrement())
+  departmentId Int           @map("department_id")
+  categoryId   Int           @map("category_id")
+  maxQuantity  Int           @map("max_quantity")
+  department   Department    @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  category     AssetCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([departmentId, categoryId])
+  @@map("department_asset_quotas")
+}
+
+model DepartmentAuditLog {
+  id           String     @id @default(uuid()) @db.Char(36)
+  departmentId Int        @map("department_id")
+  actorId      String     @map("actor_id") @db.Char(36)
+  action       String     @db.VarChar(50) // 'CREATE', 'UPDATE', 'DELETE'
+  details      String     @db.Text // JSON string containing changes (field, old_value, new_value)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  actor        User       @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@map("department_audit_logs")
 }

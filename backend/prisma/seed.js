@@ -177,7 +177,7 @@ async function seedLocations() {
   return locations;
 }
 
-async function upsertEmployee({ id, employeeCode, fullName, email, departmentId, locationId, deskX, deskY, position = "Staff", phone = null, joinDate = new Date(), status = "ACTIVE" }) {
+async function upsertEmployee({ id, employeeCode, fullName, email, departmentId, locationId, deskX, deskY, position = "Nhân viên", phone = null, joinDate = new Date(), status = "ACTIVE" }) {
   return prisma.employee.upsert({
     where: { employeeCode },
     update: { fullName, email, departmentId, locationId, deskX, deskY, position, phone, joinDate, status },

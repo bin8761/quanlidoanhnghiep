@@ -119,13 +119,23 @@ function EmployeeAvatar({ avatarUrl, fullName }) {
   )
 }
 
+const POSITION_OPTIONS = Object.freeze([
+  { value: 'Giám đốc', label: 'Giám đốc' },
+  { value: 'Trưởng phòng', label: 'Trưởng phòng' },
+  { value: 'Phó phòng', label: 'Phó phòng' },
+  { value: 'Nhân viên', label: 'Nhân viên' },
+  { value: 'Kỹ thuật viên', label: 'Kỹ thuật viên' },
+  { value: 'Kế toán', label: 'Kế toán' },
+  { value: 'Khác', label: 'Khác' },
+])
+
 const EMPTY_FORM = Object.freeze({
   employeeCode: '',
   fullName: '',
   email: '',
   departmentId: '',
   status: 'ACTIVE',
-  position: 'Staff',
+  position: 'Nhân viên',
   joinDate: '',
   allowProfileUpdate: true,
   avatarUrl: '',
@@ -238,7 +248,7 @@ export default function EmployeesPage() {
         email: detail.email || '',
         departmentId: detail.departmentId ? String(detail.departmentId) : '',
         status: detail.status || 'ACTIVE',
-        position: detail.position || 'Staff',
+        position: detail.position || 'Nhân viên',
         joinDate: toInputDateString(detail.joinDate),
         allowProfileUpdate: detail.allowProfileUpdate ?? true,
         avatarUrl: detail.avatarUrl || '',
@@ -311,7 +321,7 @@ export default function EmployeesPage() {
           email: form.email.trim(),
           departmentId: form.departmentId ? Number(form.departmentId) : null,
           status: form.status,
-          position: form.position?.trim() || 'Staff',
+          position: form.position?.trim() || 'Nhân viên',
           joinDate: form.joinDate ? new Date(form.joinDate) : new Date(),
           allowProfileUpdate: form.allowProfileUpdate,
           avatarUrl: form.avatarUrl || null,
@@ -343,7 +353,7 @@ export default function EmployeesPage() {
           email: form.email.trim(),
           departmentId: form.departmentId ? Number(form.departmentId) : null,
           status: form.status,
-          position: form.position?.trim() || 'Staff',
+          position: form.position?.trim() || 'Nhân viên',
           joinDate: form.joinDate ? new Date(form.joinDate) : new Date()
         }
         await employeeApi.create(payload)
@@ -661,11 +671,12 @@ export default function EmployeesPage() {
                         onChange={updateField}
                       />
                       <FormField
+                        as="select"
                         label="Chức vụ"
                         name="position"
                         value={form.position}
-                        placeholder="VD: Kỹ sư phần mềm"
                         onChange={updateField}
+                        options={POSITION_OPTIONS}
                       />
                     </div>
                     <div className="grid gap-5 sm:grid-cols-2">
