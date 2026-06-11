@@ -14,7 +14,6 @@ router.post(
   "/upload",
   authenticate,
   passwordChangeGuard,
-  authorize(ADMIN),
   uploadSingleImage("image"),
   assetsController.uploadAssetImage,
 );

@@ -17,7 +17,8 @@ import {
   MessageSquare,
   CalendarCheck,
   ShieldAlert,
-  Settings
+  Settings,
+  MessageSquareMore,
 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../auth/auth-context'
@@ -34,6 +35,7 @@ const navItems = [
   { to: '/admin/inventory', label: 'Kiểm kê', icon: ClipboardCheck },
   { to: '/admin/reports', label: 'Báo cáo', icon: ChartNoAxesCombined },
   { to: '/admin/locations', label: 'Sơ đồ mặt bằng', icon: Map },
+  { to: '/admin/support-chat', label: 'Hỗ trợ trực tuyến', icon: MessageSquareMore },
   { to: '/admin/faq-management', label: 'Quản lý FAQ', icon: HelpCircle },
   { to: '/admin/feedbacks', label: 'Góp ý & Phản hồi', icon: MessageSquare },
   { to: '/admin/attendance', label: 'Lịch sử chấm công', icon: CalendarCheck },
@@ -48,9 +50,8 @@ export default function Sidebar({ open, onClose }) {
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-40 flex w-[256px] flex-col overflow-hidden border-r border-white/8 bg-[var(--sidebar)] text-white shadow-2xl transition-transform duration-300 lg:translate-x-0 ${
-        open ? 'translate-x-0' : '-translate-x-full'
-      }`}
+      className={`fixed inset-y-0 left-0 z-40 flex w-[256px] flex-col overflow-hidden border-r border-white/8 bg-[var(--sidebar)] text-white shadow-2xl transition-transform duration-300 lg:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'
+        }`}
     >
       <div className="flex h-16 items-center gap-3 border-b border-white/8 px-4">
         <span className="grid size-10 place-items-center rounded-[12px] border border-white/10 bg-white text-brand-800 shadow-lg shadow-black/10">
@@ -83,10 +84,9 @@ export default function Sidebar({ open, onClose }) {
               key={to}
               to={to}
               className={({ isActive }) =>
-                `group relative flex min-h-10 items-center gap-3 rounded-[10px] px-3 text-[12px] font-semibold transition-all duration-200 ${
-                  isActive
-                    ? 'bg-white/12 text-white shadow-inner shadow-white/5'
-                    : 'text-white/62 hover:bg-white/7 hover:text-white'
+                `group relative flex min-h-10 items-center gap-3 rounded-[10px] px-3 text-[12px] font-semibold transition-all duration-200 ${isActive
+                  ? 'bg-white/12 text-white shadow-inner shadow-white/5'
+                  : 'text-white/62 hover:bg-white/7 hover:text-white'
                 }`
               }
               onClick={onClose}
@@ -102,11 +102,10 @@ export default function Sidebar({ open, onClose }) {
                     {t(label)}
                   </span>
                   <ChevronRight
-                    className={`ml-auto transition ${
-                      isActive
-                        ? 'text-white/55 opacity-80'
-                        : 'translate-x-1 text-white/50 opacity-0 group-hover:translate-x-0 group-hover:opacity-50'
-                    }`}
+                    className={`ml-auto transition ${isActive
+                      ? 'text-white/55 opacity-80'
+                      : 'translate-x-1 text-white/50 opacity-0 group-hover:translate-x-0 group-hover:opacity-50'
+                      }`}
                     size={15}
                   />
                 </>

@@ -112,7 +112,7 @@ function createEmployeesRepository(prismaClient) {
           departmentId: data.departmentId ? Number(data.departmentId) : null,
           status: data.status ?? "ACTIVE",
           avatarUrl: data.avatarUrl ?? null,
-          position: data.position ?? "Staff",
+          position: data.position ?? "Nhân viên",
           joinDate: data.joinDate ? new Date(data.joinDate) : new Date(),
           phone: data.phone ?? null,
           personalEmail: data.personalEmail ?? null,

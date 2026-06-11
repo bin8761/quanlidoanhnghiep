@@ -26,6 +26,10 @@ import PageHeader from '../../components/ui/PageHeader'
 import Button from '../../components/ui/Button'
 import FormField from '../../components/ui/FormField'
 import Toast from '../../components/ui/Toast'
+import VietnamAddressSelector from '../../components/ui/VietnamAddressSelector'
+import SearchableSelect from '../../components/ui/SearchableSelect'
+import AvatarUpload from '../../components/ui/AvatarUpload'
+import { VIETNAMESE_ETHNICITIES, NATIONALITIES } from '../../data/vietnam-static'
 import useAutoDismiss from '../../hooks/useAutoDismiss'
 import { employeeApi } from '../../api/employees'
 import { Link } from 'react-router-dom'
@@ -87,6 +91,7 @@ export default function EmployeeProfilePage() {
 
   // Edit Forms
   const [personalForm, setPersonalForm] = useState({
+    avatarUrl: '',
     fullName: '',
     phone: '',
     personalEmail: '',
@@ -135,6 +140,7 @@ export default function EmployeeProfilePage() {
       // Personal form init
       const emergency = empData.emergencyContact || {}
       setPersonalForm({
+        avatarUrl: empData.avatarUrl || '',
         fullName: empData.fullName || '',
         phone: empData.phone || '',
         personalEmail: empData.personalEmail || '',
@@ -186,6 +192,7 @@ export default function EmployeeProfilePage() {
     setIsSaving(true)
     try {
       const payload = {
+        avatarUrl: personalForm.avatarUrl || null,
         fullName: personalForm.fullName.trim(),
         phone: personalForm.phone.trim() || null,
         personalEmail: personalForm.personalEmail.trim() || null,
@@ -206,9 +213,11 @@ export default function EmployeeProfilePage() {
       await employeeApi.update(profile.id, payload)
       setToast({ type: 'success', message: 'Cập nhật thông tin cá nhân thành công.' })
       
-      // Reload logs and data
+      // Reload logs and data, sync form state
       const updatedEmp = await employeeApi.getById(profile.id)
       setProfile(updatedEmp)
+      // Sync avatarUrl back so the header shows the saved avatar
+      setPersonalForm(c => ({ ...c, avatarUrl: updatedEmp.avatarUrl || '' }))
       const newLogs = await employeeApi.getLogs(profile.id)
       setLogs(newLogs)
     } catch (err) {
@@ -375,13 +384,21 @@ export default function EmployeeProfilePage() {
       <section className="surface overflow-hidden">
         <div className="bg-slate-950 px-5 py-7 text-white sm:px-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-4">
-              <span className="grid size-16 shrink-0 place-items-center rounded-2xl bg-brand-500 text-xl font-extrabold text-white">
-                {profile.fullName.split(' ').slice(-2).map((part) => part[0]).join('')}
-              </span>
+          <div className="flex items-center gap-4">
+              {/* Avatar */}
+              <div className="shrink-0">
+                <AvatarUpload
+                  value={personalForm.avatarUrl || profile.avatarUrl || ''}
+                  onChange={val => setPersonalForm(c => ({ ...c, avatarUrl: val }))}
+                  name={profile.fullName}
+                  size="md"
+                  disabled={!profile.allowProfileUpdate}
+                  showLabel={false}
+                />
+              </div>
               <div>
                 <h3 className="text-xl font-extrabold">{profile.fullName}</h3>
-                <p className="mt-1 text-sm text-white/60">{profile.position || 'Staff'} · {profile.department?.name || 'Chưa phân phòng'}</p>
+                <p className="mt-1 text-sm text-white/60">{profile.position || 'Nhân viên'} · {profile.department?.name || 'Chưa phân phòng'}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <span className="inline-flex rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[10px] font-bold text-emerald-300">
                     {profile.status === 'ACTIVE' ? 'Đang hoạt động' : 'Ngừng hoạt động'}
@@ -475,7 +492,7 @@ export default function EmployeeProfilePage() {
                   </div>
                   <div>
                     <span className="text-[10px] font-bold text-slate-400 block uppercase">Chức vụ</span>
-                    <span className="text-sm font-semibold text-slate-800">{profile.position || 'Staff'}</span>
+                    <span className="text-sm font-semibold text-slate-800">{profile.position || 'Nhân viên'}</span>
                   </div>
                   <div>
                     <span className="text-[10px] font-bold text-slate-400 block uppercase">Ngày vào làm</span>
@@ -545,45 +562,72 @@ export default function EmployeeProfilePage() {
                   disabled={!profile.allowProfileUpdate || isSaving}
                   onChange={e => setPersonalForm(c => ({ ...c, identityCardNumber: e.target.value }))}
                 />
-                <FormField
-                  label="Quê quán"
-                  name="hometown"
-                  value={personalForm.hometown}
-                  disabled={!profile.allowProfileUpdate || isSaving}
-                  onChange={e => setPersonalForm(c => ({ ...c, hometown: e.target.value }))}
-                />
-                <FormField
+                {/* Quê quán - chọn tỉnh/thành */}
+                <div className="lg:col-span-1">
+                  <SearchableSelect
+                    label="Quê quán (Tỉnh/Thành phố)"
+                    options={[
+                      { value: '', label: '-- Chưa chọn --' },
+                      ...[
+                        'Hà Nội','TP Hồ Chí Minh','Đà Nẵng','Hải Phòng','Cần Thơ',
+                        'An Giang','Bà Rịa - Vũng Tàu','Bắc Giang','Bắc Kạn','Bạc Liêu',
+                        'Bắc Ninh','Bến Tre','Bình Định','Bình Dương','Bình Phước',
+                        'Bình Thuận','Cà Mau','Cao Bằng','Đắk Lắk','Đắk Nông',
+                        'Điện Biên','Đồng Nai','Đồng Tháp','Gia Lai','Hà Giang',
+                        'Hà Nam','Hà Tĩnh','Hải Dương','Hậu Giang','Hòa Bình',
+                        'Hưng Yên','Khánh Hòa','Kiên Giang','Kon Tum','Lai Châu',
+                        'Lâm Đồng','Lạng Sơn','Lào Cai','Long An','Nam Định',
+                        'Nghệ An','Ninh Bình','Ninh Thuận','Phú Thọ','Phú Yên',
+                        'Quảng Bình','Quảng Nam','Quảng Ngãi','Quảng Ninh','Quảng Trị',
+                        'Sóc Trăng','Sơn La','Tây Ninh','Thái Bình','Thái Nguyên',
+                        'Thanh Hóa','Thừa Thiên Huế','Tiền Giang','Trà Vinh','Tuyên Quang',
+                        'Vĩnh Long','Vĩnh Phúc','Yên Bái'
+                      ].map(t => ({ value: t, label: t }))
+                    ]}
+                    value={personalForm.hometown}
+                    onChange={val => setPersonalForm(c => ({ ...c, hometown: val }))}
+                    placeholder="Chọn tỉnh/thành quê quán"
+                    disabled={!profile.allowProfileUpdate || isSaving}
+                  />
+                </div>
+                {/* Dân tộc - dropdown cố định */}
+                <SearchableSelect
                   label="Dân tộc"
-                  name="ethnicity"
+                  options={[
+                    { value: '', label: '-- Chưa chọn --' },
+                    ...VIETNAMESE_ETHNICITIES.map(e => ({ value: e, label: e }))
+                  ]}
                   value={personalForm.ethnicity}
+                  onChange={val => setPersonalForm(c => ({ ...c, ethnicity: val }))}
+                  placeholder="Chọn dân tộc"
                   disabled={!profile.allowProfileUpdate || isSaving}
-                  onChange={e => setPersonalForm(c => ({ ...c, ethnicity: e.target.value }))}
                 />
-                <FormField
+                {/* Quốc tịch - searchable */}
+                <SearchableSelect
                   label="Quốc tịch"
-                  name="nationality"
+                  options={[{ value: '', label: '-- Chưa chọn --' }, ...NATIONALITIES]}
                   value={personalForm.nationality}
+                  onChange={val => setPersonalForm(c => ({ ...c, nationality: val }))}
+                  placeholder="Tìm và chọn quốc tịch"
                   disabled={!profile.allowProfileUpdate || isSaving}
-                  onChange={e => setPersonalForm(c => ({ ...c, nationality: e.target.value }))}
                 />
               </div>
 
+              {/* Địa chỉ thường trú và hiện tại */}
               <div className="grid gap-5 sm:grid-cols-2">
-                <FormField
-                  as="textarea"
+                <VietnamAddressSelector
                   label="Địa chỉ thường trú"
-                  name="permanentAddress"
                   value={personalForm.permanentAddress}
+                  onChange={val => setPersonalForm(c => ({ ...c, permanentAddress: val }))}
+                  includeStreet={true}
                   disabled={!profile.allowProfileUpdate || isSaving}
-                  onChange={e => setPersonalForm(c => ({ ...c, permanentAddress: e.target.value }))}
                 />
-                <FormField
-                  as="textarea"
+                <VietnamAddressSelector
                   label="Địa chỉ hiện tại"
-                  name="currentAddress"
                   value={personalForm.currentAddress}
+                  onChange={val => setPersonalForm(c => ({ ...c, currentAddress: val }))}
+                  includeStreet={true}
                   disabled={!profile.allowProfileUpdate || isSaving}
-                  onChange={e => setPersonalForm(c => ({ ...c, currentAddress: e.target.value }))}
                 />
               </div>
 

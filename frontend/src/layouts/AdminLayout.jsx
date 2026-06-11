@@ -13,6 +13,7 @@ import { useLanguage } from '../hooks/useLanguage'
 
 const PAGE_TITLES = {
   '/admin/dashboard': 'Tổng quan',
+  '/admin/support-chat': 'Hỗ trợ trực tuyến',
   '/admin/settings': 'Cài đặt hệ thống',
   '/admin/faq-management': 'Quản lý FAQ',
   '/admin/feedbacks': 'Góp ý & Phản hồi',

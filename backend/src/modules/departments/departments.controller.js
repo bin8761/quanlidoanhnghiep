@@ -7,7 +7,7 @@ const departmentsController = {
       const departments = await departmentsService.getAllDepartments();
       return sendSuccess(res, {
         statusCode: 200,
-        message: "Departments retrieved successfully",
+        message: "Danh sách phòng ban đã được tải",
         data: departments,
       });
     } catch (error) {
@@ -18,11 +18,27 @@ const departmentsController = {
   async getDepartment(req, res, next) {
     try {
       const { id } = req.params;
-      const department = await departmentsService.getDepartmentById(id);
+      const { detail } = req.query;
+      const department = detail === "true"
+        ? await departmentsService.getDepartmentDetail(id)
+        : await departmentsService.getDepartmentById(id);
       return sendSuccess(res, {
         statusCode: 200,
-        message: "Department retrieved successfully",
+        message: "Thông tin phòng ban đã được tải",
         data: department,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  },
+
+  async getDashboardSummary(req, res, next) {
+    try {
+      const summary = await departmentsService.getDashboardSummary();
+      return sendSuccess(res, {
+        statusCode: 200,
+        message: "Dữ liệu tổng quan phòng ban đã được tải",
+        data: summary,
       });
     } catch (error) {
       return next(error);
@@ -31,10 +47,11 @@ const departmentsController = {
 
   async createDepartment(req, res, next) {
     try {
-      const created = await departmentsService.createDepartment(req.body);
+      const actorId = req.user?.userId || null;
+      const created = await departmentsService.createDepartment(req.body, actorId);
       return sendSuccess(res, {
         statusCode: 201,
-        message: "Department created successfully",
+        message: "Tạo phòng ban thành công",
         data: created,
       });
     } catch (error) {
@@ -45,10 +62,11 @@ const departmentsController = {
   async updateDepartment(req, res, next) {
     try {
       const { id } = req.params;
-      const updated = await departmentsService.updateDepartment(id, req.body);
+      const actorId = req.user?.userId || null;
+      const updated = await departmentsService.updateDepartment(id, req.body, actorId);
       return sendSuccess(res, {
         statusCode: 200,
-        message: "Department updated successfully",
+        message: "Cập nhật phòng ban thành công",
         data: updated,
       });
     } catch (error) {
@@ -59,11 +77,28 @@ const departmentsController = {
   async deleteDepartment(req, res, next) {
     try {
       const { id } = req.params;
-      const deleted = await departmentsService.deleteDepartment(id);
+      const actorId = req.user?.userId || null;
+      const deleted = await departmentsService.deleteDepartment(id, actorId);
       return sendSuccess(res, {
         statusCode: 200,
-        message: "Department deleted successfully",
+        message: "Xóa phòng ban thành công",
         data: deleted,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  },
+
+  async updateQuotas(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { quotas } = req.body;
+      const actorId = req.user?.userId || null;
+      const updatedQuotas = await departmentsService.updateDepartmentQuotas(id, quotas, actorId);
+      return sendSuccess(res, {
+        statusCode: 200,
+        message: "Cập nhật hạn mức tài sản thành công",
+        data: updatedQuotas,
       });
     } catch (error) {
       return next(error);

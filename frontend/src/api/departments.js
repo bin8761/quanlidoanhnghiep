@@ -16,7 +16,22 @@ export const departmentApi = Object.freeze({
     return response.data
   },
 
+  async get(departmentId, detail = false) {
+    const response = await apiClient.get(`/departments/${departmentId}${detail ? '?detail=true' : ''}`)
+    return response.data
+  },
+
   async remove(departmentId) {
     return apiClient.delete(`/departments/${departmentId}`)
+  },
+
+  async getDashboardSummary() {
+    const response = await apiClient.get('/departments/dashboard/summary')
+    return response.data
+  },
+
+  async updateQuotas(departmentId, quotas) {
+    const response = await apiClient.post(`/departments/${departmentId}/quotas`, { quotas })
+    return response.data
   },
 })

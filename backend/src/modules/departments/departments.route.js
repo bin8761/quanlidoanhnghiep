@@ -17,6 +17,13 @@ router.get(
 );
 
 router.get(
+  "/dashboard/summary",
+  authenticate,
+  passwordChangeGuard,
+  departmentsController.getDashboardSummary,
+);
+
+router.get(
   "/:id",
   authenticate,
   passwordChangeGuard,
@@ -49,6 +56,15 @@ router.delete(
   authorize(ADMIN),
   validateRequest(departmentsValidators.delete),
   departmentsController.deleteDepartment,
+);
+
+router.post(
+  "/:id/quotas",
+  authenticate,
+  passwordChangeGuard,
+  authorize(ADMIN),
+  validateRequest(departmentsValidators.updateQuotas),
+  departmentsController.updateQuotas,
 );
 
 module.exports = router;

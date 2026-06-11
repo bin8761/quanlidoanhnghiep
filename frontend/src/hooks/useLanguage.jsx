@@ -912,6 +912,27 @@ const fallbackDictionary = {
   "Description sự cố": "Issue Description",
   "Nhập chi tiết yêu cầu hỗ trợ": "Enter detailed support request",
   "Gửi yêu cầu": "Submit Request",
+
+  //Support Chatbox
+  "Trợ lý ảo EAM": "EAM Virtual Assistant",
+  "Trí tuệ nhân tạo": "Artificial Intelligence",
+  "Xin chào!": "Hello!",
+  "Tôi là Trợ lý ảo EAM. Hãy hỏi tôi về tài sản đang dùng hoặc yêu cầu bảo trì.": "I am the EAM Virtual Assistant. Ask me about assets in use or maintenance requests.",
+  "Tài sản": "Asset",
+  "Phiếu yêu cầu": "Request Ticket",
+  "Gặp Admin": "Meet Admin",
+  "Nhập câu hỏi tại đây": "Type your question here",
+  "Hỗ trợ trực tuyến": "Online Support",
+  "Tìm nhân viên...": "Search employee...",
+  "Tất cả": "All",
+  "Không tìm thấy phiên chat nào.": "No chat session found.",
+  "Chọn cuộc trò chuyện": "Select a conversation",
+  "Chọn một nhân sự từ danh sách hàng đợi bên trái để bắt đầu tiếp Receiving hỗ trợ trực tiếp.": "Select an employee from the queue on the left to start providing direct support.",
+  "Hỗ trợ viên đang online": "Support agent online",
+  "Trợ giúp trực tuyến": "Online support",
+  "Không thể kết nối đến máy chủ.": "Cannot connect to server.",
+  "Gửi tin nhắn thất bại. Vui lòng thử lại.": "Failed to send message. Please try again.",
+  "Phiên hội thoại đã đóng. Vui lòng mở lại sau.": "Chat session has been closed. Please reopen later.",
 }
 
 const LanguageContext = createContext()

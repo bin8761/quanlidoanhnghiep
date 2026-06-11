@@ -84,13 +84,13 @@ const FIXED_IDS = Object.freeze({
 });
 
 const DEPARTMENT_SEEDS = Object.freeze([
-  { key: "board", name: "Ban Giám đốc", description: "Lãnh đạo và quản lý chiến lược phát triển doanh nghiệp." },
-  { key: "engineering", name: "Phòng Kỹ thuật", description: "Phát triển, vận hành và hỗ trợ hệ thống công nghệ." },
-  { key: "sales", name: "Phòng Kinh doanh", description: "Phụ trách khách hàng, hợp đồng và hoạt động bán hàng." },
-  { key: "administration", name: "Phòng Hành chính", description: "Quản lý cơ sở vật chất và hoạt động nội bộ." },
-  { key: "finance", name: "Phòng Tài chính", description: "Quản lý ngân sách, thanh toán và báo cáo tài chính." },
-  { key: "hr", name: "Phòng Nhân sự", description: "Tuyển dụng, đào tạo, quản lý nhân sự và chế độ phúc lợi." },
-  { key: "marketing", name: "Phòng Marketing", description: "Quản lý thương hiệu, chạy chiến dịch và truyền thông." },
+  { key: "board", code: "BGD", name: "Ban Giám đốc", description: "Lãnh đạo và quản lý chiến lược phát triển doanh nghiệp." },
+  { key: "engineering", code: "ENG", name: "Phòng Kỹ thuật", description: "Phát triển, vận hành và hỗ trợ hệ thống công nghệ." },
+  { key: "sales", code: "SAL", name: "Phòng Kinh doanh", description: "Phụ trách khách hàng, hợp đồng và hoạt động bán hàng." },
+  { key: "administration", code: "ADM", name: "Phòng Hành chính", description: "Quản lý cơ sở vật chất và hoạt động nội bộ." },
+  { key: "finance", code: "FIN", name: "Phòng Tài chính", description: "Quản lý ngân sách, thanh toán và báo cáo tài chính." },
+  { key: "hr", code: "HR", name: "Phòng Nhân sự", description: "Tuyển dụng, đào tạo, quản lý nhân sự và chế độ phúc lợi." },
+  { key: "marketing", code: "MKT", name: "Phòng Marketing", description: "Quản lý thương hiệu, chạy chiến dịch và truyền thông." },
 ]);
 
 const CATEGORY_SEEDS = Object.freeze([
@@ -123,8 +123,12 @@ async function seedDepartments() {
   for (const seed of DEPARTMENT_SEEDS) {
     departments[seed.key] = await prisma.department.upsert({
       where: { name: seed.name },
-      update: { description: seed.description },
-      create: { name: seed.name, description: seed.description },
+      update: {
+        code: seed.code, description: seed.description,
+      },
+      create: {
+        code: seed.code, name: seed.name, description: seed.description,
+      },
     });
   }
 
@@ -177,7 +181,7 @@ async function seedLocations() {
   return locations;
 }
 
-async function upsertEmployee({ id, employeeCode, fullName, email, departmentId, locationId, deskX, deskY, position = "Staff", phone = null, joinDate = new Date(), status = "ACTIVE" }) {
+async function upsertEmployee({ id, employeeCode, fullName, email, departmentId, locationId, deskX, deskY, position = "Nhân viên", phone = null, joinDate = new Date(), status = "ACTIVE" }) {
   return prisma.employee.upsert({
     where: { employeeCode },
     update: { fullName, email, departmentId, locationId, deskX, deskY, position, phone, joinDate, status },
@@ -1126,44 +1130,44 @@ async function seedInventory(departments, assets) {
   }
 }
 
-// async function seedTasks(users) {
-//   const activeUserId = users.active.id;
+async function seedTasks(users) {
+  const activeUserId = users.active.id;
 
-//   await prisma.userTask.deleteMany({
-//     where: { userId: activeUserId },
-//   });
+  await prisma.userTask.deleteMany({
+    where: { userId: activeUserId },
+  });
 
-//   const task1 = {
-//     userId: activeUserId,
-//     type: "INVENTORY_CONFIRMATION",
-//     title: "Xác nhận kiểm kê quý II/2026",
-//     description: "Nhân viên xác nhận tình trạng thực tế của laptop Dell Latitude 5440 (LT-001) trong đợt kiểm kê.",
-//     priority: "HIGH",
-//     status: "PENDING",
-//     actionUrl: "/employee/assets/LT-001",
-//     dueAt: new Date("2026-06-15T00:00:00.000Z"),
-//     referenceId: FIXED_IDS.inventorySessions.active,
-//   };
+  const task1 = {
+    userId: activeUserId,
+    type: "INVENTORY_CONFIRMATION",
+    title: "Xác nhận kiểm kê quý II/2026",
+    description: "Nhân viên xác nhận tình trạng thực tế của laptop Dell Latitude 5440 (LT-001) trong đợt kiểm kê.",
+    priority: "HIGH",
+    status: "PENDING",
+    actionUrl: "/employee/assets/LT-001",
+    dueAt: new Date("2026-06-15T00:00:00.000Z"),
+    referenceId: FIXED_IDS.inventorySessions.active,
+  };
 
-//   const task2 = {
-//     userId: activeUserId,
-//     type: "ASSET_PERIODIC_CHECK",
-//     title: "Cập nhật tình trạng laptop LT-001",
-//     description: "Kiểm tra định kỳ tình trạng hoạt động của laptop Dell Latitude 5440.",
-//     priority: "MEDIUM",
-//     status: "PENDING",
-//     actionUrl: "/employee/assets/LT-001",
-//     dueAt: new Date("2026-06-10T00:00:00.000Z"),
-//   };
+  const task2 = {
+    userId: activeUserId,
+    type: "ASSET_PERIODIC_CHECK",
+    title: "Cập nhật tình trạng laptop LT-001",
+    description: "Kiểm tra định kỳ tình trạng hoạt động của laptop Dell Latitude 5440.",
+    priority: "MEDIUM",
+    status: "PENDING",
+    actionUrl: "/employee/assets/LT-001",
+    dueAt: new Date("2026-06-10T00:00:00.000Z"),
+  };
 
-//   await prisma.userTask.createMany({
-//     data: [task1, task2],
-//   });
-// }
+  await prisma.userTask.createMany({
+    data: [task1, task2],
+  });
+}
 
 async function seedFeedbacks(users) {
   await prisma.feedback.deleteMany({});
-  
+
   const feedbackData = [
     {
       userId: users.active.id,

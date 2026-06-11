@@ -6,6 +6,7 @@ import NotificationBell from '../components/layout/NotificationBell'
 import SyncStatusBadge from '../components/layout/SyncStatusBadge'
 import ThemeToggle from '../components/layout/ThemeToggle'
 import QrScannerModal from '../components/ui/QrScannerModal'
+import SupportChatbox from '../components/chat/SupportChatbox'
 import { useNotifications } from '../notifications/notifications-context'
 import { useLanguage } from '../hooks/useLanguage'
 
@@ -80,6 +81,7 @@ export default function EmployeeLayout() {
         </div>
       </main>
       {qrOpen && <QrScannerModal onClose={() => setQrOpen(false)} />}
+      <SupportChatbox />
     </div>
   )
 }
