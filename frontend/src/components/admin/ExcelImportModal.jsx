@@ -9,6 +9,53 @@ async function createWorkbook() {
   return new ExcelJS.Workbook()
 }
 
+async function normalizeSpreadsheetNamespaces(buffer) {
+  const module = await import('jszip')
+  const JSZip = module.default || module
+  const archive = await JSZip.loadAsync(buffer)
+  const spreadsheetNamespace =
+    'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
+  let changed = false
+
+  await Promise.all(
+    Object.keys(archive.files)
+      .filter((path) => path.startsWith('xl/') && path.endsWith('.xml'))
+      .map(async (path) => {
+        const entry = archive.file(path)
+        if (!entry) return
+
+        const xml = await entry.async('string')
+        if (!xml.includes(`xmlns:x="${spreadsheetNamespace}"`)) return
+
+        archive.file(
+          path,
+          xml
+            .replace(`xmlns:x="${spreadsheetNamespace}"`, `xmlns="${spreadsheetNamespace}"`)
+            .replace(/<(\/?)x:/g, '<$1'),
+        )
+        changed = true
+      }),
+  )
+
+  return changed ? archive.generateAsync({ type: 'arraybuffer' }) : null
+}
+
+async function loadWorkbook(buffer) {
+  const workbook = await createWorkbook()
+
+  try {
+    await workbook.xlsx.load(buffer)
+    return workbook
+  } catch (originalError) {
+    const normalizedBuffer = await normalizeSpreadsheetNamespaces(buffer)
+    if (!normalizedBuffer) throw originalError
+
+    const normalizedWorkbook = await createWorkbook()
+    await normalizedWorkbook.xlsx.load(normalizedBuffer)
+    return normalizedWorkbook
+  }
+}
+
 function cellValue(cell) {
   if (cell.value instanceof Date) return cell.value
   if (cell.value && typeof cell.value === 'object') {
@@ -104,8 +151,7 @@ export default function ExcelImportModal({
     setIsReading(true)
 
     try {
-      const workbook = await createWorkbook()
-      await workbook.xlsx.load(await file.arrayBuffer())
+      const workbook = await loadWorkbook(await file.arrayBuffer())
       const worksheet = workbook.worksheets[0]
       if (!worksheet || worksheet.actualRowCount < 2) {
         throw new Error('File Excel không có dòng dữ liệu.')

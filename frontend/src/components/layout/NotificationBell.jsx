@@ -84,14 +84,14 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute top-12 right-0 z-30 w-[min(360px,calc(100vw-32px))] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-premium">
-          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+        <div className="absolute top-12 right-0 z-30 w-[min(360px,calc(100vw-32px))] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-premium dark:border-emerald-900/70 dark:bg-[#101b17] dark:shadow-[0_24px_64px_rgba(0,0,0,0.48)]">
+          <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/60 px-4 py-3 dark:border-emerald-900/60 dark:bg-[#14231d]">
             <div>
-              <p className="text-sm font-bold text-slate-900">{t('Thông báo')}</p>
-              <p className="text-xs text-slate-500">{hasUnread ? `${unreadCount} ${locale === 'en' ? 'unread' : 'chưa đọc'}` : t('Tất cả đã đọc')}</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-slate-50">{t('Thông báo')}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{hasUnread ? `${unreadCount} ${locale === 'en' ? 'unread' : 'chưa đọc'}` : t('Tất cả đã đọc')}</p>
             </div>
             <button
-              className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-900 disabled:opacity-40"
+              className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-white hover:text-slate-900 disabled:opacity-40 dark:border-emerald-900/70 dark:text-slate-400 dark:hover:bg-emerald-950/60 dark:hover:text-emerald-300"
               type="button"
               title={t('Đánh dấu tất cả đã đọc')}
               aria-label={t('Đánh dấu tất cả đã đọc')}
@@ -104,23 +104,25 @@ export default function NotificationBell() {
 
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 && (
-              <p className="px-4 py-8 text-center text-sm text-slate-500">{t('Chưa có thông báo.')}</p>
+              <p className="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">{t('Chưa có thông báo.')}</p>
             )}
 
             {notifications.map((notification) => (
               <button
                 key={notification.id}
                 type="button"
-                className="grid w-full grid-cols-[8px_minmax(0,1fr)] gap-3 border-b border-slate-100 px-4 py-3 text-left transition last:border-b-0 hover:bg-slate-50"
+                className={`grid w-full grid-cols-[8px_minmax(0,1fr)] gap-3 border-b border-slate-100 px-4 py-3 text-left transition last:border-b-0 hover:bg-slate-50 dark:border-emerald-900/45 dark:hover:bg-emerald-950/45 ${
+                  notification.isRead ? '' : 'bg-amber-50/45 dark:bg-emerald-900/15'
+                }`}
                 onClick={() => openNotification(notification)}
               >
                 <span
-                  className={`mt-2 size-2 rounded-full ${notification.isRead ? 'bg-slate-200' : 'bg-amber-500'}`}
+                  className={`mt-2 size-2 rounded-full ${notification.isRead ? 'bg-slate-200 dark:bg-slate-600' : 'bg-amber-500 shadow-[0_0_0_4px_rgba(245,158,11,0.12)] dark:bg-emerald-400 dark:shadow-[0_0_0_4px_rgba(52,211,153,0.12)]'}`}
                 />
                 <span className="min-w-0">
-                  <span className="block text-sm font-bold text-slate-900">{notification.title}</span>
-                  <span className="mt-1 block text-xs leading-5 text-slate-600">{notification.message}</span>
-                  <span className="mt-2 block text-[11px] font-semibold text-slate-400">
+                  <span className="block text-sm font-bold text-slate-900 dark:text-slate-100">{notification.title}</span>
+                  <span className="mt-1 block text-xs leading-5 text-slate-600 dark:text-slate-300">{notification.message}</span>
+                  <span className="mt-2 block text-[11px] font-semibold text-slate-400 dark:text-slate-500">
                     {formatTime(notification.createdAt, locale)}
                   </span>
                 </span>
