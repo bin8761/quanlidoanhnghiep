@@ -20,6 +20,35 @@
   box-shadow: 0 18px 45px rgb(15 23 42 / 14%);
 }
 
+.eam-toast .Toastify__toast-icon {
+  width: 20px;
+}
+
+.eam-toast .Toastify__close-button {
+  color: rgb(100 116 139);
+  opacity: 0.7;
+}
+
+.eam-toast .Toastify__close-button:hover {
+  opacity: 1;
+}
+
+.eam-toast.Toastify__toast--success {
+  border-left: 4px solid #10b981;
+}
+
+.eam-toast.Toastify__toast--error {
+  border-left: 4px solid #f43f5e;
+}
+
+.eam-toast.Toastify__toast--warning {
+  border-left: 4px solid #f59e0b;
+}
+
+.eam-toast.Toastify__toast--info {
+  border-left: 4px solid #38bdf8;
+}
+
 .eam-toast-progress {
   height: 3px;
 }
@@ -389,10 +418,20 @@ html.dark .skeleton::after {
 }
 
 html.dark .eam-toast {
-  border-color: var(--border);
-  background: var(--surface);
-  color: var(--ink);
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+  border-top-color: #2b4037;
+  border-right-color: #2b4037;
+  border-bottom-color: #2b4037;
+  background: #14231d;
+  color: #f1f5f3;
+  box-shadow: 0 20px 52px rgba(0, 0, 0, 0.46);
+}
+
+html.dark .eam-toast .Toastify__close-button {
+  color: #a9bbb2;
+}
+
+html.dark .eam-toast-progress {
+  opacity: 0.9;
 }
 
 html.dark ::-webkit-scrollbar-thumb {

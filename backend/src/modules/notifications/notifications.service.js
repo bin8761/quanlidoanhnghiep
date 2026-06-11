@@ -7,13 +7,13 @@ const { ADMIN } = require("../../shared/constants/roles");
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
 const STATUS_LABELS = Object.freeze({
-  PENDING: "cho xu ly",
-  APPROVED: "da duyet",
-  IN_PROGRESS: "dang xu ly",
-  WAITING_USER: "dang cho bo sung",
-  COMPLETED: "hoan tat",
-  REJECTED: "bi tu choi",
-  CANCELLED: "da huy",
+  PENDING: "chờ xử lý",
+  APPROVED: "đã duyệt",
+  IN_PROGRESS: "đang xử lý",
+  WAITING_USER: "đang chờ bổ sung",
+  COMPLETED: "hoàn tất",
+  REJECTED: "bị từ chối",
+  CANCELLED: "đã hủy",
 });
 
 function parseLimit(value) {
@@ -74,8 +74,8 @@ function createNotificationsService({ repository = notificationsRepository, real
       return createAndPublish({
         userId: recipientUserId,
         type: "ASSET_ASSIGNED",
-        title: "Ban vua duoc ban giao tai san",
-        message: `${assignment.asset?.name || "Tai san"} da duoc ban giao cho ban.`,
+        title: "Bạn vừa được bàn giao tài sản",
+        message: `${assignment.asset?.name || "Tài sản"} đã được bàn giao cho bạn.`,
         data: {
           assignmentId: assignment.id,
           assetId: assignment.assetId,
@@ -91,15 +91,15 @@ function createNotificationsService({ repository = notificationsRepository, real
       const admins = await repository.findActiveUsersByRole(ADMIN);
       if (!admins.length) return [];
       const notifications = [];
-      const assetName = request.asset?.name || "khong lien ket tai san";
-      const requesterName = request.requester?.fullName || "Nhan vien";
+      const assetName = request.asset?.name || "không liên kết tài sản";
+      const requesterName = request.requester?.fullName || "Nhân viên";
 
       for (const admin of admins) {
         const notification = await createAndPublish({
           userId: admin.id,
           type: "MAINTENANCE_CREATED",
-          title: "Co yeu cau ho tro moi",
-          message: `${requesterName} vua gui yeu cau ${request.type} cho ${assetName}.`,
+          title: "Có yêu cầu hỗ trợ mới",
+          message: `${requesterName} vừa gửi yêu cầu ${request.type} cho ${assetName}.`,
           data: {
             supportRequestId: request.id,
             maintenanceRequestId: request.id,
@@ -119,13 +119,13 @@ function createNotificationsService({ repository = notificationsRepository, real
     async notifySupportRequestUpdated(request) {
       const recipientUserId = request?.requester?.user?.id;
       if (!recipientUserId) return null;
-      const assetName = request.asset?.name || "yeu cau";
+      const assetName = request.asset?.name || "yêu cầu";
       const statusLabel = STATUS_LABELS[request.status] || request.status;
       return createAndPublish({
         userId: recipientUserId,
         type: "MAINTENANCE_UPDATED",
-        title: "Yeu cau ho tro da duoc cap nhat",
-        message: `Yeu cau ho tro ${assetName} hien ${statusLabel}.`,
+        title: "Yêu cầu hỗ trợ đã được cập nhật",
+        message: `Yêu cầu hỗ trợ ${assetName} hiện ${statusLabel}.`,
         data: {
           supportRequestId: request.id,
           maintenanceRequestId: request.id,
