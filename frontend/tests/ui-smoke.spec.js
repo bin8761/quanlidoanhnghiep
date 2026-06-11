@@ -1,8 +1,11 @@
 import { expect, test } from '@playwright/test'
 import { createRequire } from 'node:module'
+import { mkdir } from 'node:fs/promises'
+import path from 'node:path'
 
 const require = createRequire(import.meta.url)
 const { PrismaClient } = require('../../backend/node_modules/@prisma/client')
+const ExcelJS = require('../node_modules/exceljs')
 const workflowAssetCodes = new Set()
 
 test.afterEach(async () => {
@@ -52,6 +55,58 @@ async function loginAsEmployee(page) {
   await page.getByRole('button', { name: 'Đăng nhập hệ thống' }).click()
   await expect(page).toHaveURL(/\/employee\/dashboard$/)
 }
+
+test('admin can preview and import an asset from Excel', async ({ page }) => {
+  const prisma = new PrismaClient()
+  const suffix = Date.now()
+  const assetCode = `UI-IMPORT-${suffix}`
+  workflowAssetCodes.add(assetCode)
+
+  let category
+  let department
+  try {
+    category = await prisma.assetCategory.findFirst({ orderBy: { id: 'asc' } })
+    department = await prisma.department.findFirst({ orderBy: { id: 'asc' } })
+  } finally {
+    await prisma.$disconnect()
+  }
+
+  const outputDirectory = path.resolve('test-results')
+  await mkdir(outputDirectory, { recursive: true })
+  const filePath = path.join(outputDirectory, `asset-import-${suffix}.xlsx`)
+  const workbook = new ExcelJS.Workbook()
+  const worksheet = workbook.addWorksheet('Tai san')
+  worksheet.addRow([
+    'ma_tai_san',
+    'ten_tai_san',
+    'danh_muc',
+    'phong_ban_so_huu',
+    'trang_thai',
+  ])
+  worksheet.addRow([
+    assetCode,
+    'Thiết bị kiểm thử Excel',
+    category.name,
+    department.name,
+    'AVAILABLE',
+  ])
+  await workbook.xlsx.writeFile(filePath)
+
+  await loginAsAdmin(page)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/admin/assets')
+  await page.getByRole('button', { name: 'Nhập Excel' }).click()
+  await page.locator('input[type="file"]').setInputFiles(filePath)
+
+  await expect(page.getByText(assetCode)).toBeVisible()
+  await expect(page.getByText('Hợp lệ', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Nhập 1 dòng hợp lệ' }).click()
+  await expect(page.getByText('Thành công 1/1 dòng.')).toBeVisible()
+  const hasHorizontalOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  )
+  expect(hasHorizontalOverflow).toBe(false)
+})
 
 test('desktop login and dashboard render without console errors', async ({ page }) => {
   const errors = collectConsoleErrors(page)
@@ -560,4 +615,52 @@ test('all employee pages remain responsive and console-clean', async ({ page }) 
   await page.waitForTimeout(500)
   await page.screenshot({ path: 'test-results/week5-employee-dashboard-mobile.png', fullPage: true })
   expect(errors).toEqual([])
+})
+
+test('employee settings dark mode is consistent, persistent and responsive', async ({ page }) => {
+  const pageErrors = []
+  page.on('pageerror', (error) => pageErrors.push(error.message))
+
+  await page.setViewportSize({ width: 1440, height: 960 })
+  await loginAsEmployee(page)
+  await page.goto('/employee/settings')
+
+  await page.getByRole('button', { name: /Chế độ tối|Dark Mode/ }).click()
+  await expect(page.locator('html')).toHaveClass(/dark/)
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+
+  await page.reload()
+  await expect(page.locator('html')).toHaveClass(/dark/)
+  await page.waitForTimeout(700)
+  await page.screenshot({ path: 'test-results/settings-dark-desktop.png', fullPage: true })
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.reload()
+  await page.waitForTimeout(700)
+  const hasMobileOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  )
+  expect(hasMobileOverflow).toBe(false)
+  await page.screenshot({ path: 'test-results/settings-dark-mobile.png', fullPage: true })
+
+  expect(pageErrors).toEqual([])
+})
+
+test('language toggle updates navigation and persists across reloads', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await loginAsAdmin(page)
+
+  await page.goto('/admin/settings')
+  await page.getByRole('button', { name: 'English', exact: true }).click()
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+  await expect(page.getByRole('link', { name: 'Dashboard' })).toBeVisible()
+
+  await page.reload()
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+  await expect(page.getByRole('button', { name: 'Vietnamese', exact: true })).toBeVisible()
+
+  const hasOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  )
+  expect(hasOverflow).toBe(false)
 })

@@ -13,6 +13,7 @@ import PageHeader from '../../components/ui/PageHeader'
 import StatusBadge from '../../components/ui/StatusBadge'
 import Toast from '../../components/ui/Toast'
 import useAutoDismiss from '../../hooks/useAutoDismiss'
+import { useLanguage } from '../../hooks/useLanguage'
 
 const SESSION_STATUSES = [
   { value: '', label: 'Tất cả trạng thái' },
@@ -51,14 +52,15 @@ function Metric({ icon: Icon, label, value, tone }) {
     <article className="metric-card flex items-center gap-4 p-4">
       <span className={`grid size-11 place-items-center rounded-xl ${tone}`}><Icon size={20} /></span>
       <div>
-        <strong className="block text-2xl font-extrabold text-slate-950">{value}</strong>
-        <span className="text-xs font-semibold text-slate-500">{label}</span>
+        <strong className="block text-2xl font-extrabold text-slate-950 dark:text-slate-50">{value}</strong>
+        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{label}</span>
       </div>
     </article>
   )
 }
 
 export default function InventoryPage() {
+  const { t } = useLanguage()
   const [sessions, setSessions] = useState([])
   const [departments, setDepartments] = useState([])
   const [assets, setAssets] = useState([])
@@ -299,12 +301,12 @@ export default function InventoryPage() {
   return (
     <div className="animate-fade-up">
       <PageHeader
-        eyebrow="Đối soát tài sản thực tế"
-        title="Phiên kiểm kê"
-        description="Tạo đợt kiểm kê và ghi nhận tài sản đầy đủ, thiếu hoặc hư hỏng."
+        eyebrow={t('Đối soát tài sản thực tế')}
+        title={t('Phiên kiểm kê')}
+        description={t('Tạo đợt kiểm kê và ghi nhận tài sản đầy đủ, thiếu hoặc hư hỏng.')}
         actions={(
           <Button className="w-full sm:w-auto" type="button" onClick={openCreate}>
-            <Plus size={17} />Tạo phiên kiểm kê
+            <Plus size={17} />{t('Tạo phiên kiểm kê')}
           </Button>
         )}
       />
@@ -341,9 +343,9 @@ export default function InventoryPage() {
                 <strong className="text-sm text-slate-800">Tài sản kiểm kê</strong>
                 <span className="text-xs text-slate-500">Đã chọn {form.assetIds.length}</span>
               </div>
-              <div className="grid max-h-64 gap-2 overflow-y-auto rounded-2xl border border-slate-200 p-3 sm:grid-cols-2">
+              <div className="grid max-h-64 gap-2 overflow-y-auto rounded-2xl border border-slate-200 p-3 dark:border-slate-700 sm:grid-cols-2">
                 {assets.map((asset) => (
-                  <label className="flex cursor-pointer items-center gap-3 rounded-xl p-3 transition hover:bg-slate-50" key={asset.id}>
+                  <label className="flex cursor-pointer items-center gap-3 rounded-xl p-3 transition hover:bg-slate-50 dark:hover:bg-white/5" key={asset.id}>
                     <input className="size-4 accent-brand-600" type="checkbox" checked={form.assetIds.includes(asset.id)} onChange={() => toggleAsset(asset.id)} />
                     <span className="min-w-0">
                       <strong className="block truncate text-xs text-slate-800">{asset.assetCode}</strong>
@@ -363,7 +365,7 @@ export default function InventoryPage() {
         <Modal size="lg" title={selectedSession.name} description={`${selectedSession.department?.name || 'Chưa có phòng ban'} · ${selectedSession.items.length} tài sản`} onClose={closeModal}>
           <div className="grid gap-3">
             {selectedSession.items.length ? selectedSession.items.map((item) => (
-              <div className="flex flex-col gap-3 rounded-xl border border-slate-200 p-4 sm:flex-row sm:items-center" key={item.id}>
+              <div className="flex flex-col gap-3 rounded-xl border border-slate-200 p-4 dark:border-slate-700 sm:flex-row sm:items-center" key={item.id}>
                 <div className="min-w-0 flex-1">
                   <strong className="block text-sm text-slate-900">{item.asset.assetCode} - {item.asset.name}</strong>
                   <span className="mt-1 block text-xs text-slate-500">{item.notes || 'Chưa có ghi chú kiểm kê'}</span>
@@ -371,7 +373,7 @@ export default function InventoryPage() {
                 <StatusBadge status={item.result} />
                 {selectedSession.status !== 'COMPLETED' && <Button size="sm" variant="secondary" type="button" onClick={() => openItem(item)}>Cập nhật</Button>}
               </div>
-            )) : <p className="rounded-xl bg-slate-50 p-5 text-sm text-slate-500">Phiên này chưa có tài sản.</p>}
+            )) : <p className="rounded-xl bg-slate-50 p-5 text-sm text-slate-500 dark:bg-slate-900/40 dark:text-slate-400">Phiên này chưa có tài sản.</p>}
           </div>
         </Modal>
       )}

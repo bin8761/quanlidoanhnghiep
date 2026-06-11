@@ -3,11 +3,12 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/auth-context'
 import { useNotifications } from '../../notifications/notifications-context'
+import { useLanguage } from '../../hooks/useLanguage'
 
-function formatTime(value) {
+function formatTime(value, locale) {
   if (!value) return ''
 
-  return new Intl.DateTimeFormat('vi-VN', {
+  return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'vi-VN', {
     hour: '2-digit',
     minute: '2-digit',
     day: '2-digit',
@@ -19,6 +20,7 @@ export default function NotificationBell() {
   const { notifications, unreadCount, markRead, markAllRead } = useNotifications()
   const { user } = useAuth()
   const navigate = useNavigate()
+  const { locale, t } = useLanguage()
   const [open, setOpen] = useState(false)
   const containerRef = useRef(null)
   const hasUnread = unreadCount > 0
@@ -71,8 +73,8 @@ export default function NotificationBell() {
       <button
         className="icon-button relative"
         type="button"
-        aria-label={hasUnread ? `${unreadCount} thông báo chưa đọc` : 'Không có thông báo mới'}
-        title={hasUnread ? `${unreadCount} thông báo chưa đọc` : 'Không có thông báo mới'}
+        aria-label={hasUnread ? `${unreadCount} ${locale === 'en' ? 'unread notifications' : 'thông báo chưa đọc'}` : t('Không có thông báo mới')}
+        title={hasUnread ? `${unreadCount} ${locale === 'en' ? 'unread notifications' : 'thông báo chưa đọc'}` : t('Không có thông báo mới')}
         onClick={() => setOpen((current) => !current)}
       >
         <Bell size={18} />
@@ -85,14 +87,14 @@ export default function NotificationBell() {
         <div className="absolute top-12 right-0 z-30 w-[min(360px,calc(100vw-32px))] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-premium">
           <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
             <div>
-              <p className="text-sm font-bold text-slate-900">Thông báo</p>
-              <p className="text-xs text-slate-500">{hasUnread ? `${unreadCount} chưa đọc` : 'Tất cả đã đọc'}</p>
+              <p className="text-sm font-bold text-slate-900">{t('Thông báo')}</p>
+              <p className="text-xs text-slate-500">{hasUnread ? `${unreadCount} ${locale === 'en' ? 'unread' : 'chưa đọc'}` : t('Tất cả đã đọc')}</p>
             </div>
             <button
               className="inline-flex size-9 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-900 disabled:opacity-40"
               type="button"
-              title="Đánh dấu tất cả đã đọc"
-              aria-label="Đánh dấu tất cả đã đọc"
+              title={t('Đánh dấu tất cả đã đọc')}
+              aria-label={t('Đánh dấu tất cả đã đọc')}
               disabled={!hasUnread}
               onClick={() => markAllRead()}
             >
@@ -102,7 +104,7 @@ export default function NotificationBell() {
 
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 && (
-              <p className="px-4 py-8 text-center text-sm text-slate-500">Chưa có thông báo.</p>
+              <p className="px-4 py-8 text-center text-sm text-slate-500">{t('Chưa có thông báo.')}</p>
             )}
 
             {notifications.map((notification) => (
@@ -119,7 +121,7 @@ export default function NotificationBell() {
                   <span className="block text-sm font-bold text-slate-900">{notification.title}</span>
                   <span className="mt-1 block text-xs leading-5 text-slate-600">{notification.message}</span>
                   <span className="mt-2 block text-[11px] font-semibold text-slate-400">
-                    {formatTime(notification.createdAt)}
+                    {formatTime(notification.createdAt, locale)}
                   </span>
                 </span>
               </button>

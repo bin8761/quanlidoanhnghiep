@@ -50,6 +50,19 @@ const assetsController = {
     }
   },
 
+  async importAssets(req, res, next) {
+    try {
+      const result = await assetsService.importAssets(req.body.rows);
+      return sendSuccess(res, {
+        statusCode: 200,
+        message: "Asset import completed",
+        data: result,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  },
+
   async updateAsset(req, res, next) {
     try {
       const { id } = req.params;

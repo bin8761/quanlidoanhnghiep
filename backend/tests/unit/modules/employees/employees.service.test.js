@@ -151,6 +151,51 @@ describe("employees.service", () => {
     );
   });
 
+  test("importEmployees continues after a row fails validation", async () => {
+    const rows = [
+      {
+        rowNumber: 2,
+        employeeCode: "EMP101",
+        fullName: "Jane Doe",
+        email: "jane@company.com",
+      },
+      {
+        rowNumber: 3,
+        employeeCode: "EMP102",
+        fullName: "John Doe",
+        email: "john@company.com",
+      },
+    ];
+    const { employeesService, repository } = loadEmployeesService({
+      repositoryOverrides: {
+        findByEmployeeCode: jest.fn().mockResolvedValue(null),
+        findByEmail: jest.fn()
+          .mockResolvedValueOnce(null)
+          .mockResolvedValueOnce({ id: EMPLOYEE_ID, email: "john@company.com" }),
+        create: jest.fn().mockResolvedValue({
+          id: EMPLOYEE_ID,
+          employeeCode: "EMP101",
+          fullName: "Jane Doe",
+          email: "jane@company.com",
+        }),
+      },
+    });
+
+    const result = await employeesService.importEmployees(rows);
+
+    expect(result).toMatchObject({ total: 2, imported: 1, failed: 1 });
+    expect(result.results).toEqual([
+      expect.objectContaining({ rowNumber: 2, success: true, code: "EMP101" }),
+      expect.objectContaining({
+        rowNumber: 3,
+        success: false,
+        code: "EMP102",
+        message: "Employee email already exists",
+      }),
+    ]);
+    expect(repository.create).toHaveBeenCalledTimes(1);
+  });
+
   test("deleteEmployee throws validation error if employee has a user account", async () => {
     const emp = { id: EMPLOYEE_ID, fullName: "John Doe" };
     const { employeesService, repository } = loadEmployeesService({

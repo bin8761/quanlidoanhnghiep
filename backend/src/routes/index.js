@@ -15,6 +15,10 @@ const notificationsRouter = require("../modules/notifications/notifications.rout
 const locationsRouter = require("../modules/locations/locations.route");
 const tasksRouter = require("../modules/tasks/tasks.route");
 const supportChatRouter = require("../modules/supportChat/supportChat.route");
+const faqsRouter = require("../modules/faqs/faqs.route");
+const feedbacksRouter = require("../modules/feedbacks/feedbacks.route");
+const attendanceRouter = require("../modules/attendance/attendance.route");
+const loginHistoryRouter = require("../modules/loginHistory/loginHistory.route");
 
 const rootRouter = express.Router();
 const apiRouter = express.Router();
@@ -34,7 +38,12 @@ apiRouter.use("/notifications", notificationsRouter);
 apiRouter.use("/locations", locationsRouter);
 apiRouter.use("/tasks", tasksRouter);
 apiRouter.use("/support-chat", supportChatRouter);
+apiRouter.use("/faqs", faqsRouter);
+apiRouter.use("/feedbacks", feedbacksRouter);
+apiRouter.use("/attendance", attendanceRouter);
+apiRouter.use("/login-histories", loginHistoryRouter);
 
 rootRouter.use("/api", apiRouter);
 
 module.exports = rootRouter;
+

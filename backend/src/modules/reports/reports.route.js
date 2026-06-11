@@ -15,5 +15,7 @@ router.get("/trends", validateRequest(validators.common), controller.trends);
 router.get("/data-quality", validateRequest(validators.common), controller.dataQuality);
 router.get("/assets", validateRequest(validators.assets), controller.assets);
 router.get("/export.csv", validateRequest(validators.assets), controller.exportCsv);
+router.get("/export.xlsx", validateRequest(validators.assets), controller.exportXlsx);
+router.get("/export.pdf", validateRequest(validators.assets), controller.exportPdf);
 
 module.exports = router;

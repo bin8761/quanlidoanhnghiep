@@ -58,6 +58,7 @@ model Employee {
   supportRequests     SupportRequest[]
   attachments         EmployeeAttachment[]
   profileLogs         EmployeeProfileLog[]
+  attendances         TimeAttendance[]
   managedDepartments  Department[]         @relation("DepartmentManager")
   chatSessions        ChatSession[]
 
@@ -85,6 +86,8 @@ model User {
   tasks             UserTask[]
   uploadedAttachments EmployeeAttachment[]
   profileLogs         EmployeeProfileLog[]
+  feedbacks           Feedback[]
+  loginHistories      LoginHistory[]
   departmentAuditLogs DepartmentAuditLog[]
 
   @@map("users")
@@ -444,6 +447,69 @@ model EmployeeProfileLog {
   @@map("employee_profile_logs")
 }
 
+model Faq {
+  id        String   @id @default(uuid()) @db.Char(36)
+  question  String   @db.Text
+  answer    String   @db.Text
+  category  String   @db.VarChar(100)
+  status    String   @default("SHOW")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("faqs")
+}
+
+model Feedback {
+  id        String   @id @default(uuid()) @db.Char(36)
+  userId    String   @map("user_id") @db.Char(36)
+  title     String   @db.VarChar(255)
+  content   String   @db.Text
+  category  String   @db.VarChar(100)
+  priority  String   @default("MEDIUM")
+  status    String   @default("PENDING")
+  adminNote String?  @map("admin_note") @db.Text
+  fileUrl   String?  @map("file_url") @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("feedbacks")
+}
+
+model TimeAttendance {
+  id           String    @id @default(uuid()) @db.Char(36)
+  employeeId   String    @map("employee_id") @db.Char(36)
+  checkIn      DateTime  @map("check_in")
+  checkOut     DateTime? @map("check_out")
+  workingHours Float?    @map("working_hours")
+  date         String    @db.VarChar(10)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, date])
+  @@map("time_attendances")
+}
+
+model LoginHistory {
+  id        String    @id @default(uuid()) @db.Char(36)
+  userId    String    @map("user_id") @db.Char(36)
+  loginAt   DateTime  @default(now()) @map("login_at")
+  logoutAt  DateTime? @map("logout_at")
+  ipAddress String?   @map("ip_address") @db.VarChar(45)
+  device    String?   @db.VarChar(100)
+  browser   String?   @db.VarChar(100)
+  os        String?   @db.VarChar(100)
+  status    String    @default("SUCCESS") @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("login_histories")
+}
 model DepartmentAssetQuota {
   id           Int           @id @default(autoincrement())
   departmentId Int           @map("department_id")

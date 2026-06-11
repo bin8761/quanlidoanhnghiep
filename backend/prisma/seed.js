@@ -84,13 +84,13 @@ const FIXED_IDS = Object.freeze({
 });
 
 const DEPARTMENT_SEEDS = Object.freeze([
-  { key: "board", name: "Ban Giám đốc", description: "Lãnh đạo và quản lý chiến lược phát triển doanh nghiệp." },
-  { key: "engineering", name: "Phòng Kỹ thuật", description: "Phát triển, vận hành và hỗ trợ hệ thống công nghệ." },
-  { key: "sales", name: "Phòng Kinh doanh", description: "Phụ trách khách hàng, hợp đồng và hoạt động bán hàng." },
-  { key: "administration", name: "Phòng Hành chính", description: "Quản lý cơ sở vật chất và hoạt động nội bộ." },
-  { key: "finance", name: "Phòng Tài chính", description: "Quản lý ngân sách, thanh toán và báo cáo tài chính." },
-  { key: "hr", name: "Phòng Nhân sự", description: "Tuyển dụng, đào tạo, quản lý nhân sự và chế độ phúc lợi." },
-  { key: "marketing", name: "Phòng Marketing", description: "Quản lý thương hiệu, chạy chiến dịch và truyền thông." },
+  { key: "board", code: "BGD", name: "Ban Giám đốc", description: "Lãnh đạo và quản lý chiến lược phát triển doanh nghiệp." },
+  { key: "engineering", code: "ENG", name: "Phòng Kỹ thuật", description: "Phát triển, vận hành và hỗ trợ hệ thống công nghệ." },
+  { key: "sales", code: "SAL", name: "Phòng Kinh doanh", description: "Phụ trách khách hàng, hợp đồng và hoạt động bán hàng." },
+  { key: "administration", code: "ADM", name: "Phòng Hành chính", description: "Quản lý cơ sở vật chất và hoạt động nội bộ." },
+  { key: "finance", code: "FIN", name: "Phòng Tài chính", description: "Quản lý ngân sách, thanh toán và báo cáo tài chính." },
+  { key: "hr", code: "HR", name: "Phòng Nhân sự", description: "Tuyển dụng, đào tạo, quản lý nhân sự và chế độ phúc lợi." },
+  { key: "marketing", code: "MKT", name: "Phòng Marketing", description: "Quản lý thương hiệu, chạy chiến dịch và truyền thông." },
 ]);
 
 const CATEGORY_SEEDS = Object.freeze([
@@ -123,8 +123,12 @@ async function seedDepartments() {
   for (const seed of DEPARTMENT_SEEDS) {
     departments[seed.key] = await prisma.department.upsert({
       where: { name: seed.name },
-      update: { description: seed.description },
-      create: { name: seed.name, description: seed.description },
+      update: {
+        code: seed.code, description: seed.description,
+      },
+      create: {
+        code: seed.code, name: seed.name, description: seed.description,
+      },
     });
   }
 
@@ -1161,6 +1165,100 @@ async function seedTasks(users) {
   });
 }
 
+async function seedFeedbacks(users) {
+  await prisma.feedback.deleteMany({});
+
+  const feedbackData = [
+    {
+      userId: users.active.id,
+      title: "Giao diện tối hiển thị lỗi ở màn hình báo cáo",
+      content: "Khi chuyển sang giao diện tối, một số bảng trong mục báo cáo vẫn hiển thị chữ màu xám đen rất khó đọc. Mong đội kỹ thuật khắc phục sớm.",
+      category: "UI_UX",
+      priority: "MEDIUM",
+      status: "PENDING"
+    },
+    {
+      userId: users.active.id,
+      title: "Đề xuất thêm tính năng nhắc nhở lịch bảo trì",
+      content: "Hiện tại hệ thống đã có chức năng lập lịch bảo trì nhưng chưa gửi thông báo/mail nhắc nhở cho người được phân công trước ngày bảo trì. Việc này có thể dẫn đến trễ lịch.",
+      category: "FEATURE",
+      priority: "LOW",
+      status: "PROCESSING"
+    },
+    {
+      userId: users.active.id,
+      title: "Lỗi không tải được tệp đính kèm khi gửi yêu cầu",
+      content: "Hôm qua tôi cố gắng tải lên một ảnh định dạng png dung lượng 1.2MB trong phần Yêu cầu hỗ trợ nhưng hệ thống liên tục báo lỗi kết nối máy chủ.",
+      category: "BUG",
+      priority: "HIGH",
+      status: "COMPLETED",
+      adminNote: "Đã khắc phục giới hạn dung lượng upload file từ máy chủ. Bạn có thể thử lại."
+    },
+    {
+      userId: users.active.id,
+      title: "Góp ý về tốc độ tải trang danh sách tài sản",
+      content: "Màn hình danh sách tài sản tải khá chậm khi có nhiều dữ liệu. Có thể thêm phân trang hoặc lazy load để tăng trải nghiệm người dùng.",
+      category: "OTHER",
+      priority: "LOW",
+      status: "PENDING"
+    }
+  ];
+
+  for (const fb of feedbackData) {
+    await prisma.feedback.create({ data: fb });
+  }
+
+  console.log(`Seeded ${feedbackData.length} Feedbacks.`);
+}
+
+async function seedFaqs() {
+  // Delete existing FAQs to avoid duplicates on re-seed
+  await prisma.faq.deleteMany({});
+
+  const faqData = [
+    // Đăng nhập
+    { category: "Đăng nhập", question: "Tôi quên mật khẩu, phải làm thế nào?", answer: "Bạn có thể sử dụng chức năng 'Quên mật khẩu' trên trang đăng nhập. Hệ thống sẽ gửi mã OTP xác thực về email của bạn để đặt lại mật khẩu.", status: "SHOW" },
+    { category: "Đăng nhập", question: "Tài khoản của tôi bị vô hiệu hóa, tôi phải liên hệ ai?", answer: "Vui lòng liên hệ với Admin hệ thống hoặc phòng IT để được kích hoạt lại tài khoản. Admin có thể kích hoạt/vô hiệu hóa tài khoản trong mục quản lý nhân viên.", status: "SHOW" },
+    { category: "Đăng nhập", question: "Lần đầu đăng nhập tôi cần làm gì?", answer: "Khi đăng nhập lần đầu với tài khoản do Admin tạo, bạn sẽ được yêu cầu thay đổi mật khẩu mặc định trước khi tiếp tục sử dụng hệ thống.", status: "SHOW" },
+    { category: "Đăng nhập", question: "Tôi có thể đăng nhập từ nhiều thiết bị không?", answer: "Có, bạn có thể đăng nhập từ nhiều thiết bị khác nhau. Lịch sử đăng nhập từ mỗi thiết bị sẽ được ghi lại trong phần Cài đặt → Lịch sử đăng nhập.", status: "SHOW" },
+    // Quản lý tài sản
+    { category: "Tài sản", question: "Làm thế nào để xem danh sách tài sản đang được bàn giao cho tôi?", answer: "Bạn vào mục 'Tài sản của tôi' trong thanh điều hướng bên trái. Tất cả tài sản đang được bàn giao sẽ hiển thị tại đây.", status: "SHOW" },
+    { category: "Tài sản", question: "Tôi có thể thêm tài sản mới vào hệ thống không?", answer: "Chỉ Admin mới có quyền thêm, sửa và xóa tài sản. Nhân viên chỉ có thể xem thông tin tài sản và gửi yêu cầu hỗ trợ liên quan đến tài sản.", status: "SHOW" },
+    { category: "Tài sản", question: "Tài sản của tôi bị hỏng, tôi cần báo cáo như thế nào?", answer: "Vào mục 'Yêu cầu hỗ trợ' → Tạo yêu cầu mới, chọn loại 'Bảo trì/Sự cố', mô tả tình trạng và đính kèm ảnh nếu có. Admin sẽ xem xét và phản hồi.", status: "SHOW" },
+    { category: "Tài sản", question: "Tài sản có các trạng thái nào?", answer: "Hệ thống có 6 trạng thái: Sẵn sàng (AVAILABLE), Đã bàn giao (ASSIGNED), Đang bảo trì (MAINTENANCE), Hỏng hóc (BROKEN), Thất lạc (LOST) và Thanh lý (DISPOSED).", status: "SHOW" },
+    // Quản lý nhân viên
+    { category: "Nhân viên", question: "Ai có quyền thêm nhân viên vào hệ thống?", answer: "Chỉ Admin mới có quyền thêm nhân viên mới. Admin vào mục 'Nhân viên' và nhấn 'Thêm nhân viên'.", status: "SHOW" },
+    { category: "Nhân viên", question: "Tôi có thể cập nhật thông tin hồ sơ cá nhân của mình không?", answer: "Có, bạn có thể cập nhật một số thông tin cá nhân trong mục 'Hồ sơ cá nhân'. Một số thông tin quan trọng sẽ cần Admin phê duyệt hoặc chỉnh sửa.", status: "SHOW" },
+    { category: "Nhân viên", question: "Tôi muốn xem lịch sử bàn giao tài sản của mình?", answer: "Vào mục 'Lịch sử' trong thanh điều hướng bên trái. Bạn có thể xem toàn bộ lịch sử bàn giao và bảo trì của mình.", status: "SHOW" },
+    // Báo cáo
+    { category: "Báo cáo", question: "Tôi có thể xuất báo cáo tài sản ra file không?", answer: "Admin có thể xuất báo cáo ra 3 định dạng: CSV (tương thích Excel cũ), Excel (.xlsx) với định dạng màu sắc chuyên nghiệp, và PDF (.pdf) với bảng trình bày đẹp.", status: "SHOW" },
+    { category: "Báo cáo", question: "Báo cáo có thể lọc theo tiêu chí gì?", answer: "Báo cáo có thể lọc theo: khoảng thời gian, trạng thái tài sản, danh mục, phòng ban sở hữu, phòng ban sử dụng và vị trí. Bộ lọc được áp dụng cho cả khi xuất file.", status: "SHOW" },
+    // Chấm công
+    { category: "Chấm công", question: "Làm thế nào để Check-In/Check-Out?", answer: "Trên Dashboard nhân viên, bạn sẽ thấy widget 'Chấm công hôm nay'. Nhấn nút 'Check-In' vào đầu giờ làm và 'Check-Out' khi kết thúc. Hệ thống tự động tính số giờ làm việc.", status: "SHOW" },
+    { category: "Chấm công", question: "Tôi có thể xem lịch sử chấm công của mình không?", answer: "Có, bạn có thể xem lịch sử chấm công đầy đủ trong widget 'Lịch sử chấm công' trên Dashboard. Thông tin bao gồm giờ check-in, check-out và tổng số giờ làm việc mỗi ngày.", status: "SHOW" },
+    { category: "Chấm công", question: "Tôi quên chấm công ra, phải làm sao?", answer: "Nếu bạn quên Check-Out, vui lòng liên hệ Admin để được hỗ trợ chỉnh sửa. Bạn cũng có thể gửi yêu cầu điều chỉnh qua hộp Góp ý & Phản hồi.", status: "SHOW" },
+    // Xuất dữ liệu
+    { category: "Xuất dữ liệu", question: "File Excel xuất ra có định dạng như thế nào?", answer: "File Excel xuất ra bao gồm 2 sheet: 'Báo cáo tài sản' với dữ liệu chi tiết được tô màu theo trạng thái, và 'Tóm tắt' với số liệu tổng hợp. Header được đánh dấu màu xanh đậm.", status: "SHOW" },
+    { category: "Xuất dữ liệu", question: "File PDF xuất ra bao gồm thông tin gì?", answer: "File PDF bao gồm phần header với logo và ngày xuất, 4 chỉ số KPI quan trọng, bảng chi tiết tài sản (tối đa 100 dòng đầu), và footer với thông tin tổng kết. Nếu có nhiều hơn 100 tài sản, nên xuất Excel.", status: "SHOW" },
+    // Tài khoản
+    { category: "Tài khoản", question: "Làm thế nào để đổi mật khẩu?", answer: "Vào mục 'Đổi mật khẩu' trong thanh điều hướng bên trái. Nhập mật khẩu hiện tại, mật khẩu mới và xác nhận mật khẩu mới. Mật khẩu mới phải đủ mạnh.", status: "SHOW" },
+    { category: "Tài khoản", question: "Tôi muốn xem lịch sử đăng nhập của mình?", answer: "Vào 'Cài đặt' → tab 'Bảo mật' hoặc chuyên mục 'Lịch sử đăng nhập'. Bạn sẽ thấy thời gian đăng nhập, thiết bị, trình duyệt và địa chỉ IP của từng phiên.", status: "SHOW" },
+    // Bảo mật
+    { category: "Bảo mật", question: "Tại sao tôi thấy đăng nhập từ thiết bị lạ?", answer: "Nếu bạn phát hiện đăng nhập từ thiết bị không quen, hãy đổi mật khẩu ngay lập tức và liên hệ Admin để được hỗ trợ. Hệ thống lưu trữ IP và thông tin thiết bị cho mọi phiên đăng nhập.", status: "SHOW" },
+    { category: "Bảo mật", question: "Thông tin cá nhân của tôi có được bảo mật không?", answer: "Có, hệ thống sử dụng mã hóa mật khẩu theo chuẩn bcrypt, JWT cho xác thực và chỉ hiển thị thông tin cần thiết theo từng vai trò. Dữ liệu được lưu trữ an toàn trên máy chủ.", status: "SHOW" },
+    // Góp ý
+    { category: "Góp ý & Hỗ trợ", question: "Làm thế nào để gửi góp ý cho hệ thống?", answer: "Vào mục 'Góp ý & Phản hồi' trong thanh điều hướng hoặc Cài đặt. Điền tiêu đề, nội dung, loại góp ý và mức độ ưu tiên. Bạn cũng có thể đính kèm file minh họa.", status: "SHOW" },
+    { category: "Góp ý & Hỗ trợ", question: "Góp ý của tôi có được phản hồi không?", answer: "Có, Admin sẽ xem xét và cập nhật trạng thái góp ý của bạn. Bạn có thể theo dõi trạng thái (Chờ xử lý → Đang xử lý → Đã xử lý) trong lịch sử góp ý của mình.", status: "SHOW" },
+    { category: "Góp ý & Hỗ trợ", question: "Tôi có thể liên hệ hỗ trợ kỹ thuật qua đâu?", answer: "Bạn có thể gửi yêu cầu hỗ trợ qua mục 'Yêu cầu hỗ trợ' hoặc 'Góp ý & Phản hồi'. Với các vấn đề khẩn cấp, hãy liên hệ trực tiếp phòng IT.", status: "SHOW" },
+  ];
+
+  for (const faq of faqData) {
+    await prisma.faq.create({ data: faq });
+  }
+
+  console.log(`Seeded ${faqData.length} FAQs.`);
+}
+
 async function main() {
   const hashes = await buildPasswordHashes();
   const departments = await seedDepartments();
@@ -1173,7 +1271,9 @@ async function main() {
   await seedAssignments(assets, employees);
   await seedMaintenance(assets, employees);
   await seedInventory(departments, assets);
-  await seedTasks(users);
+  await seedFeedbacks(users);
+  await seedFaqs();
+  // await seedTasks(users);
 
   const counts = await Promise.all([
     prisma.department.count(),

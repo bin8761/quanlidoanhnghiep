@@ -1,4 +1,5 @@
 import { CheckCircle2, CloudOff, Loader2 } from 'lucide-react'
+import { useLanguage } from '../../hooks/useLanguage'
 
 const STATUS_CONFIG = {
   connected: {
@@ -29,17 +30,19 @@ const STATUS_CONFIG = {
 }
 
 export default function SyncStatusBadge({ status = 'idle', systemLabel = 'Đã đồng bộ' }) {
+  const { t } = useLanguage()
   const config = STATUS_CONFIG[status] || STATUS_CONFIG.idle
   const Icon = config.icon
+  const label = t(status === 'idle' ? systemLabel : config.label)
 
   return (
     <span
       className={`hidden h-8 items-center gap-2 rounded-full border px-3 text-[11px] font-bold sm:inline-flex ${config.className}`}
-      title={config.label}
+      title={label}
     >
       <span className={`size-1.5 rounded-full ${config.dotClassName}`} />
       <Icon size={13} className={config.spin ? 'animate-spin-soft' : undefined} />
-      {status === 'idle' ? systemLabel : config.label}
+      {label}
     </span>
   )
 }

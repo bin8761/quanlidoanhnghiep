@@ -11,7 +11,8 @@ import {
   History,
   UploadCloud,
   FileCheck,
-  Download
+  Download,
+  FileSpreadsheet
 } from 'lucide-react'
 import { departmentApi } from '../../api/departments'
 import { employeeApi } from '../../api/employees'
@@ -30,6 +31,8 @@ import VietnamAddressSelector from '../../components/ui/VietnamAddressSelector'
 import SearchableSelect from '../../components/ui/SearchableSelect'
 import { VIETNAMESE_ETHNICITIES, NATIONALITIES } from '../../data/vietnam-static'
 import useAutoDismiss from '../../hooks/useAutoDismiss'
+import ExcelImportModal from '../../components/admin/ExcelImportModal'
+import { EMPLOYEE_TEMPLATE, buildEmployeeImportRow } from '../../utils/excelImport'
 import AvatarUpload from '../../components/ui/AvatarUpload'
 
 const FIELD_LABELS = {
@@ -163,20 +166,21 @@ export default function EmployeesPage() {
   const [filters, setFilters] = useState({ keyword: '', status: '', departmentId: '' })
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
-  
+
   const [editingEmployee, setEditingEmployee] = useState(null)
   const [editingEmployeeDetail, setEditingEmployeeDetail] = useState(null)
   const [editModalTab, setEditModalTab] = useState('job')
   const [isLoadingEdit, setIsLoadingEdit] = useState(false)
   const [attachments, setAttachments] = useState([])
   const [logs, setLogs] = useState([])
-  
+
   const [deletingEmployee, setDeletingEmployee] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [formErrors, setFormErrors] = useState({})
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [toast, setToast] = useState(null)
+  const [showImport, setShowImport] = useState(false)
 
   // Pinning desk states
   const [pinningEmployee, setPinningEmployee] = useState(null)
@@ -376,7 +380,7 @@ export default function EmployeesPage() {
     setPinCoords(employee.deskX !== null ? { x: employee.deskX, y: employee.deskY } : null)
     setSelectedLocId(employee.locationId ? String(employee.locationId) : '')
     setSelectedLocDetail(null)
-    
+
     try {
       const data = await locationApi.list()
       setLocList(data)
@@ -517,10 +521,16 @@ export default function EmployeesPage() {
         title="Quản lý nhân viên"
         description="Quản lý hồ sơ nhân viên và liên kết với phòng ban trong doanh nghiệp."
         actions={(
-          <Button className="w-full sm:w-auto" type="button" onClick={openCreateModal}>
-            <Plus size={17} />
-            Thêm nhân viên
-          </Button>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <Button className="w-full sm:w-auto" variant="secondary" type="button" onClick={() => setShowImport(true)}>
+              <FileSpreadsheet size={17} />
+              Nhập Excel
+            </Button>
+            <Button className="w-full sm:w-auto" type="button" onClick={openCreateModal}>
+              <Plus size={17} />
+              Thêm nhân viên
+            </Button>
+          </div>
         )}
       />
 
@@ -571,6 +581,30 @@ export default function EmployeesPage() {
         />
       )}
 
+      {showImport && (
+        <ExcelImportModal
+          title="Nhập nhân viên từ Excel"
+          description="Kiểm tra mã nhân viên, email và phòng ban trước khi tạo hàng loạt hồ sơ."
+          entityLabel="nhân viên"
+          template={EMPLOYEE_TEMPLATE}
+          lookups={{ departments }}
+          buildRow={buildEmployeeImportRow}
+          duplicateKeys={[
+            { key: 'employeeCode', label: 'Mã nhân viên', optional: true },
+            { key: 'email', label: 'Email' },
+          ]}
+          onImport={employeeApi.importRows}
+          onImported={async (result) => {
+            await loadEmployees(filters)
+            setToast({
+              type: result.failed ? 'warning' : 'success',
+              message: `Đã nhập thành công ${result.imported}/${result.total} nhân viên.`,
+            })
+          }}
+          onClose={() => setShowImport(false)}
+        />
+      )}
+
       {editingEmployee && (
         <Modal
           title={editingEmployee.id ? `Cập nhật nhân viên: ${form.fullName}` : 'Thêm nhân viên'}
@@ -605,11 +639,10 @@ export default function EmployeesPage() {
                         key={tab.id}
                         type="button"
                         onClick={() => setEditModalTab(tab.id)}
-                        className={`flex items-center gap-2 border-b-2 py-4 text-xs font-bold transition focus:outline-none whitespace-nowrap ${
-                          active
+                        className={`flex items-center gap-2 border-b-2 py-4 text-xs font-bold transition focus:outline-none whitespace-nowrap ${active
                             ? 'border-brand-600 text-brand-700'
                             : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'
-                        }`}
+                          }`}
                       >
                         <Icon size={15} />
                         {tab.label}
@@ -775,19 +808,19 @@ export default function EmployeesPage() {
                         options={[
                           { value: '', label: '-- Chưa chọn --' },
                           ...[
-                            'Hà Nội','TP Hồ Chí Minh','Đà Nẵng','Hải Phòng','Cần Thơ',
-                            'An Giang','Bà Rịa - Vũng Tàu','Bắc Giang','Bắc Kạn','Bạc Liêu',
-                            'Bắc Ninh','Bến Tre','Bình Định','Bình Dương','Bình Phước',
-                            'Bình Thuận','Cà Mau','Cao Bằng','Đắk Lắk','Đắk Nông',
-                            'Điện Biên','Đồng Nai','Đồng Tháp','Gia Lai','Hà Giang',
-                            'Hà Nam','Hà Tĩnh','Hải Dương','Hậu Giang','Hòa Bình',
-                            'Hưng Yên','Khánh Hòa','Kiên Giang','Kon Tum','Lai Châu',
-                            'Lâm Đồng','Lạng Sơn','Lào Cai','Long An','Nam Định',
-                            'Nghệ An','Ninh Bình','Ninh Thuận','Phú Thọ','Phú Yên',
-                            'Quảng Bình','Quảng Nam','Quảng Ngãi','Quảng Ninh','Quảng Trị',
-                            'Sóc Trăng','Sơn La','Tây Ninh','Thái Bình','Thái Nguyên',
-                            'Thanh Hóa','Thừa Thiên Huế','Tiền Giang','Trà Vinh','Tuyên Quang',
-                            'Vĩnh Long','Vĩnh Phúc','Yên Bái'
+                            'Hà Nội', 'TP Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ',
+                            'An Giang', 'Bà Rịa - Vũng Tàu', 'Bắc Giang', 'Bắc Kạn', 'Bạc Liêu',
+                            'Bắc Ninh', 'Bến Tre', 'Bình Định', 'Bình Dương', 'Bình Phước',
+                            'Bình Thuận', 'Cà Mau', 'Cao Bằng', 'Đắk Lắk', 'Đắk Nông',
+                            'Điện Biên', 'Đồng Nai', 'Đồng Tháp', 'Gia Lai', 'Hà Giang',
+                            'Hà Nam', 'Hà Tĩnh', 'Hải Dương', 'Hậu Giang', 'Hòa Bình',
+                            'Hưng Yên', 'Khánh Hòa', 'Kiên Giang', 'Kon Tum', 'Lai Châu',
+                            'Lâm Đồng', 'Lạng Sơn', 'Lào Cai', 'Long An', 'Nam Định',
+                            'Nghệ An', 'Ninh Bình', 'Ninh Thuận', 'Phú Thọ', 'Phú Yên',
+                            'Quảng Bình', 'Quảng Nam', 'Quảng Ngãi', 'Quảng Ninh', 'Quảng Trị',
+                            'Sóc Trăng', 'Sơn La', 'Tây Ninh', 'Thái Bình', 'Thái Nguyên',
+                            'Thanh Hóa', 'Thừa Thiên Huế', 'Tiền Giang', 'Trà Vinh', 'Tuyên Quang',
+                            'Vĩnh Long', 'Vĩnh Phúc', 'Yên Bái'
                           ].map(t => ({ value: t, label: t }))
                         ]}
                         value={form.hometown}
@@ -1156,7 +1189,7 @@ export default function EmployeesPage() {
               {/* Auto-generated employee code notice */}
               <div className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
                 <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-emerald-100 text-emerald-700">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
                 </span>
                 <div>
                   <p className="text-xs font-bold text-emerald-800">Mã nhân viên tự động sinh</p>
@@ -1282,7 +1315,7 @@ export default function EmployeesPage() {
                       alt={selectedLocDetail.name}
                       className="max-w-full max-h-[300px] object-contain block"
                     />
-                    
+
                     {pinCoords && (
                       <div
                         style={{ left: `${pinCoords.x}%`, top: `${pinCoords.y}%` }}
@@ -1306,9 +1339,9 @@ export default function EmployeesPage() {
               <Button type="button" variant="secondary" onClick={() => setPinningEmployee(null)}>
                 Hủy
               </Button>
-              <Button 
-                type="button" 
-                disabled={isSavingPin || !selectedLocId} 
+              <Button
+                type="button"
+                disabled={isSavingPin || !selectedLocId}
                 onClick={handleSavePin}
               >
                 {isSavingPin && <span className="size-4 animate-spin-soft rounded-full border-2 border-white/30 border-t-white" />}

@@ -27,6 +27,11 @@ export const employeeApi = Object.freeze({
     return response.data
   },
 
+  async importRows(rows) {
+    const response = await apiClient.post('/employees/import', { rows })
+    return response.data
+  },
+
   async update(employeeId, payload) {
     const response = await apiClient.put(`/employees/${employeeId}`, payload)
     return response.data

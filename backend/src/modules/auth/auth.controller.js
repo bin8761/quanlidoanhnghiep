@@ -1,4 +1,5 @@
 const authService = require("./auth.service");
+const loginHistoryService = require("../loginHistory/loginHistory.service");
 const { sendSuccess } = require("../../shared/response/apiResponse");
 const { AUTH_RESPONSE_MESSAGES } = require("./auth.constants");
 
@@ -22,12 +23,41 @@ const authController = {
       const { email, password } = req.body;
       const loginResult = await authService.login(email, password);
 
+      // Record successful login history
+      try {
+        await loginHistoryService.recordLogin({
+          userId: loginResult.user.id,
+          ipAddress: req.ip || req.socket.remoteAddress,
+          userAgent: req.headers["user-agent"],
+          status: "SUCCESS",
+        });
+      } catch (err) {
+        console.error("Failed to record successful login history:", err);
+      }
+
       return sendSuccess(res, {
         statusCode: 200,
         message: AUTH_RESPONSE_MESSAGES.LOGIN_SUCCESS,
         data: loginResult,
       });
     } catch (error) {
+      // Record failed login history if user exists
+      try {
+        const defaultPrisma = require("../../config/database");
+        const user = await defaultPrisma.user.findUnique({
+          where: { email: req.body.email },
+        });
+        if (user) {
+          await loginHistoryService.recordLogin({
+            userId: user.id,
+            ipAddress: req.ip || req.socket.remoteAddress,
+            userAgent: req.headers["user-agent"],
+            status: "FAILED",
+          });
+        }
+      } catch (err) {
+        console.error("Failed to record failed login history:", err);
+      }
       return next(error);
     }
   },
@@ -48,9 +78,17 @@ const authController = {
 
   async logout(req, res, next) {
     try {
+      const userId = req.user.id;
       await authService.logout(req.user, {
         requestId: req.requestId,
       });
+
+      // Record logout history
+      try {
+        await loginHistoryService.recordLogout(userId);
+      } catch (err) {
+        console.error("Failed to record logout history:", err);
+      }
 
       return sendSuccess(res, {
         statusCode: 200,
