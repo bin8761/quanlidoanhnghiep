@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "skills": {
+    "aws-architecture-diagram": {
+      "source": "awslabs/agent-plugins",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "plugins/deploy-on-aws/skills/aws-architecture-diagram/SKILL.md",
+      "computedHash": "ee242986df441f8eccf36568d3dd872f4a9b3278b53d120e61c92ee2650235bc"
+    },
+    "deploy": {
+      "source": "awslabs/agent-plugins",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "plugins/deploy-on-aws/skills/deploy/SKILL.md",
+      "computedHash": "21abae622672b982b4c840b5daeeb712f31a5ccecd8b482d2c63ae92f7bc5c1f"
+    },
+    "elastic-beanstalk": {
+      "source": "awslabs/agent-plugins",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "plugins/deploy-on-aws/skills/elastic-beanstalk/SKILL.md",
+      "computedHash": "3954064c33da6836de7d8de8aca1b003c2b86d8c664e61b5d31f15ad68fdd61e"
+    }
+  }
+}
