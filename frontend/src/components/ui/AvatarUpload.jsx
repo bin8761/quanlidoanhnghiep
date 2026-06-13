@@ -71,7 +71,7 @@ export default function AvatarUpload({
       formData.append('image', file)
       const result = await assetApi.uploadImage(formData)
       if (result?.imageUrl) {
-        onChange(result.imageUrl)
+        await onChange(result.imageUrl)
       } else {
         throw new Error('Không nhận được đường dẫn ảnh.')
       }
@@ -95,10 +95,18 @@ export default function AvatarUpload({
     if (file) uploadFile(file)
   }
 
-  function handleClear(e) {
+  async function handleClear(e) {
     e.stopPropagation()
-    onChange('')
-    if (fileInputRef.current) fileInputRef.current.value = ''
+    setError('')
+    setIsUploading(true)
+    try {
+      await onChange('')
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    } catch (err) {
+      setError(err.message || 'Không thể xóa ảnh đại diện.')
+    } finally {
+      setIsUploading(false)
+    }
   }
 
   return (

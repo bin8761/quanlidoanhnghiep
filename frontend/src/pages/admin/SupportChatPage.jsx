@@ -23,7 +23,7 @@ function renderMarkdown(text) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
   html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-  html = html.replace(/`(.*?)`/g, '<code class="bg-slate-100 px-1 py-0.5 rounded text-xs font-mono">$1</code>')
+  html = html.replace(/`(.*?)`/g, '<code class="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 px-1 py-0.5 rounded text-xs font-mono">$1</code>')
   html = html.replace(/\n/g, '<br />')
   return <span dangerouslySetInnerHTML={{ __html: html }} />
 }
@@ -178,12 +178,12 @@ export default function SupportChatPage() {
   const empContext = sessionDetail?.employeeContext
 
   return (
-    <div className="flex h-[calc(100vh-120px)] min-h-[500px] w-full gap-4 overflow-hidden p-1 font-sans">
+    <div className="support-chat-admin flex h-[calc(100vh-120px)] min-h-[500px] w-full gap-4 overflow-hidden p-1 font-sans">
       {/* 1. Sidebar Sessions List */}
-      <div className="flex w-80 shrink-0 flex-col rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <div className="flex w-80 shrink-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-[#14201b] dark:shadow-none">
         {/* Search & Filters */}
-        <div className="border-b border-slate-100 p-4">
-          <h2 className="text-base font-bold text-slate-800 flex items-center gap-2 mb-3">
+        <div className="border-b border-slate-100 p-4 dark:border-slate-700">
+          <h2 className="mb-3 flex items-center gap-2 text-base font-bold text-slate-800 dark:text-slate-100">
             <MessageSquare size={18} className="text-brand-500" />
             Hỗ trợ trực tuyến
           </h2>
@@ -194,7 +194,7 @@ export default function SupportChatPage() {
               placeholder="Tìm nhân viên..."
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
-              className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50 pr-3 pl-9 text-xs outline-none transition focus:border-brand-500 focus:bg-white"
+              className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50 pr-3 pl-9 text-xs text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:bg-white dark:border-slate-700 dark:bg-slate-900/55 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-emerald-500 dark:focus:bg-slate-900"
             />
           </div>
           {/* Filter Status Pills */}
@@ -206,7 +206,7 @@ export default function SupportChatPage() {
                 className={`rounded-lg px-2.5 py-1 text-[10px] font-bold transition-all duration-200 ${
                   filterStatus === status
                     ? 'bg-brand-600 text-white shadow-sm shadow-brand-500/20'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
                 }`}
               >
                 {status === 'ALL' ? 'Tất cả' : status === 'ACTIVE' ? 'Admin Live' : 'AI Bot'}
@@ -231,8 +231,8 @@ export default function SupportChatPage() {
                   onClick={() => setSelectedSessionId(s.id)}
                   className={`w-full flex flex-col text-left rounded-xl p-3 transition-all duration-200 ${
                     isSelected
-                      ? 'bg-brand-50 border border-brand-100 text-brand-900'
-                      : 'border border-transparent hover:bg-slate-50 text-slate-700'
+                      ? 'bg-brand-50 border border-brand-100 text-brand-900 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-100'
+                      : 'border border-transparent hover:bg-slate-50 text-slate-700 dark:text-slate-300 dark:hover:bg-white/5'
                   }`}
                 >
                   <div className="flex items-center justify-between w-full mb-1">
@@ -263,13 +263,13 @@ export default function SupportChatPage() {
       </div>
 
       {/* 2. Main Chat Console */}
-      <div className="flex flex-1 flex-col rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-[#14201b] dark:shadow-none">
         {selectedSessionId && sessionDetail ? (
           <>
             {/* Console Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-3.5">
+            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-3.5 dark:border-slate-700 dark:bg-slate-900/30">
               <div>
-                <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <h3 className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-100">
                   <User size={15} className="text-slate-500" />
                   {sessionDetail.session?.employee?.fullName}
                 </h3>
@@ -300,7 +300,7 @@ export default function SupportChatPage() {
             </div>
 
             {/* Console Messages Box */}
-            <div className="flex-1 overflow-y-auto bg-slate-50/60 p-6 space-y-4">
+            <div className="flex-1 space-y-4 overflow-y-auto bg-slate-50/60 p-6 dark:bg-[#0f1915]">
               {sessionDetail.messages.map((msg) => {
                 const isUser = msg.senderType === 'USER'
                 const isBot = msg.senderType === 'BOT'
@@ -312,7 +312,7 @@ export default function SupportChatPage() {
                     className={`flex items-start gap-2.5 ${isAdmin ? 'justify-end' : 'justify-start'}`}
                   >
                     {!isAdmin && (
-                      <div className={`mt-0.5 rounded-lg p-1.5 ${isBot ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}`}>
+                      <div className={`mt-0.5 rounded-lg p-1.5 ${isBot ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300' : 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300'}`}>
                         {isBot ? <Bot size={15} /> : <User size={15} />}
                       </div>
                     )}
@@ -322,8 +322,8 @@ export default function SupportChatPage() {
                           isAdmin
                             ? 'bg-brand-600 text-white rounded-tr-none'
                             : isBot
-                            ? 'bg-emerald-50 border border-emerald-100 text-slate-800 rounded-tl-none'
-                            : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none'
+                            ? 'bg-emerald-50 border border-emerald-100 text-slate-800 rounded-tl-none dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-100'
+                            : 'bg-white border border-slate-200 text-slate-800 rounded-tl-none dark:border-slate-700 dark:bg-[#1b2a24] dark:text-slate-100'
                         }`}
                       >
                         {renderMarkdown(msg.message)}
@@ -339,21 +339,21 @@ export default function SupportChatPage() {
             </div>
 
             {/* Console Footer Input */}
-            <div className="border-t border-slate-100 p-4">
+            <div className="border-t border-slate-100 p-4 dark:border-slate-700">
               {error && (
-                <div className="mb-3 flex items-center gap-2 rounded-xl bg-rose-50 p-2.5 text-xs text-rose-600 border border-rose-100">
+                <div className="mb-3 flex items-center gap-2 rounded-xl border border-rose-100 bg-rose-50 p-2.5 text-xs text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
                   <AlertCircle size={14} className="shrink-0" />
                   <span>{error}</span>
                 </div>
               )}
-              <div className="flex items-end gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 focus-within:border-brand-500 focus-within:bg-white focus-within:ring-3 focus-within:ring-brand-500/10">
+              <div className="flex items-end gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 focus-within:border-brand-500 focus-within:bg-white focus-within:ring-3 focus-within:ring-brand-500/10 dark:border-slate-700 dark:bg-slate-900/55 dark:focus-within:border-emerald-500 dark:focus-within:bg-slate-900">
                 <textarea
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
                   onKeyDown={handleKeyDown}
                   rows={2}
                   placeholder="Nhập nội dung trả lời nhân viên (Nhấn Enter để gửi)..."
-                  className="flex-1 resize-none bg-transparent text-xs text-slate-800 outline-none placeholder:text-slate-400"
+                  className="flex-1 resize-none bg-transparent text-xs text-slate-800 outline-none placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500"
                 />
                 <button
                   onClick={handleSendReply}
@@ -366,11 +366,11 @@ export default function SupportChatPage() {
             </div>
           </>
         ) : (
-          <div className="flex flex-1 flex-col items-center justify-center p-12 text-center text-slate-400">
-            <div className="rounded-full bg-slate-50 p-4 mb-3">
+          <div className="flex flex-1 flex-col items-center justify-center p-12 text-center text-slate-400 dark:text-slate-500">
+            <div className="mb-3 rounded-full bg-slate-50 p-4 dark:bg-slate-900/50">
               <MessageSquare size={32} className="text-slate-300 animate-pulse" />
             </div>
-            <h3 className="text-sm font-bold text-slate-600">Chọn cuộc trò chuyện</h3>
+            <h3 className="text-sm font-bold text-slate-600 dark:text-slate-200">Chọn cuộc trò chuyện</h3>
             <p className="mt-1 text-xs max-w-xs leading-relaxed">
               Chọn một nhân sự từ danh sách hàng đợi bên trái để bắt đầu tiếp nhận hỗ trợ trực tiếp.
             </p>
@@ -380,12 +380,12 @@ export default function SupportChatPage() {
 
       {/* 3. Right Sidebar - Context Panel */}
       {selectedSessionId && empContext && (
-        <div className="w-72 shrink-0 flex flex-col rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden overflow-y-auto p-4 space-y-5">
+        <div className="flex w-72 shrink-0 flex-col space-y-5 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-[#14201b] dark:shadow-none">
           <div>
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
               Hồ sơ nhân sự
             </h3>
-            <div className="space-y-2.5 text-xs text-slate-700">
+            <div className="space-y-2.5 text-xs text-slate-700 dark:text-slate-300">
               <div className="flex items-center gap-2">
                 <Building size={14} className="text-slate-400 shrink-0" />
                 <span className="font-semibold text-slate-500">Phòng ban:</span>
@@ -404,13 +404,13 @@ export default function SupportChatPage() {
             </div>
           </div>
 
-          <hr className="border-slate-100" />
+          <hr className="border-slate-100 dark:border-slate-700" />
 
           {/* Assigned Assets */}
           <div>
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
               <span>Tài sản bàn giao</span>
-              <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-600">
+              <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                 {empContext.assignments?.length || 0}
               </span>
             </h3>
@@ -419,8 +419,8 @@ export default function SupportChatPage() {
                 <p className="text-[11px] text-slate-400 italic">Không có tài sản nào đang giữ.</p>
               ) : (
                 empContext.assignments.map((a) => (
-                  <div key={a.id} className="rounded-lg border border-slate-100 bg-slate-50 p-2.5 text-[11px]">
-                    <div className="font-bold text-slate-800 mb-0.5 truncate">{a.asset.name}</div>
+                  <div key={a.id} className="rounded-lg border border-slate-100 bg-slate-50 p-2.5 text-[11px] dark:border-slate-700 dark:bg-slate-900/35">
+                    <div className="mb-0.5 truncate font-bold text-slate-800 dark:text-slate-100">{a.asset.name}</div>
                     <div className="flex items-center justify-between text-slate-500 text-[10px]">
                       <span>Mã: <code className="bg-slate-200 px-0.5 py-0.2 rounded font-mono">{a.asset.assetCode}</code></span>
                       <span className="font-semibold capitalize text-brand-700 bg-white border border-brand-100 px-1 rounded">{a.asset.status.toLowerCase()}</span>
@@ -431,13 +431,13 @@ export default function SupportChatPage() {
             </div>
           </div>
 
-          <hr className="border-slate-100" />
+          <hr className="border-slate-100 dark:border-slate-700" />
 
           {/* Recent Support Requests */}
           <div>
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
               <span>Yêu cầu hỗ trợ</span>
-              <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-600">
+              <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                 {empContext.supportRequests?.length || 0}
               </span>
             </h3>
@@ -446,8 +446,8 @@ export default function SupportChatPage() {
                 <p className="text-[11px] text-slate-400 italic">Không có yêu cầu bảo trì gần đây.</p>
               ) : (
                 empContext.supportRequests.map((r) => (
-                  <div key={r.id} className="rounded-lg border border-slate-100 bg-slate-50 p-2.5 text-[11px]">
-                    <div className="flex items-center justify-between font-bold text-slate-700 mb-1">
+                  <div key={r.id} className="rounded-lg border border-slate-100 bg-slate-50 p-2.5 text-[11px] dark:border-slate-700 dark:bg-slate-900/35">
+                    <div className="mb-1 flex items-center justify-between font-bold text-slate-700 dark:text-slate-200">
                       <span>Phiếu #{r.id.slice(0, 5)}</span>
                       <span className={`rounded-md px-1.5 py-0.2 text-[9px] font-bold ${
                         r.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'

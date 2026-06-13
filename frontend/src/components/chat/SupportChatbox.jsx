@@ -16,7 +16,7 @@ function renderMarkdown(text) {
   html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
 
   // Code: `code`
-  html = html.replace(/`(.*?)`/g, '<code class="bg-slate-100 text-slate-800 px-1 py-0.5 rounded text-xs font-mono">$1</code>')
+  html = html.replace(/`(.*?)`/g, '<code class="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 px-1 py-0.5 rounded text-xs font-mono">$1</code>')
 
   // Line breaks: \n
   html = html.replace(/\n/g, '<br />')
@@ -162,7 +162,7 @@ export default function SupportChatbox() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="absolute bottom-18 right-0 flex h-[520px] w-92 animate-in slide-in-from-bottom-6 fade-in duration-300 flex-col rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden sm:w-96">
+        <div className="absolute right-0 bottom-18 flex h-[520px] w-92 animate-in flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl duration-300 slide-in-from-bottom-6 fade-in dark:border-slate-700 dark:bg-[#14201b] dark:shadow-black/45 sm:w-96">
           {/* Header */}
           <div className="flex items-center justify-between bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-3 text-white">
             <div className="flex items-center gap-3">
@@ -195,13 +195,13 @@ export default function SupportChatbox() {
           </div>
 
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto bg-slate-50 p-4 space-y-4">
+          <div className="flex-1 space-y-4 overflow-y-auto bg-slate-50 p-4 dark:bg-[#0f1915]">
             {messages.length === 0 && (
-              <div className="flex h-full flex-col items-center justify-center p-6 text-center text-slate-400">
-                <div className="rounded-full bg-emerald-50 p-3 text-emerald-500 mb-2">
+              <div className="flex h-full flex-col items-center justify-center p-6 text-center text-slate-400 dark:text-slate-500">
+                <div className="mb-2 rounded-full bg-emerald-50 p-3 text-emerald-500 dark:bg-emerald-500/10 dark:text-emerald-300">
                   <Bot size={28} />
                 </div>
-                <p className="text-xs font-semibold text-slate-600">Xin chào!</p>
+                <p className="text-xs font-semibold text-slate-600 dark:text-slate-200">Xin chào!</p>
                 <p className="mt-1 text-[11px]">
                   Tôi là Trợ lý ảo EAM. Hãy hỏi tôi về tài sản đang dùng hoặc yêu cầu bảo trì.
                 </p>
@@ -217,7 +217,7 @@ export default function SupportChatbox() {
                   className={`flex items-start gap-2.5 ${isUser ? 'justify-end' : 'justify-start'}`}
                 >
                   {!isUser && (
-                    <div className={`mt-0.5 rounded-lg p-1.5 ${isBot ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}`}>
+                    <div className={`mt-0.5 rounded-lg p-1.5 ${isBot ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300' : 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300'}`}>
                       {isBot ? <Bot size={15} /> : <Headset size={15} />}
                     </div>
                   )}
@@ -226,8 +226,8 @@ export default function SupportChatbox() {
                       isUser
                         ? 'bg-emerald-600 text-white rounded-tr-none'
                         : isBot
-                        ? 'bg-white border border-slate-200 text-slate-800 rounded-tl-none'
-                        : 'bg-blue-50 border border-blue-100 text-slate-800 rounded-tl-none'
+                        ? 'bg-white border border-slate-200 text-slate-800 rounded-tl-none dark:border-slate-700 dark:bg-[#1b2a24] dark:text-slate-100'
+                        : 'bg-blue-50 border border-blue-100 text-slate-800 rounded-tl-none dark:border-blue-500/25 dark:bg-blue-500/10 dark:text-blue-100'
                     }`}
                   >
                     {renderMarkdown(msg.message)}
@@ -238,10 +238,10 @@ export default function SupportChatbox() {
 
             {isTyping && (
               <div className="flex items-start gap-2.5 justify-start">
-                <div className="mt-0.5 rounded-lg bg-emerald-50 p-1.5 text-emerald-600">
+                <div className="mt-0.5 rounded-lg bg-emerald-50 p-1.5 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300">
                   <Bot size={15} />
                 </div>
-                <div className="flex items-center gap-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm rounded-tl-none">
+                <div className="flex items-center gap-1 rounded-2xl rounded-tl-none border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-[#1b2a24]">
                   <div className="size-1.5 animate-bounce rounded-full bg-slate-400" />
                   <div className="size-1.5 animate-bounce rounded-full bg-slate-400 delay-100" />
                   <div className="size-1.5 animate-bounce rounded-full bg-slate-400 delay-200" />
@@ -250,7 +250,7 @@ export default function SupportChatbox() {
             )}
 
             {error && (
-              <div className="flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-[11px] text-rose-600 border border-rose-100">
+              <div className="flex items-center gap-2 rounded-xl border border-rose-100 bg-rose-50 p-3 text-[11px] text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
                 <AlertCircle size={14} className="shrink-0" />
                 <span>{error}</span>
               </div>
@@ -261,23 +261,23 @@ export default function SupportChatbox() {
 
           {/* Suggestion Chips */}
           {sessionStatus === 'BOT' && (
-            <div className="border-t border-slate-100 bg-slate-50/50 px-3 py-2">
+            <div className="border-t border-slate-100 bg-slate-50/50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900/30">
               <div className="flex flex-wrap gap-1.5">
                 <button
                   onClick={() => handleSuggestionClick('Tài sản của tôi')}
-                  className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-medium text-slate-600 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
+                  className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-medium text-slate-600 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300 dark:hover:border-emerald-500/50 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-300"
                 >
                   📋 Tài sản
                 </button>
                 <button
                   onClick={() => handleSuggestionClick('Yêu cầu hỗ trợ')}
-                  className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-medium text-slate-600 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
+                  className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-medium text-slate-600 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300 dark:hover:border-emerald-500/50 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-300"
                 >
                   🛠️ Phiếu yêu cầu
                 </button>
                 <button
                   onClick={() => handleSuggestionClick('Gặp hỗ trợ viên')}
-                  className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-medium text-slate-600 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
+                  className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-medium text-slate-600 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300 dark:hover:border-emerald-500/50 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-300"
                 >
                   📞 Gặp Admin
                 </button>
@@ -286,8 +286,8 @@ export default function SupportChatbox() {
           )}
 
           {/* Input Area */}
-          <div className="border-t border-slate-200 bg-white p-3">
-            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 focus-within:border-emerald-500 focus-within:bg-white focus-within:ring-3 focus-within:ring-emerald-500/10">
+          <div className="border-t border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-[#14201b]">
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 focus-within:border-emerald-500 focus-within:bg-white focus-within:ring-3 focus-within:ring-emerald-500/10 dark:border-slate-700 dark:bg-slate-900/55 dark:focus-within:border-emerald-500 dark:focus-within:bg-slate-900">
               <textarea
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
@@ -295,7 +295,7 @@ export default function SupportChatbox() {
                 rows={1}
                 placeholder="Nhập câu hỏi tại đây..."
                 disabled={sessionStatus === 'CLOSED'}
-                className="flex-1 resize-none bg-transparent text-xs text-slate-800 outline-none placeholder:text-slate-400 disabled:opacity-50"
+                className="flex-1 resize-none bg-transparent text-xs text-slate-800 outline-none placeholder:text-slate-400 disabled:opacity-50 dark:text-slate-100 dark:placeholder:text-slate-500"
               />
               <button
                 onClick={() => handleSend()}

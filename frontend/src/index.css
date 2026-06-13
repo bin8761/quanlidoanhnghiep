@@ -409,6 +409,40 @@ html.dark .admin-floor-plan img {
   filter: brightness(0.88) contrast(1.04);
 }
 
+html.dark .employee-profile-page :where(
+  [class~="bg-white"],
+  [class~="bg-slate-50"],
+  [class~="bg-slate-50/50"],
+  [class~="bg-slate-50/70"]
+) {
+  background-color: var(--surface-muted);
+}
+
+html.dark .employee-profile-page :where(
+  [class~="border-slate-100"],
+  [class~="border-slate-200"],
+  [class~="border-slate-300"]
+) {
+  border-color: var(--border);
+}
+
+html.dark .employee-profile-page :where(input, select, textarea) {
+  border-color: var(--border);
+  background-color: #101b17;
+  color: var(--ink);
+}
+
+html.dark .employee-profile-page :where(
+  [class~="hover:bg-slate-50"]:hover,
+  [class~="hover:bg-slate-50/50"]:hover
+) {
+  background-color: rgba(255, 255, 255, 0.055);
+}
+
+html.dark .employee-profile-page :where([class~="bg-emerald-50"]) {
+  background-color: rgba(16, 185, 129, 0.12);
+}
+
 html.dark .skeleton {
   background: #22332c;
 }

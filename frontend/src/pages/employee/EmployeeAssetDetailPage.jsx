@@ -136,7 +136,7 @@ export default function EmployeeAssetDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="grid min-h-72 place-items-center">
+      <div className="grid min-h-72 place-items-center text-slate-600 dark:text-slate-300">
         Đang tải chi tiết tài sản...
       </div>
     )
@@ -145,10 +145,10 @@ export default function EmployeeAssetDetailPage() {
   if (!asset) return <Navigate to="/employee/assets" replace />
 
   return (
-    <div className="animate-fade-up">
+    <div className="employee-asset-detail-page animate-fade-up">
       <div className="mb-6 flex items-center gap-3">
         <Link
-          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-brand-700"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-brand-700 dark:text-slate-400 dark:hover:text-emerald-300"
           to="/employee/assets"
         >
           <ArrowLeft size={16} /> Tài sản của tôi
@@ -158,22 +158,22 @@ export default function EmployeeAssetDetailPage() {
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)]">
         {/* Main Info with Map */}
         <div className="grid gap-5">
-          <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-soft">
-            <div className="flex items-start justify-between border-b border-slate-100 bg-slate-50/70 p-5 sm:p-6">
+          <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-soft dark:border-slate-700 dark:bg-[#14201b]">
+            <div className="flex items-start justify-between border-b border-slate-100 bg-slate-50/70 p-5 dark:border-slate-700 dark:bg-slate-900/35 sm:p-6">
               <div className="flex items-center gap-4">
-                <span className="grid size-14 place-items-center rounded-2xl bg-brand-50 text-brand-700">
+                <span className="grid size-14 place-items-center rounded-2xl bg-brand-50 text-brand-700 dark:bg-emerald-500/10 dark:text-emerald-300">
                   <Laptop size={26} />
                 </span>
                 <div>
-                  <h2 className="text-lg font-extrabold text-slate-950">{asset.name}</h2>
-                  <p className="mt-0.5 text-sm font-semibold text-brand-700">{asset.code}</p>
+                  <h2 className="text-lg font-extrabold text-slate-950 dark:text-slate-50">{asset.name}</h2>
+                  <p className="mt-0.5 text-sm font-semibold text-brand-700 dark:text-emerald-400">{asset.code}</p>
                 </div>
               </div>
               <StatusBadge status={asset.status} />
             </div>
 
             {asset.imageUrl && (
-              <div className="border-b border-slate-100 bg-slate-50/20 p-5 flex justify-center items-center overflow-hidden max-h-[240px]">
+              <div className="flex max-h-[240px] items-center justify-center overflow-hidden border-b border-slate-100 bg-slate-50/20 p-5 dark:border-slate-700 dark:bg-slate-900/20">
                 <img
                   src={getFullImageUrl(asset.imageUrl)}
                   alt={asset.name}
@@ -186,20 +186,20 @@ export default function EmployeeAssetDetailPage() {
               </div>
             )}
 
-            <dl className="grid gap-px bg-slate-100 sm:grid-cols-2">
+            <dl className="grid gap-px bg-slate-100 dark:bg-slate-700 sm:grid-cols-2">
               {[
                 { label: 'Danh mục', value: asset.category, icon: Tag },
                 { label: 'Serial number', value: asset.serial, icon: Hash },
                 { label: 'Ngày nhận', value: asset.assignedAt, icon: CalendarDays },
                 { label: 'Tình trạng', value: asset.condition, icon: FileText },
               ].map(({ label, value, icon: Icon }) => (
-                <div className="flex items-start gap-3 bg-white p-5" key={label}>
-                  <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700">
+                <div className="flex items-start gap-3 bg-white p-5 dark:bg-[#14201b]" key={label}>
+                  <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700 dark:bg-emerald-500/10 dark:text-emerald-300">
                     <Icon size={17} />
                   </span>
                   <div>
-                    <dt className="text-[11px] font-semibold text-slate-400">{label}</dt>
-                    <dd className="mt-1 text-sm font-bold text-slate-800">{value}</dd>
+                    <dt className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">{label}</dt>
+                    <dd className="mt-1 text-sm font-bold text-slate-800 dark:text-slate-100">{value}</dd>
                   </div>
                 </div>
               ))}
@@ -207,14 +207,14 @@ export default function EmployeeAssetDetailPage() {
           </section>
 
           {/* Sơ đồ vị trí thiết bị */}
-          <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-soft sm:p-6">
-            <h3 className="text-sm font-extrabold text-slate-900 mb-3">Vị trí của thiết bị trên sơ đồ</h3>
+          <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-soft dark:border-slate-700 dark:bg-[#14201b] sm:p-6">
+            <h3 className="mb-3 text-sm font-extrabold text-slate-900 dark:text-slate-100">Vị trí của thiết bị trên sơ đồ</h3>
             {asset.resolvedLocation ? (
               <div>
-                <p className="text-xs text-slate-600 font-bold mb-3 flex items-center gap-1">
+                <p className="mb-3 flex items-center gap-1 text-xs font-bold text-slate-600 dark:text-slate-300">
                   <span>📍</span> {asset.resolvedLocation.name} ({asset.resolvedLocation.type === 'ASSIGNED' ? 'Được định vị tại Bàn làm việc của bạn' : 'Vị trí cố định'})
                 </p>
-                <div className="relative border border-slate-100 rounded-xl overflow-hidden bg-slate-50 flex items-center justify-center max-h-[300px]">
+                <div className="relative flex max-h-[300px] items-center justify-center overflow-hidden rounded-xl border border-slate-100 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/35">
                   <div className="relative">
                     <img
                       src={asset.resolvedLocation.floorPlanUrl}
@@ -236,7 +236,7 @@ export default function EmployeeAssetDetailPage() {
                 </div>
               </div>
             ) : (
-              <p className="text-xs text-slate-400 italic">Thiết bị này chưa được cấu hình định vị trên sơ đồ văn phòng.</p>
+              <p className="text-xs italic text-slate-400 dark:text-slate-500">Thiết bị này chưa được cấu hình định vị trên sơ đồ văn phòng.</p>
             )}
           </section>
         </div>
@@ -260,7 +260,7 @@ export default function EmployeeAssetDetailPage() {
                   <button
                     type="button"
                     onClick={() => handleTabChange('draw')}
-                    className={`flex-1 pb-2 text-xs font-bold transition-colors border-b-2 flex items-center justify-center gap-1.5 ${signatureType === 'draw' ? 'border-brand-600 text-brand-700 dark:text-brand-400' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                    className={`flex flex-1 items-center justify-center gap-1.5 border-b-2 pb-2 text-xs font-bold transition-colors ${signatureType === 'draw' ? 'border-brand-600 text-brand-700 dark:border-emerald-400 dark:text-emerald-300' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
                   >
                     <Pencil size={13} />
                     Vẽ chữ ký
@@ -268,7 +268,7 @@ export default function EmployeeAssetDetailPage() {
                   <button
                     type="button"
                     onClick={() => handleTabChange('upload')}
-                    className={`flex-1 pb-2 text-xs font-bold transition-colors border-b-2 flex items-center justify-center gap-1.5 ${signatureType === 'upload' ? 'border-brand-600 text-brand-700 dark:text-brand-400' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                    className={`flex flex-1 items-center justify-center gap-1.5 border-b-2 pb-2 text-xs font-bold transition-colors ${signatureType === 'upload' ? 'border-brand-600 text-brand-700 dark:border-emerald-400 dark:text-emerald-300' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
                   >
                     <UploadCloud size={13} />
                     Tải ảnh chữ ký
@@ -311,7 +311,7 @@ export default function EmployeeAssetDetailPage() {
                 )}
                 
                 <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Ghi chú khi nhận (tùy chọn)</label>
+                  <label className="mb-1 block text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Ghi chú khi nhận (tùy chọn)</label>
                   <textarea
                     className="w-full text-xs p-2.5 border rounded-lg border-slate-200 bg-white outline-none focus:border-brand-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 transition"
                     placeholder="Ví dụ: Máy hoạt động bình thường, màn hình đẹp..."
@@ -326,7 +326,7 @@ export default function EmployeeAssetDetailPage() {
                   type="button"
                   onClick={handleConfirm}
                   disabled={!signature || isSubmitting}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-100 disabled:text-slate-400 border border-transparent transition shadow-sm hover:shadow-md disabled:shadow-none"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-transparent bg-emerald-600 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 hover:shadow-md disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none dark:disabled:bg-slate-800 dark:disabled:text-slate-500"
                 >
                   {isSubmitting ? 'Đang xác nhận...' : 'Xác nhận & Ký biên bản'}
                 </button>
@@ -371,19 +371,19 @@ export default function EmployeeAssetDetailPage() {
       </div>
 
       {/* Maintenance History */}
-      <section className="mt-5 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-soft">
-        <header className="flex items-center gap-3 border-b border-slate-100 px-5 py-4 sm:px-6">
-          <span className="grid size-9 place-items-center rounded-xl bg-amber-50 text-amber-700">
+      <section className="mt-5 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-soft dark:border-slate-700 dark:bg-[#14201b]">
+        <header className="flex items-center gap-3 border-b border-slate-100 px-5 py-4 dark:border-slate-700 sm:px-6">
+          <span className="grid size-9 place-items-center rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
             <Wrench size={17} />
           </span>
           <div>
-            <h3 className="text-sm font-extrabold text-slate-900">Lịch sử bảo trì</h3>
-            <p className="text-[11px] text-slate-500">Các lần sửa chữa trước đây</p>
+            <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">Lịch sử bảo trì</h3>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Các lần sửa chữa trước đây</p>
           </div>
         </header>
         {history.length ? (
           <>
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-slate-100 dark:divide-slate-700">
               {history.slice(0, 5).map((item) => {
                 const ticketCode = `REQ-${item.id.slice(0, 8).toUpperCase()}`
                 const formattedCreated = new Date(item.createdAt).toLocaleDateString('vi-VN')
@@ -395,23 +395,23 @@ export default function EmployeeAssetDetailPage() {
                 return (
                   <Link
                     to={`/employee/requests?requestId=${item.id}`}
-                    className="grid gap-3 px-5 py-4 md:grid-cols-[1fr_110px_110px_100px] items-center hover:bg-slate-50/50 transition block"
+                    className="grid items-center gap-3 px-5 py-4 transition hover:bg-slate-50/50 dark:hover:bg-white/4 md:grid-cols-[1fr_110px_110px_100px]"
                     key={item.id}
                   >
                     <div>
-                      <strong className="text-xs font-bold text-brand-700">{ticketCode}</strong>
-                      <p className="mt-0.5 text-xs text-slate-600">{item.description}</p>
+                      <strong className="text-xs font-bold text-brand-700 dark:text-emerald-400">{ticketCode}</strong>
+                      <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-300">{item.description}</p>
                       {item.resolution && (
-                        <p className="mt-1.5 text-[10px] italic text-slate-500 font-semibold bg-slate-50/80 p-1.5 rounded-lg border border-slate-100/80">
-                          <span className="text-brand-700 font-bold">Khắc phục:</span> {item.resolution}
+                        <p className="mt-1.5 rounded-lg border border-slate-100/80 bg-slate-50/80 p-1.5 text-[10px] font-semibold italic text-slate-500 dark:border-slate-700 dark:bg-slate-900/35 dark:text-slate-400">
+                          <span className="font-bold text-brand-700 dark:text-emerald-400">Khắc phục:</span> {item.resolution}
                         </p>
                       )}
-                      <span className="mt-1.5 block text-[10px] text-slate-400 font-medium">
+                      <span className="mt-1.5 block text-[10px] font-medium text-slate-400 dark:text-slate-500">
                         Phụ trách: {assigneeName}
                       </span>
                     </div>
-                    <span className="text-[11px] text-slate-500 font-semibold">{formattedCreated}</span>
-                    <span className="text-[11px] text-slate-500 font-semibold">{formattedCompleted}</span>
+                    <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{formattedCreated}</span>
+                    <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">{formattedCompleted}</span>
                     <span className="w-fit">
                       <StatusBadge status={item.status} />
                     </span>
@@ -420,10 +420,10 @@ export default function EmployeeAssetDetailPage() {
               })}
             </div>
             {history.length > 5 && (
-              <div className="border-t border-slate-100 p-3 text-center bg-slate-50/50">
+              <div className="border-t border-slate-100 bg-slate-50/50 p-3 text-center dark:border-slate-700 dark:bg-slate-900/30">
                 <Link
                   to="/employee/requests"
-                  className="text-xs font-bold text-brand-700 hover:text-brand-800 transition hover:underline"
+                  className="text-xs font-bold text-brand-700 transition hover:text-brand-800 hover:underline dark:text-emerald-400 dark:hover:text-emerald-300"
                 >
                   Xem tất cả {history.length} lần bảo trì
                 </Link>
@@ -432,8 +432,8 @@ export default function EmployeeAssetDetailPage() {
           </>
         ) : (
           <div className="grid min-h-40 place-items-center text-center px-5 py-8">
-            <Wrench className="mx-auto text-slate-300" size={28} />
-            <p className="mt-3 text-sm text-slate-500">Chưa có lịch sử bảo trì.</p>
+            <Wrench className="mx-auto text-slate-300 dark:text-slate-600" size={28} />
+            <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">Chưa có lịch sử bảo trì.</p>
           </div>
         )}
       </section>

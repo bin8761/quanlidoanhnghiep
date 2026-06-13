@@ -129,21 +129,22 @@ export default function VietnamAddressSelector({
     'min-h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2',
     'text-sm text-slate-900 shadow-sm outline-none transition-all duration-200',
     'hover:border-slate-300 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/12',
-    disabled ? 'cursor-not-allowed bg-slate-50 text-slate-400 pointer-events-none' : '',
+    'dark:border-slate-700 dark:bg-slate-900/55 dark:text-slate-100 dark:hover:border-slate-600 dark:focus:border-emerald-500',
+    disabled ? 'cursor-not-allowed bg-slate-50 text-slate-400 pointer-events-none dark:bg-slate-800 dark:text-slate-500' : '',
   ].filter(Boolean).join(' ')
 
   return (
     <div className="grid gap-1.5">
       {/* Label row */}
       <div className="flex items-center justify-between gap-2">
-        <label className="text-xs font-bold text-slate-700">{label}</label>
+        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">{label}</label>
         {hint && <span className="text-[11px] text-slate-400">{hint}</span>}
       </div>
 
       {/* Current value display + expand toggle */}
       <div
-        className={`flex min-h-10 w-full cursor-pointer items-center gap-2 rounded-[10px] border border-slate-200 bg-white px-3.5 py-2 text-sm shadow-sm transition hover:border-slate-300 ${
-          disabled ? 'cursor-not-allowed bg-slate-50 text-slate-400' : ''
+        className={`flex min-h-10 w-full cursor-pointer items-center gap-2 rounded-[10px] border border-slate-200 bg-white px-3.5 py-2 text-sm shadow-sm transition hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900/55 dark:hover:border-slate-600 ${
+          disabled ? 'cursor-not-allowed bg-slate-50 text-slate-400 dark:bg-slate-800 dark:text-slate-500' : ''
         }`}
         onClick={() => !disabled && setIsExpanded(v => !v)}
         role="button"
@@ -152,7 +153,7 @@ export default function VietnamAddressSelector({
         aria-expanded={isExpanded}
       >
         <MapPin size={14} className={`shrink-0 ${value ? 'text-brand-600' : 'text-slate-300'}`} />
-        <span className={`flex-1 truncate ${value ? 'text-slate-800' : 'text-slate-400 italic'} text-xs`}>
+        <span className={`flex-1 truncate ${value ? 'text-slate-800 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500 italic'} text-xs`}>
           {value || 'Chưa chọn địa chỉ — bấm để chọn'}
         </span>
         {value && !disabled && (
@@ -173,7 +174,7 @@ export default function VietnamAddressSelector({
 
       {/* Expanded Picker */}
       {isExpanded && !disabled && (
-        <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-4 space-y-3 shadow-sm">
+        <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-4 space-y-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/35">
           {apiError && (
             <p className="text-xs text-red-500 font-medium">{apiError} — Vui lòng nhập địa chỉ thủ công bên dưới.</p>
           )}

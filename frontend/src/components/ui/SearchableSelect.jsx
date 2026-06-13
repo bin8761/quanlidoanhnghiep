@@ -60,7 +60,7 @@ export default function SearchableSelect({
   return (
     <div className="grid gap-1.5" ref={containerRef}>
       {label && (
-        <label className="text-xs font-bold text-slate-700">{label}</label>
+        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">{label}</label>
       )}
 
       {/* Trigger */}
@@ -70,11 +70,11 @@ export default function SearchableSelect({
         disabled={disabled}
         className={[
           'flex min-h-11 w-full items-center justify-between gap-2 rounded-[10px] border border-slate-200 bg-white px-3.5 py-2 text-left text-sm shadow-sm transition-all duration-200',
-          'hover:border-slate-300 focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/12',
-          disabled ? 'cursor-not-allowed bg-slate-50 text-slate-400' : 'cursor-pointer',
+          'hover:border-slate-300 focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/12 dark:border-slate-700 dark:bg-slate-900/55 dark:hover:border-slate-600 dark:focus:border-emerald-500',
+          disabled ? 'cursor-not-allowed bg-slate-50 text-slate-400 dark:bg-slate-800 dark:text-slate-500' : 'cursor-pointer',
         ].join(' ')}
       >
-        <span className={selectedOption ? 'text-slate-900' : 'text-slate-400 italic text-xs'}>
+        <span className={selectedOption ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500 italic text-xs'}>
           {selectedOption ? selectedOption.label : placeholder}
         </span>
         <ChevronDown
@@ -86,14 +86,14 @@ export default function SearchableSelect({
       {/* Dropdown */}
       {isOpen && (
         <div className="relative z-50">
-          <div className="absolute left-0 right-0 top-1 rounded-xl border border-slate-200 bg-white shadow-xl">
+          <div className="absolute left-0 right-0 top-1 rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-[#14201b]">
             {/* Search box */}
-            <div className="flex items-center gap-2 border-b border-slate-100 px-3 py-2">
+            <div className="flex items-center gap-2 border-b border-slate-100 px-3 py-2 dark:border-slate-700">
               <Search size={13} className="shrink-0 text-slate-400" />
               <input
                 ref={inputRef}
                 type="text"
-                className="flex-1 text-sm outline-none placeholder:text-slate-400"
+                className="min-w-0 flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500"
                 placeholder="Tìm kiếm..."
                 value={query}
                 onChange={e => setQuery(e.target.value)}
@@ -110,8 +110,10 @@ export default function SearchableSelect({
                     <button
                       type="button"
                       onClick={() => handleSelect(opt)}
-                      className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition hover:bg-brand-50 ${
-                        opt.value === value ? 'bg-brand-50 font-bold text-brand-700' : 'text-slate-700'
+                      className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition hover:bg-brand-50 dark:hover:bg-white/6 ${
+                        opt.value === value
+                          ? 'bg-brand-50 font-bold text-brand-700 dark:bg-emerald-500/10 dark:text-emerald-300'
+                          : 'text-slate-700 dark:text-slate-300'
                       }`}
                     >
                       <Check

@@ -31,6 +31,9 @@ export default function LoginPage() {
   })
 
   function updateField(event) {
+    if (error) {
+      setError('')
+    }
     setForm((current) => ({ ...current, [event.target.name]: event.target.value }))
   }
 
@@ -44,7 +47,11 @@ export default function LoginPage() {
 
       navigate(user.role === 'ADMIN' ? '/admin/dashboard' : '/employee/dashboard')
     } catch (requestError) {
-      setError(requestError.message)
+      setError(
+        requestError.errorCode === 'AUTH_INVALID_CREDENTIALS'
+          ? 'Email hoặc mật khẩu không chính xác.'
+          : requestError.message || 'Đăng nhập không thành công. Vui lòng thử lại.',
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -124,6 +131,7 @@ export default function LoginPage() {
               <div
                 className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-5 text-red-700"
                 role="alert"
+                aria-live="polite"
               >
                 {error}
               </div>
