@@ -1,17 +1,34 @@
-import { useState, useEffect } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { loginHistoryApi } from '../../api/loginHistory'
 import PageHeader from '../../components/ui/PageHeader'
 import Button from '../../components/ui/Button'
 import DataTable from '../../components/ui/DataTable'
 import { toast } from 'react-toastify'
 import { Shield, RefreshCw } from 'lucide-react'
+import { matchesSearch } from '../../utils/search'
 
 export default function AdminLoginHistoryPage() {
   const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
-    fetchHistory()
+    let active = true
+
+    loginHistoryApi.list({ page: 1, pageSize: 100 })
+      .then((data) => {
+        if (active) setHistory(data.items || [])
+      })
+      .catch(() => {
+        if (active) toast.error('Không thể tải lịch sử đăng nhập')
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
   }, [])
 
   const fetchHistory = async () => {
@@ -19,7 +36,7 @@ export default function AdminLoginHistoryPage() {
       setLoading(true)
       const data = await loginHistoryApi.list({ page: 1, pageSize: 100 })
       setHistory(data.items || [])
-    } catch (error) {
+    } catch {
       toast.error('Không thể tải lịch sử đăng nhập')
     } finally {
       setLoading(false)
@@ -54,6 +71,21 @@ export default function AdminLoginHistoryPage() {
     }
   ]
 
+  const filteredHistory = useMemo(
+    () => history.filter((record) => matchesSearch(search, [
+      record.user?.email,
+      record.user?.employee?.fullName,
+      record.ipAddress,
+      record.browser,
+      record.os,
+      record.device,
+      record.status,
+      record.status === 'SUCCESS' ? 'Thành công' : 'Thất bại',
+      record.createdAt ? new Date(record.createdAt).toLocaleString('vi-VN') : '',
+    ])),
+    [history, search],
+  )
+
   return (
     <div className="animate-fade-up">
       <PageHeader
@@ -74,7 +106,9 @@ export default function AdminLoginHistoryPage() {
         ) : (
           <DataTable
             columns={columns}
-            rows={history}
+            rows={filteredHistory}
+            searchValue={search}
+            onSearchChange={setSearch}
             searchPlaceholder="Tìm kiếm theo email, IP hoặc hệ điều hành..."
           />
         )}

@@ -8,12 +8,20 @@
 -- AlterTable
 ALTER TABLE `departments` ADD COLUMN `annual_budget` DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
     ADD COLUMN `branch` VARCHAR(100) NULL,
-    ADD COLUMN `code` VARCHAR(50) NOT NULL,
+    ADD COLUMN `code` VARCHAR(50) NULL,
     ADD COLUMN `email` VARCHAR(255) NULL,
     ADD COLUMN `established_date` DATETIME(3) NULL,
     ADD COLUMN `parent_id` INTEGER NULL,
     ADD COLUMN `phone` VARCHAR(50) NULL,
     ADD COLUMN `status` VARCHAR(191) NOT NULL DEFAULT 'ACTIVE';
+
+-- Backfill stable, unique codes for departments created before this column existed.
+UPDATE `departments`
+SET `code` = CONCAT('DEPT-', LPAD(`id`, 3, '0'))
+WHERE `code` IS NULL OR TRIM(`code`) = '';
+
+ALTER TABLE `departments`
+    MODIFY COLUMN `code` VARCHAR(50) NOT NULL;
 
 -- CreateTable
 CREATE TABLE `department_asset_quotas` (

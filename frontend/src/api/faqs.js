@@ -22,8 +22,9 @@ export const faqApi = Object.freeze({
     return response.data
   },
 
-  async toggleStatus(id) {
-    const response = await apiClient.patch(`/faqs/${id}/toggle`)
+  async toggleStatus(id, currentStatus) {
+    const nextStatus = currentStatus === 'SHOW' ? 'HIDE' : 'SHOW'
+    const response = await apiClient.put(`/faqs/${id}`, { status: nextStatus })
     return response.data
   },
 })

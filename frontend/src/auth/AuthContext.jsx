@@ -63,6 +63,15 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
+  function updateCurrentUser(updates) {
+    setUser((current) => {
+      if (!current) return current
+      const updated = { ...current, ...updates }
+      localStorage.setItem(USER_KEY, JSON.stringify(updated))
+      return updated
+    })
+  }
+
   const value = useMemo(
     () => ({
       user,
@@ -71,6 +80,7 @@ export function AuthProvider({ children }) {
       login,
       register,
       logout,
+      updateCurrentUser,
     }),
     [user, isBootstrapping],
   )

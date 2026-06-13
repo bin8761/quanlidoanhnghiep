@@ -1,4 +1,28 @@
-import { apiClient } from './client'
+import { API_BASE_URL, apiClient } from './client'
+
+export function getFeedbackFileUrl(fileUrl) {
+  if (!fileUrl) return ''
+  if (/^https?:\/\//i.test(fileUrl)) return fileUrl
+
+  const apiHost = API_BASE_URL.replace(/\/api\/?$/, '')
+  const normalizedPath = fileUrl.startsWith('/') ? fileUrl : `/${fileUrl}`
+  return `${apiHost}${normalizedPath}`
+}
+
+export function getFeedbackFileName(fileUrl) {
+  if (!fileUrl) return ''
+
+  const path = fileUrl.split('?')[0]
+  const encodedName = path.split('/').filter(Boolean).pop()
+
+  if (!encodedName) return 'Tệp đính kèm'
+
+  try {
+    return decodeURIComponent(encodedName)
+  } catch {
+    return encodedName
+  }
+}
 
 export const feedbackApi = Object.freeze({
   async list(params = {}) {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { faqApi } from '../../api/faqs'
 import PageHeader from '../../components/ui/PageHeader'
 import Button from '../../components/ui/Button'
@@ -8,10 +8,12 @@ import DataTable from '../../components/ui/DataTable'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import { toast } from 'react-toastify'
 import { HelpCircle, Plus, Edit2, Trash2, Eye, EyeOff } from 'lucide-react'
+import { matchesSearch } from '../../utils/search'
 
 export default function FaqManagementPage() {
   const [faqs, setFaqs] = useState([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [editingFaq, setEditingFaq] = useState(null)
   
@@ -26,7 +28,22 @@ export default function FaqManagementPage() {
   const [deleteId, setDeleteId] = useState(null)
 
   useEffect(() => {
-    fetchFaqs()
+    let active = true
+
+    faqApi.list({ adminMode: 'true' })
+      .then((data) => {
+        if (active) setFaqs(data)
+      })
+      .catch(() => {
+        if (active) toast.error('Không thể tải danh sách FAQ')
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
   }, [])
 
   const fetchFaqs = async () => {
@@ -34,7 +51,7 @@ export default function FaqManagementPage() {
       setLoading(true)
       const data = await faqApi.list({ adminMode: 'true' })
       setFaqs(data)
-    } catch (error) {
+    } catch {
       toast.error('Không thể tải danh sách FAQ')
     } finally {
       setLoading(false)
@@ -85,12 +102,22 @@ export default function FaqManagementPage() {
     }
   }
 
-  const handleToggleStatus = async (id) => {
+  const handleToggleStatus = async (faq) => {
+    const nextStatus = faq.status === 'SHOW' ? 'HIDE' : 'SHOW'
+    setFaqs((current) => current.map((item) => (
+      item.id === faq.id ? { ...item, status: nextStatus } : item
+    )))
+
     try {
-      await faqApi.toggleStatus(id)
+      const updated = await faqApi.toggleStatus(faq.id, faq.status)
+      setFaqs((current) => current.map((item) => (
+        item.id === faq.id ? updated : item
+      )))
       toast.success('Thay đổi trạng thái FAQ thành công!')
-      fetchFaqs()
-    } catch (error) {
+    } catch {
+      setFaqs((current) => current.map((item) => (
+        item.id === faq.id ? { ...item, status: faq.status } : item
+      )))
       toast.error('Thay đổi trạng thái thất bại!')
     }
   }
@@ -102,7 +129,7 @@ export default function FaqManagementPage() {
       toast.success('Xóa FAQ thành công!')
       setDeleteId(null)
       fetchFaqs()
-    } catch (error) {
+    } catch {
       toast.error('Xóa FAQ thất bại!')
     }
   }
@@ -115,7 +142,7 @@ export default function FaqManagementPage() {
       label: 'Trạng thái', 
       render: (value, row) => (
         <button
-          onClick={() => handleToggleStatus(row.id)}
+          onClick={() => handleToggleStatus(row)}
           className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition ${
             value === 'SHOW' 
               ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' 
@@ -158,6 +185,16 @@ export default function FaqManagementPage() {
     }
   ]
 
+  const filteredFaqs = useMemo(
+    () => faqs.filter((faq) => matchesSearch(search, [
+      faq.question,
+      faq.answer,
+      faq.category,
+      faq.status === 'SHOW' ? 'Hiển thị' : 'Ẩn',
+    ])),
+    [faqs, search],
+  )
+
   return (
     <div className="animate-fade-up">
       <PageHeader
@@ -178,7 +215,9 @@ export default function FaqManagementPage() {
         ) : (
           <DataTable
             columns={columns}
-            rows={faqs}
+            rows={filteredFaqs}
+            searchValue={search}
+            onSearchChange={setSearch}
             searchPlaceholder="Tìm kiếm câu hỏi, câu trả lời hoặc danh mục..."
           />
         )}

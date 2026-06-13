@@ -4,8 +4,8 @@ import Button from './Button'
 export default function DataTable({
   columns,
   rows,
-  searchValue,
-  onSearchChange,
+  searchValue = '',
+  onSearchChange = () => {},
   searchPlaceholder = 'Tìm kiếm...',
   actions,
   onFilterClick,
