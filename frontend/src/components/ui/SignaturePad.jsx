@@ -89,7 +89,7 @@ export default function SignaturePad({ onChange, disabled = false }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="relative overflow-hidden rounded-xl border border-dashed border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/20">
+      <div className="relative overflow-hidden rounded-xl border border-dashed border-slate-300 bg-white shadow-inner dark:border-slate-600 dark:bg-slate-100">
         <canvas
           ref={canvasRef}
           className="block h-40 w-full cursor-crosshair touch-none bg-transparent"

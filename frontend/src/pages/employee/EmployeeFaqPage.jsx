@@ -63,7 +63,7 @@ export default function EmployeeFaqPage() {
       const query = searchQuery.trim().toLowerCase()
       if (!query) return matchesCategory
 
-      const matchesText = 
+      const matchesText =
         faq.question.toLowerCase().includes(query) ||
         faq.answer.toLowerCase().includes(query) ||
         faq.category.toLowerCase().includes(query)
@@ -72,11 +72,11 @@ export default function EmployeeFaqPage() {
   }, [faqs, selectedCategory, searchQuery])
 
   if (isLoading) {
-    return <div className="grid min-h-72 place-items-center">Đang tải tài liệu hướng dẫn...</div>
+    return <div className="grid min-h-72 place-items-center text-slate-600 dark:text-slate-300">Đang tải tài liệu hướng dẫn...</div>
   }
 
   return (
-    <div className="animate-fade-up space-y-6">
+    <div className="employee-faq-page animate-fade-up space-y-6">
       <PageHeader
         eyebrow="Tự phục vụ & Hướng dẫn"
         title="Cẩm nang tự phục vụ"
@@ -92,7 +92,7 @@ export default function EmployeeFaqPage() {
       />
 
       {error && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
           {error}
         </div>
       )}
@@ -121,11 +121,10 @@ export default function EmployeeFaqPage() {
         <button
           type="button"
           onClick={() => setSelectedCategory('')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 border ${
-            !selectedCategory
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 border ${!selectedCategory
               ? 'bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-500/20'
               : 'bg-white border-slate-200/80 text-slate-600 hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800'
-          }`}
+            }`}
         >
           <Layers size={14} />
           Tất cả danh mục
@@ -138,11 +137,10 @@ export default function EmployeeFaqPage() {
               key={cat}
               type="button"
               onClick={() => setSelectedCategory(cat)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 border ${
-                isSelected
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 border ${isSelected
                   ? 'bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-500/20'
                   : 'bg-white border-slate-200/80 text-slate-600 hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800'
-              }`}
+                }`}
             >
               <Icon size={14} />
               {cat}
@@ -160,9 +158,8 @@ export default function EmployeeFaqPage() {
           return (
             <article
               key={faq.id}
-              className={`surface border border-slate-100 hover:border-slate-200/60 dark:border-slate-800/80 dark:hover:border-slate-700/60 transition-all duration-200 overflow-hidden ${
-                isExpanded ? 'ring-1 ring-emerald-500/10 shadow-soft' : ''
-              }`}
+              className={`surface border border-slate-100 hover:border-slate-200/60 dark:border-slate-800/80 dark:hover:border-slate-700/60 transition-all duration-200 overflow-hidden ${isExpanded ? 'ring-1 ring-emerald-500/10 shadow-soft' : ''
+                }`}
             >
               <button
                 type="button"
@@ -222,7 +219,8 @@ export default function EmployeeFaqPage() {
           </p>
         </div>
         <Link to="/employee/requests" className="shrink-0">
-          <Button className="bg-white text-emerald-700 hover:bg-emerald-50 shadow-md">
+          <Button variant="secondary"className="bg-white text-emerald-700 hover:bg-emerald-50 shadow-md"
+          >
             Tạo phiếu hỗ trợ
           </Button>
         </Link>

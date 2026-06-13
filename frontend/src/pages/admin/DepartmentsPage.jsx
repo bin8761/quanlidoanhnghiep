@@ -571,43 +571,43 @@ export default function DepartmentsPage() {
 
       {/* Dashboard Summary Statistics */}
       <div className="grid gap-5 mb-8 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-[16px] border border-slate-100 bg-white p-5 shadow-sm flex items-center gap-4 transition-all hover:shadow-md">
-          <div className="grid size-12 place-items-center rounded-xl bg-brand-50 text-brand-600">
+        <div className="flex items-center gap-4 rounded-[16px] border border-slate-100 bg-white p-5 shadow-sm transition-all hover:shadow-md dark:border-slate-700 dark:bg-[#14201b] dark:shadow-none dark:hover:border-slate-600">
+          <div className="grid size-12 place-items-center rounded-xl bg-brand-50 text-brand-600 dark:bg-emerald-500/10 dark:text-emerald-300">
             <Building size={24} />
           </div>
           <div>
-            <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tổng phòng ban</span>
-            <strong className="text-xl font-black text-slate-800">{summary.totalDepartments} đơn vị</strong>
+            <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Tổng phòng ban</span>
+            <strong className="text-xl font-black text-slate-800 dark:text-slate-100">{summary.totalDepartments} đơn vị</strong>
           </div>
         </div>
 
-        <div className="rounded-[16px] border border-slate-100 bg-white p-5 shadow-sm flex items-center gap-4 transition-all hover:shadow-md">
-          <div className="grid size-12 place-items-center rounded-xl bg-blue-50 text-blue-600">
+        <div className="flex items-center gap-4 rounded-[16px] border border-slate-100 bg-white p-5 shadow-sm transition-all hover:shadow-md dark:border-slate-700 dark:bg-[#14201b] dark:shadow-none dark:hover:border-slate-600">
+          <div className="grid size-12 place-items-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300">
             <Users size={24} />
           </div>
           <div>
-            <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tổng nhân viên</span>
-            <strong className="text-xl font-black text-slate-800">{summary.totalEmployees} người</strong>
+            <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Tổng nhân viên</span>
+            <strong className="text-xl font-black text-slate-800 dark:text-slate-100">{summary.totalEmployees} người</strong>
           </div>
         </div>
 
-        <div className="rounded-[16px] border border-slate-100 bg-white p-5 shadow-sm flex items-center gap-4 transition-all hover:shadow-md">
-          <div className="grid size-12 place-items-center rounded-xl bg-emerald-50 text-emerald-600">
+        <div className="flex items-center gap-4 rounded-[16px] border border-slate-100 bg-white p-5 shadow-sm transition-all hover:shadow-md dark:border-slate-700 dark:bg-[#14201b] dark:shadow-none dark:hover:border-slate-600">
+          <div className="grid size-12 place-items-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300">
             <Boxes size={24} />
           </div>
           <div>
-            <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tổng tài sản</span>
-            <strong className="text-xl font-black text-slate-800">{summary.totalAssets} thiết bị</strong>
+            <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Tổng tài sản</span>
+            <strong className="text-xl font-black text-slate-800 dark:text-slate-100">{summary.totalAssets} thiết bị</strong>
           </div>
         </div>
 
-        <div className="rounded-[16px] border border-slate-100 bg-white p-5 shadow-sm flex items-center gap-4 transition-all hover:shadow-md">
-          <div className="grid size-12 place-items-center rounded-xl bg-amber-50 text-amber-600">
+        <div className="flex items-center gap-4 rounded-[16px] border border-slate-100 bg-white p-5 shadow-sm transition-all hover:shadow-md dark:border-slate-700 dark:bg-[#14201b] dark:shadow-none dark:hover:border-slate-600">
+          <div className="grid size-12 place-items-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
             <Coins size={24} />
           </div>
           <div>
-            <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tổng giá trị tài sản</span>
-            <strong className="text-lg font-black text-slate-800">
+            <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Tổng giá trị tài sản</span>
+            <strong className="text-lg font-black text-slate-800 dark:text-slate-100">
               {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(summary.totalAssetValue)}
             </strong>
           </div>

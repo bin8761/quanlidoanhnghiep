@@ -8,6 +8,7 @@ import SyncStatusBadge from '../components/layout/SyncStatusBadge'
 import ThemeToggle from '../components/layout/ThemeToggle'
 import QrScannerModal from '../components/ui/QrScannerModal'
 import SupportChatbox from '../components/chat/SupportChatbox'
+import EmployeeGlobalSearch from '../components/layout/EmployeeGlobalSearch'
 import { useNotifications } from '../notifications/notifications-context'
 import { useLanguage } from '../hooks/useLanguage'
 
@@ -29,6 +30,9 @@ export default function EmployeeLayout() {
   const { user } = useAuth()
   const { connectionStatus } = useNotifications()
   const { t } = useLanguage()
+  const pageTitle = location.pathname.startsWith('/employee/assets/')
+    ? 'Chi tiết tài sản'
+    : PAGE_TITLES[location.pathname] || 'EAM Workspace'
 
   return (
     <div className="app-shell lg:grid lg:grid-cols-[256px_minmax(0,1fr)]">
@@ -59,12 +63,13 @@ export default function EmployeeLayout() {
                 {t('Cổng thông tin nhân viên')}
               </p>
               <h1 className="truncate text-base font-bold text-slate-900 dark:text-slate-100 sm:text-lg">
-                {t(PAGE_TITLES[location.pathname] || 'EAM Workspace')}
+                {t(pageTitle)}
               </h1>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
+            <EmployeeGlobalSearch />
             <SyncStatusBadge status={connectionStatus} />
             <ThemeToggle />
             <NotificationBell />
@@ -79,7 +84,7 @@ export default function EmployeeLayout() {
           </div>
         </header>
 
-        <div className="page-container max-w-[1440px]">
+        <div className="page-container employee-portal max-w-[1440px]">
           {user?.mustChangePassword && location.pathname !== '/employee/change-password' && (
             <div className="mb-5 flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-950 shadow-sm dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-100 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-3">

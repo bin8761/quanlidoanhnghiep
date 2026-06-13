@@ -17,7 +17,7 @@ function PasswordInput({ id, name, value, placeholder, autoComplete, onChange })
         size={17}
       />
       <input
-        className="min-h-12 w-full rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-11 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10"
+        className="min-h-12 w-full rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-11 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 dark:border-slate-700 dark:bg-slate-900/55 dark:text-slate-100 dark:shadow-none dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-emerald-500"
         id={id}
         name={name}
         type={show ? 'text' : 'password'}
@@ -28,7 +28,7 @@ function PasswordInput({ id, name, value, placeholder, autoComplete, onChange })
         required
       />
       <button
-        className="absolute top-1/2 right-2 grid size-9 -translate-y-1/2 place-items-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+        className="absolute top-1/2 right-2 grid size-9 -translate-y-1/2 place-items-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
         type="button"
         title={show ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
         onClick={() => setShow((prev) => !prev)}
@@ -97,7 +97,7 @@ export default function EmployeeChangePasswordPage() {
   }
 
   return (
-    <div className="animate-fade-up">
+    <div className="employee-change-password-page animate-fade-up">
       <PageHeader
         eyebrow="Bảo mật tài khoản"
         title="Đổi mật khẩu"
@@ -106,13 +106,13 @@ export default function EmployeeChangePasswordPage() {
 
       <div className="mx-auto max-w-lg">
         <section className="surface overflow-hidden">
-          <header className="flex items-center gap-3 border-b border-slate-100 bg-slate-50 px-5 py-4 sm:px-6">
-            <span className="grid size-9 place-items-center rounded-xl bg-brand-50 text-brand-700">
+          <header className="flex items-center gap-3 border-b border-slate-100 bg-slate-50 px-5 py-4 dark:border-slate-700 dark:bg-slate-900/35 sm:px-6">
+            <span className="grid size-9 place-items-center rounded-xl bg-brand-50 text-brand-700 dark:bg-emerald-500/10 dark:text-emerald-300">
               <ShieldCheck size={18} />
             </span>
             <div>
-              <h3 className="text-sm font-extrabold text-slate-900">Bảo mật tài khoản</h3>
-              <p className="text-[11px] text-slate-500">Mật khẩu được mã hóa và lưu trữ an toàn.</p>
+              <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">Bảo mật tài khoản</h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">Mật khẩu được mã hóa và lưu trữ an toàn.</p>
             </div>
           </header>
 
@@ -120,13 +120,13 @@ export default function EmployeeChangePasswordPage() {
             {isSuccess ? (
               <div className="grid min-h-52 place-items-center text-center">
                 <div>
-                  <span className="mx-auto mb-4 grid size-14 place-items-center rounded-full bg-emerald-50 text-emerald-600">
+                  <span className="mx-auto mb-4 grid size-14 place-items-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300">
                     <ShieldCheck size={28} />
                   </span>
-                  <h4 className="text-base font-extrabold text-slate-950">Đổi mật khẩu thành công</h4>
-                  <p className="mt-1.5 text-sm text-slate-500">Lần đăng nhập tiếp theo hãy dùng mật khẩu mới.</p>
+                  <h4 className="text-base font-extrabold text-slate-950 dark:text-slate-50">Đổi mật khẩu thành công</h4>
+                  <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">Lần đăng nhập tiếp theo hãy dùng mật khẩu mới.</p>
                   <button
-                    className="mt-5 text-sm font-bold text-brand-700 hover:text-brand-800"
+                    className="mt-5 text-sm font-bold text-brand-700 hover:text-brand-800 dark:text-emerald-400 dark:hover:text-emerald-300"
                     type="button"
                     onClick={() => setIsSuccess(false)}
                   >
@@ -151,7 +151,7 @@ export default function EmployeeChangePasswordPage() {
                   />
                 </FormField>
 
-                <div className="border-t border-slate-100 pt-5">
+                <div className="border-t border-slate-100 pt-5 dark:border-slate-700">
                   <FormField
                     label="Mật khẩu mới"
                     name="newPassword"
@@ -185,7 +185,7 @@ export default function EmployeeChangePasswordPage() {
                 </FormField>
 
                 {serverError && (
-                  <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
                     {serverError}
                   </div>
                 )}
@@ -201,7 +201,7 @@ export default function EmployeeChangePasswordPage() {
           </div>
         </section>
 
-        <p className="mt-4 text-center text-xs text-slate-500">
+        <p className="mt-4 text-center text-xs text-slate-500 dark:text-slate-400">
           Nếu quên mật khẩu hiện tại, hãy liên hệ quản trị viên để được hỗ trợ.
         </p>
       </div>

@@ -79,7 +79,7 @@ function toInputDateString(isoString) {
 }
 
 export default function EmployeeProfilePage() {
-  const { user } = useAuth()
+  const { user, updateCurrentUser } = useAuth()
   const [profile, setProfile] = useState(null)
   const [attachments, setAttachments] = useState([])
   const [logs, setLogs] = useState([])
@@ -181,6 +181,33 @@ export default function EmployeeProfilePage() {
   useEffect(() => {
     loadProfileData()
   }, [user])
+
+  const handleAvatarChange = async (avatarUrl) => {
+    if (!profile?.id) {
+      throw new Error('Không tìm thấy hồ sơ nhân viên.')
+    }
+
+    try {
+      const updatedEmployee = await employeeApi.update(profile.id, {
+        avatarUrl: avatarUrl || null,
+      })
+
+      setProfile(updatedEmployee)
+      setPersonalForm((current) => ({
+        ...current,
+        avatarUrl: updatedEmployee.avatarUrl || '',
+      }))
+      updateCurrentUser({ avatarUrl: updatedEmployee.avatarUrl || null })
+      setToast({
+        type: 'success',
+        message: avatarUrl
+          ? 'Cập nhật ảnh đại diện thành công.'
+          : 'Đã xóa ảnh đại diện.',
+      })
+    } catch (err) {
+      throw new Error(err.message || 'Không thể cập nhật ảnh đại diện.', { cause: err })
+    }
+  }
 
   const handleExportPDF = () => {
     if (!profile) return
@@ -741,7 +768,7 @@ export default function EmployeeProfilePage() {
   }
 
   return (
-    <div className="animate-fade-up space-y-6">
+    <div className="employee-profile-page animate-fade-up space-y-6">
       <PageHeader
         eyebrow="Quản lý tài khoản"
         title="Hồ sơ nhân viên"
@@ -772,7 +799,7 @@ export default function EmployeeProfilePage() {
               <div className="shrink-0">
                 <AvatarUpload
                   value={personalForm.avatarUrl || profile.avatarUrl || ''}
-                  onChange={val => setPersonalForm(c => ({ ...c, avatarUrl: val }))}
+                  onChange={handleAvatarChange}
                   name={profile.fullName}
                   size="md"
                   disabled={!profile.allowProfileUpdate}
