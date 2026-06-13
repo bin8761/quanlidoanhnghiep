@@ -5,6 +5,7 @@ import path from 'node:path'
 
 const require = createRequire(import.meta.url)
 const { PrismaClient } = require('../../backend/node_modules/@prisma/client')
+const passwordUtils = require('../../backend/src/shared/utils/password.util')
 const ExcelJS = require('../node_modules/exceljs')
 const workflowAssetCodes = new Set()
 
@@ -143,17 +144,24 @@ test('admin can toggle FAQ visibility', async ({ page }) => {
   await loginAsAdmin(page)
   await page.goto('/admin/faq-management')
 
+  await page
+    .getByRole('searchbox', { name: 'Tìm kiếm câu hỏi, câu trả lời hoặc danh mục...' })
+    .fill('nhập nhiều tài sản')
   const faqRow = page.getByRole('row').filter({
-    hasText: 'Tôi có thể đính kèm loại tệp nào khi gửi góp ý?',
+    hasText: 'Admin có thể nhập nhiều tài sản hoặc nhân viên cùng lúc không?',
   })
-  const statusButton = faqRow.getByRole('button', { name: 'Hiển thị' })
+  await expect(faqRow).toBeVisible()
+  const showButton = faqRow.getByRole('button', { name: 'Hiển thị' })
+  const hideButton = faqRow.getByRole('button', { name: 'Ẩn' })
+  const startsVisible = await showButton.count() === 1
+  const initialButton = startsVisible ? showButton : hideButton
+  const toggledButton = startsVisible ? hideButton : showButton
 
-  await expect(statusButton).toBeVisible()
-  await statusButton.click()
-  await expect(faqRow.getByRole('button', { name: 'Ẩn' })).toBeVisible()
-
-  await faqRow.getByRole('button', { name: 'Ẩn' }).click()
-  await expect(faqRow.getByRole('button', { name: 'Hiển thị' })).toBeVisible()
+  await expect(initialButton).toBeVisible()
+  await initialButton.click()
+  await expect(toggledButton).toBeVisible()
+  await toggledButton.click()
+  await expect(initialButton).toBeVisible()
 
   expect(errors).toEqual([])
 })
@@ -206,6 +214,12 @@ test('admin search works across FAQ, feedback, attendance and login history', as
 test('first-login employee can use dashboard without a forced password redirect', async ({ page }) => {
   const errors = collectConsoleErrors(page)
   const failedApiResponses = []
+  const prisma = new PrismaClient()
+  const existingUser = await prisma.user.findUnique({
+    where: { email: 'firstlogin.employee@company.local' },
+    select: { id: true, passwordHash: true, mustChangePassword: true },
+  })
+  const temporaryPasswordHash = await passwordUtils.hashPassword('Password123')
 
   page.on('response', (response) => {
     if (response.url().includes('/api/') && response.status() >= 400) {
@@ -213,18 +227,37 @@ test('first-login employee can use dashboard without a forced password redirect'
     }
   })
 
-  await page.goto('/login')
-  await page.getByLabel('Email công ty').fill('firstlogin.employee@company.local')
-  await page.getByLabel('Mật khẩu').fill('Password123')
-  await page.getByRole('button', { name: 'Đăng nhập hệ thống' }).click()
+  try {
+    await prisma.user.update({
+      where: { id: existingUser.id },
+      data: {
+        passwordHash: temporaryPasswordHash,
+        mustChangePassword: true,
+      },
+    })
 
-  await expect(page).toHaveURL(/\/employee\/dashboard$/)
-  await expect(page.getByText('Bạn đang sử dụng mật khẩu tạm thời')).toBeVisible()
-  await expect(page.getByRole('main').getByRole('link', { name: 'Đổi mật khẩu' })).toBeVisible()
-  await page.waitForTimeout(1000)
+    await page.goto('/login')
+    await page.getByLabel('Email công ty').fill('firstlogin.employee@company.local')
+    await page.getByLabel('Mật khẩu').fill('Password123')
+    await page.getByRole('button', { name: 'Đăng nhập hệ thống' }).click()
 
-  expect(failedApiResponses).toEqual([])
-  expect(errors).toEqual([])
+    await expect(page).toHaveURL(/\/employee\/dashboard$/)
+    await expect(page.getByText('Bạn đang sử dụng mật khẩu tạm thời')).toBeVisible()
+    await expect(page.getByRole('main').getByRole('link', { name: 'Đổi mật khẩu' })).toBeVisible()
+    await page.waitForTimeout(1000)
+
+    expect(failedApiResponses).toEqual([])
+    expect(errors).toEqual([])
+  } finally {
+    await prisma.user.update({
+      where: { id: existingUser.id },
+      data: {
+        passwordHash: existingUser.passwordHash,
+        mustChangePassword: existingUser.mustChangePassword,
+      },
+    })
+    await prisma.$disconnect()
+  }
 })
 
 test('mobile login, dashboard and sidebar remain usable', async ({ page }) => {
