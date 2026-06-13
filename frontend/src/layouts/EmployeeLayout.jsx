@@ -15,6 +15,7 @@ const PAGE_TITLES = {
   '/employee/dashboard': 'Tổng quan',
   '/employee/assets': 'Tài sản của tôi',
   '/employee/requests': 'Yêu cầu hỗ trợ',
+  '/employee/faq': 'Cẩm nang tự phục vụ',
   '/employee/history': 'Lịch sử hoạt động',
   '/employee/profile': 'Hồ sơ cá nhân',
   '/employee/change-password': 'Đổi mật khẩu',

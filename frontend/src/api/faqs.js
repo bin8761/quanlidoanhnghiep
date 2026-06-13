@@ -27,4 +27,9 @@ export const faqApi = Object.freeze({
     const response = await apiClient.put(`/faqs/${id}`, { status: nextStatus })
     return response.data
   },
+
+  async getCategories() {
+    const response = await apiClient.get('/faqs/categories')
+    return response.data
+  },
 })

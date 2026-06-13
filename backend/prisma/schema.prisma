@@ -209,17 +209,19 @@ enum AssignmentStatus {
 }
 
 model AssetAssignment {
-  id         String           @id @default(uuid()) @db.Char(36)
-  assetId    String           @map("asset_id") @db.Char(36)
-  employeeId String           @map("employee_id") @db.Char(36)
-  assignedAt DateTime         @default(now()) @map("assigned_at")
-  returnedAt DateTime?        @map("returned_at")
-  status     AssignmentStatus @default(ACTIVE)
-  notes      String?          @db.Text
-  createdAt  DateTime         @default(now()) @map("created_at")
-  updatedAt  DateTime         @updatedAt @map("updated_at")
-  asset      Asset            @relation(fields: [assetId], references: [id], onDelete: Restrict)
-  employee   Employee         @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  id           String           @id @default(uuid()) @db.Char(36)
+  assetId      String           @map("asset_id") @db.Char(36)
+  employeeId   String           @map("employee_id") @db.Char(36)
+  assignedAt   DateTime         @default(now()) @map("assigned_at")
+  returnedAt   DateTime?        @map("returned_at")
+  confirmedAt  DateTime?        @map("confirmed_at")
+  signatureUrl String?          @map("signature_url") @db.Text
+  status       AssignmentStatus @default(ACTIVE)
+  notes        String?          @db.Text
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+  asset        Asset            @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  employee     Employee         @relation(fields: [employeeId], references: [id], onDelete: Restrict)
 
   @@index([assetId, status])
   @@index([employeeId, status])
@@ -283,6 +285,9 @@ model SupportRequest {
   resolution    String?              @db.Text
   completedAt   DateTime?            @map("completed_at")
   cancelledAt   DateTime?            @map("cancelled_at")
+  rating        Int?
+  feedback      String?              @db.Text
+  ratedAt       DateTime?            @map("rated_at")
   createdAt     DateTime             @default(now()) @map("created_at")
   updatedAt     DateTime             @updatedAt @map("updated_at")
   asset         Asset?               @relation(fields: [assetId], references: [id], onDelete: Restrict)

@@ -23,6 +23,7 @@ import { ASSET_TEMPLATE, buildAssetImportRow } from '../../utils/excelImport'
 const ASSET_STATUSES = [
   { value: 'AVAILABLE', label: 'Sẵn sàng' },
   { value: 'ASSIGNED', label: 'Đã bàn giao' },
+  { value: 'PENDING_CONFIRMATION', label: 'Chờ ký nhận' },
   { value: 'MAINTENANCE', label: 'Đang bảo trì' },
   { value: 'BROKEN', label: 'Bị hỏng' },
   { value: 'LOST', label: 'Thất lạc' },

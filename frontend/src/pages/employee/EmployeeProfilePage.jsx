@@ -182,6 +182,384 @@ export default function EmployeeProfilePage() {
     loadProfileData()
   }, [user])
 
+  const handleExportPDF = () => {
+    if (!profile) return
+
+    const printWindow = window.open('', '_blank')
+    if (!printWindow) {
+      setToast({ type: 'error', message: 'Vui lòng cho phép mở pop-up để xuất file PDF.' })
+      return
+    }
+
+    const educationHtml = resumeForm.education.length > 0
+      ? resumeForm.education.map(item => `
+        <div class="education-item">
+          <div class="edu-header">
+            <strong>${item.school || 'Chưa cập nhật'}</strong>
+            <span>${item.graduateYear ? `Năm tốt nghiệp: ${item.graduateYear}` : ''}</span>
+          </div>
+          <div class="edu-details">${item.major || 'Chưa cập nhật'} (${item.degree || 'Đại học'})</div>
+        </div>
+      `).join('')
+      : '<p class="empty-text">Chưa cập nhật thông tin học vấn.</p>'
+
+    const skillsHtml = resumeForm.skills
+      ? resumeForm.skills.split(',').map(s => `<span class="tag">${s.trim()}</span>`).join(' ')
+      : '<p class="empty-text">Chưa cập nhật kỹ năng.</p>'
+
+    const certsHtml = resumeForm.certificates
+      ? resumeForm.certificates.split(',').map(c => `<span class="tag tag-teal">${c.trim()}</span>`).join(' ')
+      : '<p class="empty-text">Chưa cập nhật chứng chỉ.</p>'
+
+    const emergency = profile.emergencyContact || {}
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Hồ sơ nhân viên - ${profile.fullName}</title>
+        <meta charset="utf-8">
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+          body {
+            font-family: 'Inter', sans-serif;
+            color: #1e293b;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 40px;
+            font-size: 13px;
+            line-height: 1.6;
+          }
+          @media print {
+            body {
+              padding: 0;
+            }
+            .no-print {
+              display: none;
+            }
+          }
+          .header-container {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 24px;
+            margin-bottom: 30px;
+          }
+          .avatar-placeholder {
+            width: 90px;
+            height: 90px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: 800;
+            text-transform: uppercase;
+          }
+          .avatar-img {
+            width: 90px;
+            height: 90px;
+            border-radius: 16px;
+            object-fit: cover;
+            border: 1px solid #e2e8f0;
+          }
+          .header-info h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 800;
+            color: #0f172a;
+          }
+          .header-info p {
+            margin: 4px 0 0 0;
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 500;
+          }
+          .badge-container {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+          }
+          .badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 9999px;
+            text-transform: uppercase;
+            border: 1px solid #e2e8f0;
+          }
+          .badge-green {
+            background-color: #f0fdf4;
+            color: #166534;
+            border-color: #bbf7d0;
+          }
+          .badge-blue {
+            background-color: #eff6ff;
+            color: #1e40af;
+            border-color: #bfdbfe;
+          }
+          .section {
+            margin-bottom: 25px;
+          }
+          .section-title {
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #0f172a;
+            letter-spacing: 0.1em;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 6px;
+            margin-bottom: 15px;
+          }
+          .grid {
+            display: grid;
+            grid-template-cols: 1fr 1fr;
+            gap: 15px 30px;
+          }
+          .info-block {
+            display: flex;
+            flex-direction: column;
+          }
+          .info-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin-bottom: 2px;
+          }
+          .info-value {
+            font-weight: 600;
+            color: #334155;
+          }
+          .education-item {
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px dashed #e2e8f0;
+          }
+          .education-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+          }
+          .edu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
+          .edu-header strong {
+            font-size: 13px;
+            color: #1e293b;
+          }
+          .edu-header span {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 500;
+          }
+          .edu-details {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 2px;
+          }
+          .tag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            background-color: #f1f5f9;
+            color: #475569;
+            border-radius: 6px;
+            margin-right: 6px;
+            margin-bottom: 6px;
+          }
+          .tag-teal {
+            background-color: #f0fdfa;
+            color: #0d9488;
+          }
+          .empty-text {
+            font-style: italic;
+            color: #94a3b8;
+            margin: 0;
+          }
+          .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 11px;
+            color: #94a3b8;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 15px;
+          }
+          .print-btn-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+          }
+          .print-btn {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+            transition: all 0.2s;
+          }
+          .print-btn:hover {
+            background-color: #059669;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="print-btn-container no-print">
+          <button class="print-btn" onclick="window.print()">In hồ sơ / Lưu PDF</button>
+        </div>
+
+        <div class="header-container">
+          <div>
+            ${profile.avatarUrl 
+              ? `<img class="avatar-img" src="${profile.avatarUrl}" alt="${profile.fullName}">`
+              : `<div class="avatar-placeholder">${profile.fullName.slice(0, 2).toUpperCase()}</div>`
+            }
+          </div>
+          <div class="header-info">
+            <h1>${profile.fullName}</h1>
+            <p>${profile.position || 'Nhân viên'} · ${profile.department?.name || 'Chưa phân phòng'}</p>
+            <div class="badge-container">
+              <span class="badge badge-green">${profile.status === 'ACTIVE' ? 'Đang hoạt động' : 'Ngừng hoạt động'}</span>
+              <span class="badge badge-blue">Mã NV: ${profile.employeeCode}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Thông tin công việc</div>
+          <div class="grid">
+            <div class="info-block">
+              <span class="info-label">Mã nhân viên</span>
+              <span class="info-value">${profile.employeeCode}</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Email công việc</span>
+              <span class="info-value">${profile.email}</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Chức vụ</span>
+              <span class="info-value">${profile.position || 'Nhân viên'}</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Ngày vào làm</span>
+              <span class="info-value">${formatDate(profile.joinDate)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Thông tin cá nhân</div>
+          <div class="grid">
+            <div class="info-block">
+              <span class="info-label">Số điện thoại</span>
+              <span class="info-value">${profile.phone || 'Chưa cập nhật'}</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Email cá nhân</span>
+              <span class="info-value">${profile.personalEmail || 'Chưa cập nhật'}</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Ngày sinh</span>
+              <span class="info-value">${formatDate(profile.dateOfBirth)}</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Giới tính</span>
+              <span class="info-value">${profile.gender || 'Chưa cập nhật'}</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Dân tộc</span>
+              <span class="info-value">${profile.ethnicity || 'Chưa cập nhật'}</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Quốc tịch</span>
+              <span class="info-value">${profile.nationality || 'Chưa cập nhật'}</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Số CCCD</span>
+              <span class="info-value">${profile.identityCardNumber || 'Chưa cập nhật'}</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Quê quán</span>
+              <span class="info-value">${profile.hometown || 'Chưa cập nhật'}</span>
+            </div>
+            <div class="info-block" style="grid-column: span 2;">
+              <span class="info-label">Địa chỉ thường trú</span>
+              <span class="info-value">${profile.permanentAddress || 'Chưa cập nhật'}</span>
+            </div>
+            <div class="info-block" style="grid-column: span 2;">
+              <span class="info-label">Địa chỉ hiện tại</span>
+              <span class="info-value">${profile.currentAddress || 'Chưa cập nhật'}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Liên hệ khẩn cấp</div>
+          <div class="grid">
+            <div class="info-block">
+              <span class="info-label">Họ và tên</span>
+              <span class="info-value">${emergency.name || 'Chưa cập nhật'}</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Mối quan hệ</span>
+              <span class="info-value">${emergency.relation || 'Chưa cập nhật'}</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Số điện thoại liên hệ</span>
+              <span class="info-value">${emergency.phone || 'Chưa cập nhật'}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Trình độ học vấn</div>
+          <div class="education-list">
+            ${educationHtml}
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Kỹ năng chuyên môn</div>
+          <div>
+            ${skillsHtml}
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Chứng chỉ chuyên môn</div>
+          <div>
+            ${certsHtml}
+          </div>
+        </div>
+
+        <div class="footer">
+          Hồ sơ được trích xuất tự động từ hệ thống EAM Workspace vào lúc ${new Date().toLocaleString('vi-VN')}
+        </div>
+
+        <script>
+          window.onload = function() {
+            window.print();
+          }
+        </script>
+      </body>
+      </html>
+    `
+
+    printWindow.document.write(htmlContent)
+    printWindow.document.close()
+  }
+
   // Update Personal Info
   const handlePersonalSubmit = async (e) => {
     e.preventDefault()
@@ -368,6 +746,11 @@ export default function EmployeeProfilePage() {
         eyebrow="Quản lý tài khoản"
         title="Hồ sơ nhân viên"
         description="Quản lý thông tin hồ sơ cá nhân, sơ yếu lý lịch và hồ sơ chứng chỉ đính kèm."
+        actions={
+          <Button onClick={handleExportPDF}>
+            <Download size={16} /> Xuất hồ sơ (PDF)
+          </Button>
+        }
       />
 
       {/* Lock Banner */}

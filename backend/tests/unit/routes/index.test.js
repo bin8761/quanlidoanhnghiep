@@ -38,6 +38,10 @@ describe('routes/index', () => {
     jest.doMock('../../../src/modules/locations/locations.route', () => ({ mocked: 'locationsRouter' }));
     jest.doMock('../../../src/modules/tasks/tasks.route', () => ({ mocked: 'tasksRouter' }));
     jest.doMock('../../../src/modules/supportChat/supportChat.route', () => ({ mocked: 'supportChatRouter' }));
+    jest.doMock('../../../src/modules/faqs/faqs.route', () => ({ mocked: 'faqsRouter' }));
+    jest.doMock('../../../src/modules/feedbacks/feedbacks.route', () => ({ mocked: 'feedbacksRouter' }));
+    jest.doMock('../../../src/modules/attendance/attendance.route', () => ({ mocked: 'attendanceRouter' }));
+    jest.doMock('../../../src/modules/loginHistory/loginHistory.route', () => ({ mocked: 'loginHistoryRouter' }));
 
     return {
       routesIndex: require('../../../src/routes/index'),

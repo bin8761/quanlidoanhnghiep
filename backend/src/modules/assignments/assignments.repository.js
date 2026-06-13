@@ -12,6 +12,8 @@ const ASSIGNMENT_SELECT = Object.freeze({
   employeeId: true,
   assignedAt: true,
   returnedAt: true,
+  confirmedAt: true,
+  signatureUrl: true,
   status: true,
   notes: true,
   createdAt: true,
@@ -151,6 +153,18 @@ function createAssignmentsRepository(prismaClient = defaultPrisma) {
       });
     },
 
+    async confirmAssignment(assignmentId, { confirmedAt, signatureUrl, notes }) {
+      return prismaClient.assetAssignment.update({
+        where: { id: assignmentId },
+        data: {
+          confirmedAt: confirmedAt ? new Date(confirmedAt) : new Date(),
+          signatureUrl,
+          notes: notes ?? undefined,
+        },
+        select: ASSIGNMENT_SELECT,
+      });
+    },
+
     async transferAsset(activeAssignmentId, data) {
       return prismaClient.$transaction(async (tx) => {
         const activeAssignment = await tx.assetAssignment.findUnique({
@@ -184,6 +198,13 @@ function createAssignmentsRepository(prismaClient = defaultPrisma) {
           },
           select: ASSIGNMENT_SELECT,
         });
+      });
+    },
+
+    async findAssignmentById(id) {
+      return prismaClient.assetAssignment.findUnique({
+        where: { id },
+        select: ASSIGNMENT_SELECT,
       });
     },
 

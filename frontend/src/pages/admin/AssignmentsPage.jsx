@@ -7,6 +7,8 @@ import {
   Plus,
   RotateCcw,
   UserRound,
+  FileCheck,
+  Eye,
 } from 'lucide-react'
 import { assignmentApi } from '../../api/assignments'
 import { assetApi } from '../../api/assets'
@@ -350,39 +352,74 @@ export default function AssignmentsPage() {
     {
       key: 'status',
       label: 'Trạng thái',
-      render: (value) => (
-        <div className="grid gap-1">
-          <StatusBadge status={value} />
-          <span className="text-[10px] font-semibold text-slate-400">{getStatusLabel(value)}</span>
-        </div>
-      ),
+      render: (value, assignment) => {
+        const isPending = assignment.status === 'ACTIVE' && !assignment.confirmedAt;
+        const badgeStatus = isPending ? 'PENDING_CONFIRMATION' : value;
+        const subLabel = isPending ? 'Chưa hoàn thành' : getStatusLabel(value);
+
+        return (
+          <div className="grid gap-1">
+            <StatusBadge status={badgeStatus} />
+            <span className="text-[10px] font-semibold text-slate-400">{subLabel}</span>
+            {assignment.confirmedAt && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedAssignment(assignment)
+                  setModal('view-signature')
+                }}
+                className="inline-flex items-center gap-1 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700 hover:bg-emerald-100 transition w-fit text-left cursor-pointer"
+                title="Xem chữ ký bàn giao"
+              >
+                ✓ Đã ký nhận
+              </button>
+            )}
+          </div>
+        )
+      },
     },
     {
       key: 'actions',
       label: 'Thao tác',
-      render: (_value, assignment) =>
-        assignment.status === 'ACTIVE' ? (
-          <div className="flex items-center gap-1">
+      render: (_value, assignment) => (
+        <div className="flex items-center gap-1">
+          {assignment.signatureUrl && (
             <button
-              className="grid size-9 place-items-center rounded-xl text-slate-400 transition hover:bg-blue-50 hover:text-blue-700"
+              className="grid size-9 place-items-center rounded-xl text-slate-400 transition hover:bg-emerald-50 hover:text-emerald-700"
               type="button"
-              title={`Chuyển giao ${assignment.asset?.assetCode}`}
-              onClick={() => openTransferModal(assignment)}
+              title="Xem chữ ký xác nhận"
+              onClick={() => {
+                setSelectedAssignment(assignment)
+                setModal('view-signature')
+              }}
             >
-              <ArrowLeftRight size={16} />
+              <FileCheck size={16} />
             </button>
-            <button
-              className="grid size-9 place-items-center rounded-xl text-slate-400 transition hover:bg-amber-50 hover:text-amber-700"
-              type="button"
-              title={`Thu hồi ${assignment.asset?.assetCode}`}
-              onClick={() => openReturnModal(assignment)}
-            >
-              <RotateCcw size={16} />
-            </button>
-          </div>
-        ) : (
-          <span className="text-xs text-slate-400">Đã hoàn tất</span>
-        ),
+          )}
+          {assignment.status === 'ACTIVE' ? (
+            <>
+              <button
+                className="grid size-9 place-items-center rounded-xl text-slate-400 transition hover:bg-blue-50 hover:text-blue-700"
+                type="button"
+                title={`Chuyển giao ${assignment.asset?.assetCode}`}
+                onClick={() => openTransferModal(assignment)}
+              >
+                <ArrowLeftRight size={16} />
+              </button>
+              <button
+                className="grid size-9 place-items-center rounded-xl text-slate-400 transition hover:bg-amber-50 hover:text-amber-700"
+                type="button"
+                title={`Thu hồi ${assignment.asset?.assetCode}`}
+                onClick={() => openReturnModal(assignment)}
+              >
+                <RotateCcw size={16} />
+              </button>
+            </>
+          ) : (
+            <span className="text-xs text-slate-400">Đã hoàn tất</span>
+          )}
+        </div>
+      ),
     },
   ]
 
@@ -471,6 +508,77 @@ export default function AssignmentsPage() {
             <FormField as="textarea" label="Ghi chú chuyển giao" name="notes" value={transferForm.notes} maxLength={1000} hint={`${transferForm.notes.length}/1000`} placeholder="Lý do chuyển giao, phụ kiện đi kèm..." onChange={updateForm(setTransferForm)} />
             <WorkflowActions isSaving={isSaving} submitLabel="Xác nhận chuyển giao" onClose={closeModal} />
           </form>
+        </Modal>
+      )}
+
+      {modal === 'view-signature' && selectedAssignment && (
+        <Modal
+          title="Chi tiết chữ ký bàn giao"
+          description={`Xác nhận nhận tài sản bởi ${selectedAssignment.employee?.fullName}`}
+          onClose={closeModal}
+        >
+          <div className="space-y-4">
+            <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4 space-y-3">
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <p className="font-semibold text-slate-400">Tài sản</p>
+                  <p className="mt-0.5 font-bold text-slate-800">
+                    {selectedAssignment.asset?.assetCode}
+                  </p>
+                  <p className="text-[11px] text-slate-500">{selectedAssignment.asset?.name}</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-400">Nhân viên</p>
+                  <p className="mt-0.5 font-bold text-slate-800">
+                    {selectedAssignment.employee?.fullName}
+                  </p>
+                  <p className="text-[11px] text-slate-500">{selectedAssignment.employee?.employeeCode}</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-400">Thời gian ký nhận</p>
+                  <p className="mt-0.5 font-bold text-slate-800">
+                    {selectedAssignment.confirmedAt ? new Date(selectedAssignment.confirmedAt).toLocaleString('vi-VN') : 'Chưa xác nhận'}
+                  </p>
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-400">Trạng thái bàn giao</p>
+                  <p className="mt-0.5 font-bold text-slate-800">
+                    {getStatusLabel(selectedAssignment.status)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {selectedAssignment.signatureUrl ? (
+              <div className="space-y-2">
+                <p className="text-xs font-bold text-slate-700">Chữ ký của nhân viên:</p>
+                <div className="flex justify-center rounded-xl border border-slate-200 bg-white p-4 shadow-inner">
+                  <img
+                    src={selectedAssignment.signatureUrl}
+                    alt="Chữ ký xác nhận"
+                    className="max-h-40 object-contain"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-4 text-xs text-slate-500">
+                Không tìm thấy tệp chữ ký.
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <p className="text-xs font-bold text-slate-700">Ghi chú của nhân viên khi ký:</p>
+              <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3 text-xs text-slate-600 italic">
+                {selectedAssignment.notes || 'Không có ghi chú khi bàn giao.'}
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <Button type="button" variant="secondary" onClick={closeModal}>
+                Đóng
+              </Button>
+            </div>
+          </div>
         </Modal>
       )}
 

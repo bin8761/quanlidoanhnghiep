@@ -28,6 +28,7 @@ import EmployeeRequestsPage from '../pages/employee/EmployeeRequestsPage'
 import EmployeeChangePasswordPage from '../pages/employee/EmployeeChangePasswordPage'
 import EmployeeHistoryPage from '../pages/employee/EmployeeHistoryPage'
 import EmployeeAssetDetailPage from '../pages/employee/EmployeeAssetDetailPage'
+import EmployeeFaqPage from '../pages/employee/EmployeeFaqPage'
 import SupportChatPage from '../pages/admin/SupportChatPage'
 
 function ProtectedAdminRoute() {
@@ -133,6 +134,7 @@ export default function AppRoutes() {
         <Route path="dashboard" element={<EmployeeDashboardPage />} />
         <Route path="assets" element={<EmployeeAssetsPage />} />
         <Route path="requests" element={<EmployeeRequestsPage />} />
+        <Route path="faq" element={<EmployeeFaqPage />} />
         <Route path="profile" element={<EmployeeProfilePage />} />
         <Route path="change-password" element={<EmployeeChangePasswordPage />} />
         <Route path="history" element={<EmployeeHistoryPage />} />

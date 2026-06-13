@@ -13,6 +13,7 @@ function resolveAssetLocation(asset) {
   if (!asset) return null;
 
   let resolvedLocation = null;
+  let status = asset.status;
 
   // 1. Fixed Asset: has its own location coordinates
   if (asset.locationId && asset.locationX !== null && asset.locationY !== null) {
@@ -28,23 +29,31 @@ function resolveAssetLocation(asset) {
   // 2. Mobile Asset: check active assignment
   else if (asset.assignments && asset.assignments.length > 0) {
     const activeAssignment = asset.assignments[0];
-    const employee = activeAssignment.employee;
-    if (employee && employee.locationId && employee.deskX !== null && employee.deskY !== null) {
-      resolvedLocation = {
-        locationId: employee.locationId,
-        locationName: employee.location?.name || null,
-        floorPlanUrl: employee.location?.floorPlanUrl || null,
-        x: employee.deskX,
-        y: employee.deskY,
-        type: "ASSIGNED",
-        employeeName: employee.fullName,
-        employeeCode: employee.employeeCode,
-      };
+    
+    // ONLY resolve location to employee desk if the assignment is confirmed
+    if (activeAssignment.confirmedAt) {
+      const employee = activeAssignment.employee;
+      if (employee && employee.locationId && employee.deskX !== null && employee.deskY !== null) {
+        resolvedLocation = {
+          locationId: employee.locationId,
+          locationName: employee.location?.name || null,
+          floorPlanUrl: employee.location?.floorPlanUrl || null,
+          x: employee.deskX,
+          y: employee.deskY,
+          type: "ASSIGNED",
+          employeeName: employee.fullName,
+          employeeCode: employee.employeeCode,
+        };
+      }
+    } else if (asset.status === "ASSIGNED") {
+      // Handover not confirmed yet! Show status as "PENDING_CONFIRMATION"
+      status = "PENDING_CONFIRMATION";
     }
   }
 
   return {
     ...asset,
+    status,
     resolvedLocation,
   };
 }

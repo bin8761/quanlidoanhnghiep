@@ -7,12 +7,16 @@ import {
   Wrench,
   FileText,
   AlertTriangle,
+  Pencil,
+  UploadCloud,
 } from 'lucide-react'
 import { Link, useParams, Navigate } from 'react-router-dom'
 import StatusBadge from '../../components/ui/StatusBadge'
 import { useEffect, useState } from 'react'
-import { getMaintenanceByAsset, getMyAssets } from '../../services/employee.service'
+import { getMaintenanceByAsset, getMyAssets, confirmAssignment } from '../../services/employee.service'
 import { API_BASE_URL } from '../../api/client'
+import SignaturePad from '../../components/ui/SignaturePad'
+import Modal from '../../components/ui/Modal'
 
 const getFullImageUrl = (url) => {
   if (!url) return ''
@@ -27,6 +31,49 @@ export default function EmployeeAssetDetailPage() {
   const [asset, setAsset] = useState(null)
   const [history, setHistory] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [signature, setSignature] = useState(null)
+  const [notes, setNotes] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false)
+  const [reloadTrigger, setReloadTrigger] = useState(0)
+  const [signatureType, setSignatureType] = useState('draw')
+
+  const handleSignatureUpload = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Kích thước file không được vượt quá 2MB.")
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      setSignature(event.target.result)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleTabChange = (type) => {
+    setSignatureType(type)
+    setSignature(null)
+  }
+
+  const handleConfirm = async () => {
+    if (!signature) return
+    setIsSubmitting(true)
+    try {
+      await confirmAssignment({
+        assignmentId: asset.assignmentId,
+        signatureUrl: signature,
+        notes: notes || undefined
+      })
+      setReloadTrigger(c => c + 1)
+    } catch (err) {
+      console.error("Xác nhận bàn giao thất bại:", err)
+      alert(err.message || "Xác nhận bàn giao thất bại. Vui lòng thử lại.")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   useEffect(() => {
     getMyAssets()
@@ -43,7 +90,7 @@ export default function EmployeeAssetDetailPage() {
                 y: ast.locationY,
                 type: 'FIXED',
               }
-            : emp?.locationId && emp?.deskX !== null
+            : (found.confirmedAt && emp?.locationId && emp?.deskX !== null)
               ? {
                   name: emp.location?.name,
                   floorPlanUrl: emp.location?.floorPlanUrl,
@@ -55,6 +102,7 @@ export default function EmployeeAssetDetailPage() {
 
           setAsset({
             id: found.asset.id,
+            assignmentId: found.id,
             code: found.asset.assetCode,
             name: found.asset.name,
             status: found.asset.status,
@@ -64,6 +112,8 @@ export default function EmployeeAssetDetailPage() {
             condition: found.notes || 'Tốt',
             imageUrl: found.asset.imageUrl || '',
             resolvedLocation: resolvedLoc,
+            confirmedAt: found.confirmedAt,
+            signatureUrl: found.signatureUrl,
           })
         } else {
           setAsset(null)
@@ -74,7 +124,7 @@ export default function EmployeeAssetDetailPage() {
         setAsset(null)
       })
       .finally(() => setIsLoading(false))
-  }, [code])
+  }, [code, reloadTrigger])
 
   useEffect(() => {
     if (asset?.id) {
@@ -193,12 +243,124 @@ export default function EmployeeAssetDetailPage() {
 
         {/* Quick Actions */}
         <div className="grid gap-5 content-start">
-          <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-soft sm:p-6">
-            <h3 className="text-sm font-extrabold text-slate-900">Thao tác nhanh</h3>
+          {/* Ký nhận bàn giao tài sản */}
+          {!asset.confirmedAt ? (
+            <section className="rounded-2xl border border-amber-200 bg-amber-50/50 p-5 shadow-soft sm:p-6 backdrop-blur-sm dark:border-amber-500/35 dark:bg-amber-500/10">
+              <h3 className="text-sm font-extrabold text-amber-900 dark:text-amber-200 flex items-center gap-2">
+                <span className="flex h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                Ký nhận bàn giao
+              </h3>
+              <p className="mt-2 text-xs text-amber-800 dark:text-amber-300 font-medium leading-relaxed">
+                Thiết bị này được bàn giao cho bạn nhưng chưa được ký nhận. Vui lòng kiểm tra kỹ hiện trạng và ký tên xác nhận dưới đây.
+              </p>
+              
+              <div className="mt-4 space-y-4">
+                {/* Tab Selector */}
+                <div className="flex border-b border-slate-200/80 dark:border-slate-800 mb-3">
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange('draw')}
+                    className={`flex-1 pb-2 text-xs font-bold transition-colors border-b-2 flex items-center justify-center gap-1.5 ${signatureType === 'draw' ? 'border-brand-600 text-brand-700 dark:text-brand-400' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                  >
+                    <Pencil size={13} />
+                    Vẽ chữ ký
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange('upload')}
+                    className={`flex-1 pb-2 text-xs font-bold transition-colors border-b-2 flex items-center justify-center gap-1.5 ${signatureType === 'upload' ? 'border-brand-600 text-brand-700 dark:text-brand-400' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                  >
+                    <UploadCloud size={13} />
+                    Tải ảnh chữ ký
+                  </button>
+                </div>
+
+                {signatureType === 'draw' ? (
+                  <SignaturePad onChange={setSignature} disabled={isSubmitting} />
+                ) : (
+                  <div className="relative flex flex-col items-center justify-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 p-4 h-[180px] hover:border-slate-300 transition cursor-pointer">
+                    {signature ? (
+                      <div className="relative group size-full flex items-center justify-center">
+                        <img src={signature} alt="Ảnh chữ ký đã tải" className="max-h-full max-w-full object-contain" />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSignature(null);
+                          }}
+                          className="absolute top-2 right-2 rounded-full bg-red-50 text-red-600 p-1.5 text-xs font-bold hover:bg-red-100 transition shadow"
+                        >
+                          Xóa ảnh
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center cursor-pointer size-full">
+                        <UploadCloud size={30} className="text-slate-400 mb-2" />
+                        <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Click để chọn ảnh chữ ký</span>
+                        <span className="text-[10px] text-slate-400 mt-1">Hỗ trợ PNG, JPG, JPEG. Tối đa 2MB.</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleSignatureUpload}
+                          disabled={isSubmitting}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                  </div>
+                )}
+                
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Ghi chú khi nhận (tùy chọn)</label>
+                  <textarea
+                    className="w-full text-xs p-2.5 border rounded-lg border-slate-200 bg-white outline-none focus:border-brand-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 transition"
+                    placeholder="Ví dụ: Máy hoạt động bình thường, màn hình đẹp..."
+                    value={notes}
+                    onChange={e => setNotes(e.target.value)}
+                    disabled={isSubmitting}
+                    rows={2}
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleConfirm}
+                  disabled={!signature || isSubmitting}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-100 disabled:text-slate-400 border border-transparent transition shadow-sm hover:shadow-md disabled:shadow-none"
+                >
+                  {isSubmitting ? 'Đang xác nhận...' : 'Xác nhận & Ký biên bản'}
+                </button>
+              </div>
+            </section>
+          ) : (
+            <section className="rounded-2xl border border-emerald-100 bg-emerald-50/20 p-5 shadow-soft sm:p-6 dark:border-emerald-500/30 dark:bg-emerald-500/10">
+              <h3 className="text-sm font-extrabold text-emerald-950 dark:text-emerald-300 flex items-center gap-1.5">
+                ✅ Đã xác nhận bàn giao
+              </h3>
+              <p className="mt-1.5 text-xs text-emerald-800 dark:text-emerald-400 leading-relaxed font-semibold">
+                Xác nhận lúc: {new Date(asset.confirmedAt).toLocaleString('vi-VN')}
+              </p>
+              {asset.signatureUrl && (
+                <div className="mt-4">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Chữ ký xác nhận</span>
+                  <div 
+                    onClick={() => setIsSignatureModalOpen(true)}
+                    className="cursor-pointer border border-slate-100 rounded-xl bg-white p-2 flex items-center justify-center h-20 hover:border-slate-200 transition dark:border-slate-800 dark:bg-slate-950"
+                    title="Click để phóng to chữ ký"
+                  >
+                    <img src={asset.signatureUrl} alt="Chữ ký xác nhận" className="max-h-full max-w-full object-contain" />
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+
+          <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-soft sm:p-6 dark:border-slate-700/80 dark:bg-[#15241f]">
+            <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">Thao tác nhanh</h3>
             <div className="mt-4 grid gap-2">
               <Link
                 to="/employee/requests"
-                className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800 transition hover:bg-amber-100"
+                className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800 transition hover:bg-amber-100 dark:border-amber-500/35 dark:bg-amber-500/10 dark:text-amber-200 dark:hover:bg-amber-500/20"
               >
                 <AlertTriangle size={17} className="text-amber-600 shrink-0" />
                 Báo cáo sự cố / hỏng hóc
@@ -275,6 +437,20 @@ export default function EmployeeAssetDetailPage() {
           </div>
         )}
       </section>
+
+      {isSignatureModalOpen && asset.signatureUrl && (
+        <Modal 
+          title="Chữ ký xác nhận bàn giao" 
+          onClose={() => setIsSignatureModalOpen(false)}
+        >
+          <div className="flex flex-col items-center justify-center p-4 bg-white rounded-2xl border border-slate-100 dark:bg-slate-950 dark:border-slate-800">
+            <img src={asset.signatureUrl} alt="Chữ ký phóng to" className="max-h-60 object-contain" />
+            <p className="mt-4 text-xs font-semibold text-slate-500">
+              Được ký bởi bạn vào ngày {new Date(asset.confirmedAt).toLocaleDateString('vi-VN')} lúc {new Date(asset.confirmedAt).toLocaleTimeString('vi-VN')}
+            </p>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }

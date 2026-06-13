@@ -10,6 +10,7 @@ import {
   LockKeyhole,
   History,
   Settings,
+  HelpCircle,
 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../auth/auth-context'
@@ -19,6 +20,7 @@ const navItemDefs = [
   { to: '/employee/dashboard', labelKey: 'Tổng quan', icon: Gauge },
   { to: '/employee/assets', labelKey: 'Tài sản của tôi', icon: Boxes },
   { to: '/employee/requests', labelKey: 'Yêu cầu hỗ trợ', icon: Headphones },
+  { to: '/employee/faq', labelKey: 'Cẩm nang tự phục vụ', icon: HelpCircle },
   { to: '/employee/profile', labelKey: 'Hồ sơ cá nhân', icon: CircleUserRound },
   { to: '/employee/change-password', labelKey: 'Đổi mật khẩu', icon: LockKeyhole },
   { to: '/employee/history', labelKey: 'Lịch sử', icon: History },

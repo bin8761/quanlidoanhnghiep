@@ -456,6 +456,70 @@ export default function EmployeesPage() {
     }
   }
 
+  const handleExportExcel = () => {
+    if (employees.length === 0) {
+      setToast({ type: 'warning', message: 'Không có dữ liệu nhân viên để xuất.' })
+      return
+    }
+
+    const headers = [
+      'Mã nhân viên',
+      'Họ và tên',
+      'Email',
+      'Phòng ban',
+      'Chức vụ',
+      'Ngày sinh',
+      'Giới tính',
+      'Số điện thoại',
+      'Email cá nhân',
+      'Quê quán',
+      'Dân tộc',
+      'Quốc tịch',
+      'Số CCCD',
+      'Địa chỉ thường trú',
+      'Địa chỉ hiện tại',
+      'Ngày vào làm',
+      'Trạng thái'
+    ]
+
+    const rows = employees.map(emp => [
+      emp.employeeCode || '',
+      emp.fullName || '',
+      emp.email || '',
+      emp.department?.name || 'Chưa phân phòng',
+      emp.position || 'Nhân viên',
+      emp.dateOfBirth ? new Date(emp.dateOfBirth).toLocaleDateString('vi-VN') : '',
+      emp.gender || '',
+      emp.phone || '',
+      emp.personalEmail || '',
+      emp.hometown || '',
+      emp.ethnicity || '',
+      emp.nationality || '',
+      emp.identityCardNumber || '',
+      emp.permanentAddress || '',
+      emp.currentAddress || '',
+      emp.joinDate ? new Date(emp.joinDate).toLocaleDateString('vi-VN') : '',
+      emp.status === 'ACTIVE' ? 'Đang hoạt động' : 'Ngừng hoạt động'
+    ])
+
+    const csvContent = '\uFEFF' + [headers, ...rows]
+      .map(row => row.map(cell => {
+        const stringified = String(cell).replace(/"/g, '""')
+        return `"${stringified}"`
+      }).join(','))
+      .join('\r\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `danh_sach_nhan_vien_${new Date().toISOString().split('T')[0]}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    setToast({ type: 'success', message: 'Xuất danh sách nhân viên thành công.' })
+  }
+
   const departmentOptions = [
     { value: '', label: 'Chưa phân phòng ban' },
     ...departments.map((department) => ({ value: String(department.id), label: department.name })),
@@ -525,6 +589,10 @@ export default function EmployeesPage() {
             <Button className="w-full sm:w-auto" variant="secondary" type="button" onClick={() => setShowImport(true)}>
               <FileSpreadsheet size={17} />
               Nhập Excel
+            </Button>
+            <Button className="w-full sm:w-auto" variant="secondary" type="button" onClick={handleExportExcel}>
+              <Download size={17} />
+              Xuất Excel
             </Button>
             <Button className="w-full sm:w-auto" type="button" onClick={openCreateModal}>
               <Plus size={17} />

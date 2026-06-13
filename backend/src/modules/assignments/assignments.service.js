@@ -8,24 +8,44 @@ function workflowError(message, statusCode = 400) {
   return new AppError({ message, statusCode, errorCode: ERROR_CODES.VALIDATION_ERROR });
 }
 
+function mapAssignmentAssetStatus(assignment) {
+  if (assignment && assignment.asset) {
+    let status = assignment.asset.status;
+    if (assignment.status === "ACTIVE" && !assignment.confirmedAt && status === "ASSIGNED") {
+      status = "PENDING_CONFIRMATION";
+    }
+    return {
+      ...assignment,
+      asset: {
+        ...assignment.asset,
+        status,
+      },
+    };
+  }
+  return assignment;
+}
+
 function createAssignmentsService({ repository = assignmentsRepository, notifications = notificationsService } = {}) {
   return Object.freeze({
     async getMyAssignments(authenticatedUser) {
       if (!authenticatedUser) throw new Error("Unauthorized");
       const employee = await repository.findEmployeeByUserId(authenticatedUser.userId);
       if (!employee) throw new Error("Employee not found");
-      return repository.findMyAssignments(employee.id);
+      const assignments = await repository.findMyAssignments(employee.id);
+      return assignments.map(mapAssignmentAssetStatus);
     },
 
     async getMyHistory(authenticatedUser) {
       if (!authenticatedUser) throw new Error("Unauthorized");
       const employee = await repository.findEmployeeByUserId(authenticatedUser.userId);
       if (!employee) throw new Error("Employee not found");
-      return repository.findHistory({ employeeId: employee.id });
+      const history = await repository.findHistory({ employeeId: employee.id });
+      return history.map(mapAssignmentAssetStatus);
     },
 
     async getHistory(filters = {}) {
-      return repository.findHistory(filters);
+      const history = await repository.findHistory(filters);
+      return history.map(mapAssignmentAssetStatus);
     },
 
     async assignAsset(data) {
@@ -101,6 +121,37 @@ function createAssignmentsService({ repository = assignmentsRepository, notifica
       if (employee.status !== "ACTIVE") throw workflowError("Target employee is not active");
 
       return repository.transferAsset(activeAssignment.id, data);
+    },
+
+    async confirmAssignment(authenticatedUser, assignmentId, { signatureUrl, notes }) {
+      if (!authenticatedUser) throw new AppError({ message: "Unauthorized", statusCode: 401, errorCode: ERROR_CODES.UNAUTHORIZED });
+
+      const assignment = await repository.findAssignmentById(assignmentId);
+      if (!assignment) throw workflowError("Assignment not found", 404);
+
+      if (assignment.status !== "ACTIVE") {
+        throw workflowError("Only active assignments can be confirmed");
+      }
+
+      const employee = await repository.findEmployeeByUserId(authenticatedUser.userId);
+      if (!employee || assignment.employeeId !== employee.id) {
+        throw new AppError({ message: "Forbidden - You do not own this assignment", statusCode: 403, errorCode: ERROR_CODES.FORBIDDEN });
+      }
+
+      const updatedAssignment = await repository.confirmAssignment(assignmentId, {
+        confirmedAt: new Date(),
+        signatureUrl,
+        notes: notes ?? undefined
+      });
+
+      try {
+        const tasksService = require("../tasks/tasks.service");
+        await tasksService.completeTask(authenticatedUser.userId, "ASSET_RECEIPT_CONFIRMATION", assignmentId);
+      } catch (error) {
+        logger.error({ err: error, assignmentId }, "Failed to complete user task for asset confirmation");
+      }
+
+      return updatedAssignment;
     },
   });
 }

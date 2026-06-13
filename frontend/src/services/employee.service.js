@@ -62,6 +62,15 @@ export async function createRequest(data) {
 }
 
 /**
+ * Hủy yêu cầu hỗ trợ.
+ * POST /api/support-requests/:id/cancel
+ */
+export async function cancelRequest(id) {
+  const response = await apiClient.post(`/support-requests/${id}/cancel`)
+  return response.data
+}
+
+/**
  * Lấy lịch sử bảo trì của một tài sản cụ thể.
  * GET /api/support-requests?assetId=:id
  */
@@ -76,5 +85,26 @@ export async function getMaintenanceByAsset(assetId) {
  */
 export async function getMyTasks() {
   const response = await apiClient.get('/tasks')
+  return response.data
+}
+
+/**
+ * Xác nhận bàn giao tài sản bằng chữ ký số.
+ * POST /assignments/confirm
+ * @param {{ assignmentId: string, signatureUrl: string, notes?: string }} data
+ */
+export async function confirmAssignment(data) {
+  const response = await apiClient.post('/assignments/confirm', data)
+  return response.data
+}
+
+/**
+ * Đánh giá chất lượng dịch vụ của yêu cầu hỗ trợ.
+ * POST /api/support-requests/:id/rate
+ * @param {string} id
+ * @param {{ rating: number, feedback?: string }} data
+ */
+export async function rateRequest(id, data) {
+  const response = await apiClient.post(`/support-requests/${id}/rate`, data)
   return response.data
 }

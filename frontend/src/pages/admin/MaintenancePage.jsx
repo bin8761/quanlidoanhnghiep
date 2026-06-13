@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, Clock3, Eye, LifeBuoy, Plus, XCircle } from 'lucide-react'
+import { CheckCircle2, Clock3, Eye, LifeBuoy, Plus, XCircle, Star } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { assetApi } from '../../api/assets'
 import { employeeApi } from '../../api/employees'
@@ -431,6 +431,37 @@ export default function MaintenancePage() {
             ))}
           </dl>
           {selected.resolution && <p className="mt-4 rounded-xl border border-slate-200 p-4 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">{selected.resolution}</p>}
+          {selected.status === 'COMPLETED' && selected.ratedAt && (
+            <div className="mt-4 rounded-xl border border-slate-200 bg-amber-50/35 p-4 dark:border-slate-700 dark:bg-amber-950/10">
+              <span className="text-[10px] font-bold text-slate-400 block uppercase mb-1">Đánh giá từ người dùng</span>
+              <div className="flex items-center gap-1.5 mb-2">
+                <div className="flex items-center">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      size={16}
+                      className={`${
+                        star <= selected.rating
+                          ? 'fill-amber-400 text-amber-400'
+                          : 'text-slate-300 dark:text-slate-700'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  {selected.rating === 5 ? 'Rất hài lòng' : selected.rating === 4 ? 'Hài lòng' : selected.rating === 3 ? 'Bình thường' : selected.rating === 2 ? 'Không hài lòng' : 'Rất không hài lòng'}
+                </span>
+              </div>
+              {selected.feedback && (
+                <p className="text-xs text-slate-600 dark:text-slate-400 italic">
+                  "{selected.feedback}"
+                </p>
+              )}
+              <p className="mt-1 text-[10px] text-slate-400">
+                Đánh giá lúc: {new Date(selected.ratedAt).toLocaleString('vi-VN')}
+              </p>
+            </div>
+          )}
           {!!selected.events?.length && (
             <ol className="mt-4 space-y-2">
               {selected.events.map((event) => (
