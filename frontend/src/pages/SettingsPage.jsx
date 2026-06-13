@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useLanguage } from '../hooks/useLanguage'
 import { useTheme } from '../hooks/useTheme'
 import { faqApi } from '../api/faqs'
-import { feedbackApi } from '../api/feedbacks'
+import { feedbackApi, getFeedbackFileName, getFeedbackFileUrl } from '../api/feedbacks'
 import { loginHistoryApi } from '../api/loginHistory'
 import PageHeader from '../components/ui/PageHeader'
 import Button from '../components/ui/Button'
@@ -447,14 +447,16 @@ export default function SettingsPage() {
                               }`}>
                                 {t(`priority${fb.priority.charAt(0) + fb.priority.slice(1).toLowerCase()}`)}
                               </span>
-                              {fb.filePath && (
+                              {fb.fileUrl && (
                                 <a
-                                  href={`http://localhost:5000/uploads/${fb.filePath}`}
+                                  href={getFeedbackFileUrl(fb.fileUrl)}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="flex items-center gap-1 text-brand-600 hover:underline"
+                                  className="flex min-w-0 items-center gap-1 text-brand-600 hover:underline dark:text-brand-300"
+                                  title={getFeedbackFileName(fb.fileUrl)}
                                 >
-                                  <FileText size={12} /> File đính kèm
+                                  <FileText className="shrink-0" size={12} />
+                                  <span className="max-w-40 truncate">{getFeedbackFileName(fb.fileUrl)}</span>
                                 </a>
                               )}
                               <span>• {new Date(fb.createdAt).toLocaleString('vi-VN')}</span>

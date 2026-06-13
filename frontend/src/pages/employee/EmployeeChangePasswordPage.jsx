@@ -1,5 +1,7 @@
 import { Eye, EyeOff, KeyRound, ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
+import { apiClient } from '../../api/client'
+import { useAuth } from '../../auth/auth-context'
 import Button from '../../components/ui/Button'
 import FormField from '../../components/ui/FormField'
 import PageHeader from '../../components/ui/PageHeader'
@@ -38,6 +40,7 @@ function PasswordInput({ id, name, value, placeholder, autoComplete, onChange })
 }
 
 export default function EmployeeChangePasswordPage() {
+  const { updateCurrentUser } = useAuth()
   const [form, setForm] = useState(INITIAL_FORM)
   const [errors, setErrors] = useState({})
   const [serverError, setServerError] = useState('')
@@ -75,8 +78,12 @@ export default function EmployeeChangePasswordPage() {
     setServerError('')
 
     try {
-      const { changePassword } = await import('../../services/auth.service')
-      await changePassword({ currentPassword: form.currentPassword, newPassword: form.newPassword })
+      await apiClient.put('/auth/change-password', {
+        currentPassword: form.currentPassword,
+        newPassword: form.newPassword,
+        confirmNewPassword: form.confirmPassword,
+      })
+      updateCurrentUser({ mustChangePassword: false })
       setIsSuccess(true)
       setForm(INITIAL_FORM)
     } catch (err) {

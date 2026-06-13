@@ -137,6 +137,96 @@ test('desktop login and dashboard render without console errors', async ({ page 
   expect(errors).toEqual([])
 })
 
+test('admin can toggle FAQ visibility', async ({ page }) => {
+  const errors = collectConsoleErrors(page)
+
+  await loginAsAdmin(page)
+  await page.goto('/admin/faq-management')
+
+  const faqRow = page.getByRole('row').filter({
+    hasText: 'Tôi có thể đính kèm loại tệp nào khi gửi góp ý?',
+  })
+  const statusButton = faqRow.getByRole('button', { name: 'Hiển thị' })
+
+  await expect(statusButton).toBeVisible()
+  await statusButton.click()
+  await expect(faqRow.getByRole('button', { name: 'Ẩn' })).toBeVisible()
+
+  await faqRow.getByRole('button', { name: 'Ẩn' }).click()
+  await expect(faqRow.getByRole('button', { name: 'Hiển thị' })).toBeVisible()
+
+  expect(errors).toEqual([])
+})
+
+test('admin search works across FAQ, feedback, attendance and login history', async ({ page }) => {
+  const errors = collectConsoleErrors(page)
+
+  await loginAsAdmin(page)
+
+  const cases = [
+    {
+      route: '/admin/faq-management',
+      placeholder: 'Tìm kiếm câu hỏi, câu trả lời hoặc danh mục...',
+      query: 'đính kèm loại tệp',
+      expected: 'Tôi có thể đính kèm loại tệp nào khi gửi góp ý?',
+    },
+    {
+      route: '/admin/feedbacks',
+      placeholder: 'Tìm kiếm góp ý...',
+      query: 'firstlogin.employee',
+      expected: 'firstlogin.employee@company.local',
+    },
+    {
+      route: '/admin/attendance',
+      placeholder: 'Tìm kiếm theo tên nhân viên hoặc mã nhân viên...',
+      query: 'pham van hung',
+      expected: 'Phạm Văn Hùng',
+    },
+    {
+      route: '/admin/login-histories',
+      placeholder: 'Tìm kiếm theo email, IP hoặc hệ điều hành...',
+      query: 'admin@company.local',
+      expected: 'admin@company.local',
+    },
+  ]
+
+  for (const searchCase of cases) {
+    await page.goto(searchCase.route)
+    const searchbox = page.getByRole('searchbox', { name: searchCase.placeholder })
+    await expect(searchbox).toBeVisible()
+    await searchbox.fill(searchCase.query)
+    await expect.poll(
+      () => page.getByRole('row').filter({ hasText: searchCase.expected }).count(),
+    ).toBeGreaterThan(0)
+  }
+
+  expect(errors).toEqual([])
+})
+
+test('first-login employee can use dashboard without a forced password redirect', async ({ page }) => {
+  const errors = collectConsoleErrors(page)
+  const failedApiResponses = []
+
+  page.on('response', (response) => {
+    if (response.url().includes('/api/') && response.status() >= 400) {
+      failedApiResponses.push(`${response.status()} ${response.url()}`)
+    }
+  })
+
+  await page.goto('/login')
+  await page.getByLabel('Email công ty').fill('firstlogin.employee@company.local')
+  await page.getByLabel('Mật khẩu').fill('Password123')
+  await page.getByRole('button', { name: 'Đăng nhập hệ thống' }).click()
+
+  await expect(page).toHaveURL(/\/employee\/dashboard$/)
+  await expect(page.getByText('Bạn đang sử dụng mật khẩu tạm thời')).toBeVisible()
+  await expect(page.getByRole('main').getByRole('link', { name: 'Đổi mật khẩu' })).toBeVisible()
+  await page.waitForTimeout(1000)
+
+  expect(failedApiResponses).toEqual([])
+  expect(errors).toEqual([])
+})
+
 test('mobile login, dashboard and sidebar remain usable', async ({ page }) => {
   const errors = collectConsoleErrors(page)
 

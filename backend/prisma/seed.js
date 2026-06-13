@@ -1212,9 +1212,6 @@ async function seedFeedbacks(users) {
 }
 
 async function seedFaqs() {
-  // Delete existing FAQs to avoid duplicates on re-seed
-  await prisma.faq.deleteMany({});
-
   const faqData = [
     // Đăng nhập
     { category: "Đăng nhập", question: "Tôi quên mật khẩu, phải làm thế nào?", answer: "Bạn có thể sử dụng chức năng 'Quên mật khẩu' trên trang đăng nhập. Hệ thống sẽ gửi mã OTP xác thực về email của bạn để đặt lại mật khẩu.", status: "SHOW" },
@@ -1250,13 +1247,43 @@ async function seedFaqs() {
     { category: "Góp ý & Hỗ trợ", question: "Làm thế nào để gửi góp ý cho hệ thống?", answer: "Vào mục 'Góp ý & Phản hồi' trong thanh điều hướng hoặc Cài đặt. Điền tiêu đề, nội dung, loại góp ý và mức độ ưu tiên. Bạn cũng có thể đính kèm file minh họa.", status: "SHOW" },
     { category: "Góp ý & Hỗ trợ", question: "Góp ý của tôi có được phản hồi không?", answer: "Có, Admin sẽ xem xét và cập nhật trạng thái góp ý của bạn. Bạn có thể theo dõi trạng thái (Chờ xử lý → Đang xử lý → Đã xử lý) trong lịch sử góp ý của mình.", status: "SHOW" },
     { category: "Góp ý & Hỗ trợ", question: "Tôi có thể liên hệ hỗ trợ kỹ thuật qua đâu?", answer: "Bạn có thể gửi yêu cầu hỗ trợ qua mục 'Yêu cầu hỗ trợ' hoặc 'Góp ý & Phản hồi'. Với các vấn đề khẩn cấp, hãy liên hệ trực tiếp phòng IT.", status: "SHOW" },
+    // Bàn giao và thu hồi
+    { category: "Bàn giao tài sản", question: "Làm thế nào để xác nhận tôi đã nhận tài sản?", answer: "Khi Admin hoàn tất bàn giao, tài sản sẽ xuất hiện trong mục 'Tài sản của tôi'. Hãy kiểm tra mã tài sản, số serial và tình trạng thực tế trước khi xác nhận nhận tài sản.", status: "SHOW" },
+    { category: "Bàn giao tài sản", question: "Khi chuyển phòng ban, tài sản của tôi được xử lý như thế nào?", answer: "Admin sẽ căn cứ vào nhu cầu sử dụng để thu hồi hoặc chuyển tài sản sang phòng ban mới. Mọi thay đổi đều được lưu trong lịch sử bàn giao để bạn có thể tra cứu.", status: "SHOW" },
+    { category: "Bàn giao tài sản", question: "Tôi cần làm gì trước khi trả lại tài sản?", answer: "Hãy sao lưu dữ liệu công việc cần thiết, đăng xuất các tài khoản cá nhân và bàn giao đầy đủ phụ kiện đi kèm. Admin sẽ kiểm tra tình trạng tài sản trước khi xác nhận thu hồi.", status: "SHOW" },
+    // Bảo trì
+    { category: "Bảo trì", question: "Tôi theo dõi tiến độ sửa chữa tài sản ở đâu?", answer: "Mở mục 'Yêu cầu hỗ trợ' để xem trạng thái yêu cầu. Các trạng thái chính gồm Chờ xử lý, Đang xử lý, Đã hoàn thành hoặc Từ chối.", status: "SHOW" },
+    { category: "Bảo trì", question: "Tôi có nên tiếp tục sử dụng tài sản đang báo hỏng không?", answer: "Không nên tiếp tục sử dụng nếu thiết bị có dấu hiệu mất an toàn, quá nhiệt, chập điện hoặc hư hỏng nghiêm trọng. Hãy ngắt nguồn nếu có thể và gửi yêu cầu hỗ trợ ngay.", status: "SHOW" },
+    // Kiểm kê
+    { category: "Kiểm kê", question: "Khi được yêu cầu kiểm kê tài sản, tôi cần làm gì?", answer: "Kiểm tra tài sản đang giữ, đối chiếu mã tài sản và số serial, sau đó xác nhận tình trạng thực tế theo hướng dẫn của Admin. Nếu có sai lệch, hãy ghi chú rõ trong phiên kiểm kê.", status: "SHOW" },
+    { category: "Kiểm kê", question: "Nếu tài sản thực tế không khớp với hệ thống thì xử lý thế nào?", answer: "Không tự ý sửa thông tin. Hãy báo cho Admin trong phiên kiểm kê, cung cấp mã tài sản, vị trí hiện tại và mô tả sai lệch để được xác minh.", status: "SHOW" },
+    // Nhập dữ liệu
+    { category: "Nhập dữ liệu", question: "Admin có thể nhập nhiều tài sản hoặc nhân viên cùng lúc không?", answer: "Có. Admin có thể sử dụng chức năng Nhập Excel tại trang quản lý tương ứng, tải file mẫu, điền dữ liệu đúng cột rồi xem trước kết quả trước khi xác nhận nhập.", status: "SHOW" },
+    { category: "Nhập dữ liệu", question: "Tại sao một số dòng trong file Excel không được nhập?", answer: "Các dòng thiếu trường bắt buộc, sai định dạng, trùng mã hoặc tham chiếu tới phòng ban và danh mục không tồn tại sẽ bị đánh dấu lỗi. Hãy sửa theo thông báo ở bước xem trước rồi tải lại file.", status: "SHOW" },
+    // Sơ đồ vị trí
+    { category: "Vị trí tài sản", question: "Làm thế nào để tìm vị trí một tài sản trong văn phòng?", answer: "Admin có thể mở mục 'Sơ đồ mặt bằng', chọn tầng hoặc khu vực và tìm tài sản theo mã hoặc tên. Vị trí hiển thị dựa trên dữ liệu được cập nhật gần nhất.", status: "SHOW" },
+    { category: "Vị trí tài sản", question: "Vì sao tài sản chưa xuất hiện trên sơ đồ mặt bằng?", answer: "Tài sản chỉ xuất hiện khi đã được gán vị trí và tọa độ trên sơ đồ. Hãy kiểm tra thông tin vị trí của tài sản hoặc liên hệ Admin để cập nhật.", status: "SHOW" },
+    // Tệp đính kèm
+    { category: "Góp ý & Hỗ trợ", question: "Tôi có thể đính kèm loại tệp nào khi gửi góp ý?", answer: "Bạn có thể đính kèm tài liệu hoặc hình ảnh minh họa có dung lượng tối đa 10 MB. Không nên tải lên tệp chứa mật khẩu, khóa truy cập hoặc dữ liệu nhạy cảm.", status: "SHOW" },
   ];
 
   for (const faq of faqData) {
-    await prisma.faq.create({ data: faq });
+    const existing = await prisma.faq.findFirst({
+      where: { question: faq.question },
+      select: { id: true },
+    });
+
+    if (existing) {
+      await prisma.faq.update({
+        where: { id: existing.id },
+        data: faq,
+      });
+    } else {
+      await prisma.faq.create({ data: faq });
+    }
   }
 
-  console.log(`Seeded ${faqData.length} FAQs.`);
+  console.log(`Synchronized ${faqData.length} FAQs.`);
 }
 
 async function main() {
@@ -1317,12 +1344,21 @@ async function main() {
   );
 }
 
-main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (error) => {
-    console.error(error);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+async function disconnectSeedDatabase() {
+  await prisma.$disconnect();
+}
+
+if (require.main === module) {
+  main()
+    .then(disconnectSeedDatabase)
+    .catch(async (error) => {
+      console.error(error);
+      await disconnectSeedDatabase();
+      process.exit(1);
+    });
+}
+
+module.exports = Object.freeze({
+  seedFaqs,
+  disconnectSeedDatabase,
+});

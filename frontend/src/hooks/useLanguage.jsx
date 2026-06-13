@@ -163,6 +163,9 @@ const translations = {
 }
 
 const fallbackDictionary = {
+  "Bạn đang sử dụng mật khẩu tạm thời": "You are using a temporary password",
+  "Hãy đổi mật khẩu để tăng tính bảo mật cho tài khoản của bạn.": "Change your password to improve your account security.",
+
   // Sidebar & Navigation
   "Tổng quan": "Dashboard",
   "Tài sản": "Assets",

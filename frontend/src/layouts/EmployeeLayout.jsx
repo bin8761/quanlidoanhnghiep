@@ -1,6 +1,7 @@
-import { Menu, QrCode } from 'lucide-react'
+import { KeyRound, Menu, QrCode } from 'lucide-react'
 import { useState } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Link, Outlet, useLocation } from 'react-router-dom'
+import { useAuth } from '../auth/auth-context'
 import EmployeeSidebar from '../components/layout/EmployeeSidebar'
 import NotificationBell from '../components/layout/NotificationBell'
 import SyncStatusBadge from '../components/layout/SyncStatusBadge'
@@ -24,6 +25,7 @@ export default function EmployeeLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [qrOpen, setQrOpen] = useState(false)
   const location = useLocation()
+  const { user } = useAuth()
   const { connectionStatus } = useNotifications()
   const { t } = useLanguage()
 
@@ -77,6 +79,25 @@ export default function EmployeeLayout() {
         </header>
 
         <div className="page-container max-w-[1440px]">
+          {user?.mustChangePassword && location.pathname !== '/employee/change-password' && (
+            <div className="mb-5 flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-950 shadow-sm dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-100 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <KeyRound className="mt-0.5 shrink-0 text-amber-600 dark:text-amber-300" size={18} />
+                <div>
+                  <p className="text-sm font-bold">{t('Bạn đang sử dụng mật khẩu tạm thời')}</p>
+                  <p className="mt-0.5 text-xs leading-5 text-amber-800 dark:text-amber-200/80">
+                    {t('Hãy đổi mật khẩu để tăng tính bảo mật cho tài khoản của bạn.')}
+                  </p>
+                </div>
+              </div>
+              <Link
+                className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-lg bg-amber-600 px-3.5 text-xs font-bold text-white transition hover:bg-amber-700 focus:outline-none focus:ring-4 focus:ring-amber-500/20 dark:bg-amber-400 dark:text-amber-950 dark:hover:bg-amber-300"
+                to="/employee/change-password"
+              >
+                {t('Đổi mật khẩu')}
+              </Link>
+            </div>
+          )}
           <Outlet />
         </div>
       </main>
