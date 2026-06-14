@@ -595,8 +595,61 @@ const fallbackDictionary = {
   "Xóa tài liệu này?": "Delete this document?",
   "Bạn có chắc chắn muốn xóa câu hỏi FAQ này không? Hành động này không thể hoàn tác.": "Are you sure you want to delete this FAQ? This action cannot be undone.",
   "VD: Làm cách nào để đổi mật khẩu?": "Example: How do I change my password?",
-  "Ghim ở": "Pinned at"
-  ,
+  "Ghim ở": "Pinned at",
+  "Nhập lại mật khẩu": "Confirm Password",
+  "Quên mật khẩu?": "Forgot Password?",
+  "Khôi phục mật khẩu": "Reset Password",
+  "Hệ thống sẽ gửi mã xác thực (OTP) tới email của bạn để thay đổi mật khẩu.": "The system will send a verification OTP to your email to reset your password.",
+  "Nhập email để nhận mã khôi phục.": "Enter your email to receive a recovery code.",
+  "Xác thực OTP": "Verify OTP",
+  "Company Email đã đăng ký": "Registered Company Email",
+  "Cancel bỏ": "Cancel",
+  "Mã xác thực đã được gửi đến địa chỉ admin@company.local. Vui lòng nhập mã OTP để tiếp tục.": "The verification code has been sent to {{email}}. Please enter the OTP to continue.",
+  "Nhập 6 chữ số": "Enter 6 digits",
+
+  // Login page
+  "Email công ty": "Company Email",
+  "Nhập mật khẩu": "Enter Password",
+  "Ẩn mật khẩu": "Hide Password",
+  "Hiện mật khẩu": "Show Password",
+  "Email hoặc mật khẩu không chính xác.": "Incorrect email or password.",
+  "Đăng nhập không thành công. Vui lòng thử lại.": "Login failed. Please try again.",
+
+  // Forgot password flow
+  "Mã OTP đã được gửi về email của bạn.": "An OTP has been sent to your email.",
+  "Đã gửi lại mã OTP mới.": "A new OTP has been sent.",
+  "Gửi OTP thất bại. Vui lòng thử lại.": "Failed to send OTP. Please try again.",
+  "Gửi OTP thất bại.": "Failed to send OTP.",
+  "Xác thực OTP thành công!": "OTP verified successfully!",
+  "Mã OTP không hợp lệ hoặc đã hết hạn.": "The OTP is invalid or has expired.",
+  "Mật khẩu xác nhận không khớp.": "Password confirmation does not match.",
+  "Đặt lại mật khẩu thành công! Hãy đăng nhập bằng mật khẩu mới.": "Password reset successfully! Please sign in with your new password.",
+  "Đặt lại mật khẩu thất bại.": "Failed to reset password.",
+
+  // Step 1
+  "Email công ty đã đăng ký": "Registered Company Email",
+  "email@company.local": "email@company.local",
+  "Hủy bỏ": "Cancel",
+  "Đang xử lý...": "Processing...",
+
+  // Step 2
+  "Mã xác thực (OTP)": "Verification Code (OTP)",
+  "Mã xác thực đã được gửi đến địa chỉ": "The verification code has been sent to",
+  "Vui lòng nhập mã OTP để tiếp tục.": "Please enter the OTP to continue.",
+  "Gửi lại mã OTP": "Resend OTP",
+  "Gửi lại mã": "Resend Code",
+  "Quay lại": "Back",
+  "Xác nhận mã": "Verify Code",
+
+  // Dynamic countdown
+  "Gửi lại mã ({time}s)": "Resend Code ({time}s)",
+
+  // Step 3
+  "Mã OTP đã được xác nhận thành công. Hãy đặt mật khẩu mới của bạn dưới đây.": "OTP verification successful. Please set your new password below.",
+  "Mật khẩu ít nhất 8 ký tự (chữ & số)": "Password must be at least 8 characters (letters & numbers).",
+  "Nhập lại mật khẩu mới": "Re-enter New Password",
+  "Đang đổi mật khẩu...": "Changing Password...",
+
   // Login History page
   "Email tài khoản": "Account Email",
   "Thời gian": "Time",
