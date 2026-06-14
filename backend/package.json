@@ -10,7 +10,8 @@
     "start": "node src/app/server.js",
     "test": "jest",
     "lint": "eslint .",
-    "db:seed": "prisma db seed"
+    "db:seed": "prisma db seed",
+    "db:seed:faqs": "node prisma/seed-faqs.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

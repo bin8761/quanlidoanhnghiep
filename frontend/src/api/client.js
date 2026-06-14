@@ -54,7 +54,9 @@ async function request(path, options = {}) {
   const payload = await response.json().catch(() => null)
 
   if (!response.ok) {
-    if (response.status === 401) {
+    const isLoginRequest = path === '/auth/login'
+
+    if (response.status === 401 && token && !isLoginRequest) {
       setAccessToken(null)
       localStorage.removeItem('eam_current_user')
       window.location.href = '/login'

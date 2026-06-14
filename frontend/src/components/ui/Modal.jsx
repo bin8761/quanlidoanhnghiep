@@ -5,6 +5,7 @@ import { X } from 'lucide-react'
 const sizes = {
   md: 'max-w-[560px]',
   lg: 'max-w-[820px]',
+  xl: 'max-w-[1120px]',
 }
 
 export default function Modal({ title, description, children, onClose, size = 'md' }) {
@@ -42,16 +43,16 @@ export default function Modal({ title, description, children, onClose, size = 'm
     >
       <section
         ref={dialogRef}
-        className={`animate-fade-up max-h-[calc(100vh-24px)] w-full overflow-auto rounded-[22px] border border-white/70 bg-white shadow-premium outline-none ${sizes[size] || sizes.md}`}
+        className={`animate-fade-up max-h-[calc(100vh-24px)] w-full overflow-auto rounded-[22px] border border-white/70 bg-white shadow-premium outline-none dark:border-slate-700 dark:bg-[#14201b] ${sizes[size] || sizes.md}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <header className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-100 bg-white/95 px-5 py-5 backdrop-blur-xl sm:px-6">
+        <header className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-100 bg-white/95 px-5 py-5 backdrop-blur-xl dark:border-slate-700 dark:bg-[#14201b]/95 sm:px-6">
           <div>
-            <h3 className="m-0 text-lg font-extrabold text-slate-950" id={titleId}>{title}</h3>
+            <h3 className="m-0 text-lg font-extrabold text-slate-950 dark:text-slate-100" id={titleId}>{title}</h3>
             {description && (
               <p className="mt-1 text-xs leading-5 text-slate-500">{description}</p>
             )}

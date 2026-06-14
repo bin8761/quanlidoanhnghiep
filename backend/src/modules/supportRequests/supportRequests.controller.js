@@ -46,4 +46,22 @@ module.exports = Object.freeze({
       return next(error);
     }
   },
+
+  async cancel(req, res, next) {
+    try {
+      const request = await service.cancel(req.params.id, { authenticatedUser: req.user });
+      return sendSuccess(res, { message: "Support request cancelled successfully", data: request });
+    } catch (error) {
+      return next(error);
+    }
+  },
+
+  async rate(req, res, next) {
+    try {
+      const request = await service.rate(req.params.id, req.body, { authenticatedUser: req.user });
+      return sendSuccess(res, { message: "Support request rated successfully", data: request });
+    } catch (error) {
+      return next(error);
+    }
+  },
 });

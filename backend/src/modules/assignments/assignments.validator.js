@@ -36,4 +36,11 @@ module.exports = Object.freeze({
       status: z.enum(["ACTIVE", "RETURNED", "TRANSFERRED"]).optional(),
     }),
   }),
+  confirm: Object.freeze({
+    body: z.object({
+      assignmentId: uuid("Assignment ID"),
+      signatureUrl: z.string({ required_error: "Signature is required" }).min(1, "Signature cannot be empty"),
+      notes: notes,
+    }),
+  }),
 });

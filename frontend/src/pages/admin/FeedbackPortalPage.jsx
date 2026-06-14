@@ -1,35 +1,52 @@
-import { useState, useEffect } from 'react'
-import { feedbackApi } from '../../api/feedbacks'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { feedbackApi, getFeedbackFileName, getFeedbackFileUrl } from '../../api/feedbacks'
 import PageHeader from '../../components/ui/PageHeader'
 import Button from '../../components/ui/Button'
 import Modal from '../../components/ui/Modal'
 import FormField from '../../components/ui/FormField'
 import DataTable from '../../components/ui/DataTable'
 import { toast } from 'react-toastify'
-import { MessageSquare, Eye, FileText, CheckCircle2, RefreshCw } from 'lucide-react'
+import { MessageSquare, Eye, FileText, RefreshCw } from 'lucide-react'
+import { matchesSearch } from '../../utils/search'
 
 export default function FeedbackPortalPage() {
   const [feedbacks, setFeedbacks] = useState([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
   const [selectedFeedback, setSelectedFeedback] = useState(null)
   const [status, setStatus] = useState('PENDING')
   const [updating, setUpdating] = useState(false)
 
-  useEffect(() => {
-    fetchFeedbacks()
-  }, [])
-
-  const fetchFeedbacks = async () => {
+  const fetchFeedbacks = useCallback(async () => {
     try {
       setLoading(true)
       const data = await feedbackApi.list()
       setFeedbacks(data)
-    } catch (error) {
+    } catch {
       toast.error('Không thể tải danh sách góp ý & phản hồi')
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    let active = true
+
+    feedbackApi.list()
+      .then((data) => {
+        if (active) setFeedbacks(data)
+      })
+      .catch(() => {
+        if (active) toast.error('Không thể tải danh sách góp ý & phản hồi')
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [])
 
   const handleOpenDetail = (fb) => {
     setSelectedFeedback(fb)
@@ -46,7 +63,7 @@ export default function FeedbackPortalPage() {
       toast.success('Cập nhật trạng thái góp ý thành công!')
       setSelectedFeedback(null)
       fetchFeedbacks()
-    } catch (error) {
+    } catch {
       toast.error('Cập nhật trạng thái thất bại!')
     } finally {
       setUpdating(false)
@@ -92,6 +109,17 @@ export default function FeedbackPortalPage() {
       render: (value) => new Date(value).toLocaleString('vi-VN')
     },
     {
+      key: 'fileUrl',
+      label: 'Đính kèm',
+      render: (value) => value ? (
+        <span className="inline-flex items-center gap-1 rounded-lg bg-brand-50 px-2 py-1 text-[10px] font-bold text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
+          <FileText size={12} /> Có tệp
+        </span>
+      ) : (
+        <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500">Không có</span>
+      )
+    },
+    {
       key: 'actions',
       label: 'Hành động',
       render: (_, row) => (
@@ -104,6 +132,20 @@ export default function FeedbackPortalPage() {
       )
     }
   ]
+
+  const filteredFeedbacks = useMemo(
+    () => feedbacks.filter((feedback) => matchesSearch(search, [
+      feedback.title,
+      feedback.content,
+      feedback.user?.email,
+      feedback.user?.employee?.fullName,
+      feedback.category,
+      feedback.priority,
+      feedback.status,
+      feedback.fileUrl ? 'Có tệp đính kèm' : 'Không có tệp',
+    ])),
+    [feedbacks, search],
+  )
 
   return (
     <div className="animate-fade-up">
@@ -125,7 +167,9 @@ export default function FeedbackPortalPage() {
         ) : (
           <DataTable
             columns={columns}
-            rows={feedbacks}
+            rows={filteredFeedbacks}
+            searchValue={search}
+            onSearchChange={setSearch}
             searchPlaceholder="Tìm kiếm góp ý..."
           />
         )}
@@ -162,16 +206,18 @@ export default function FeedbackPortalPage() {
               </div>
             </div>
 
-            {selectedFeedback.filePath && (
+            {selectedFeedback.fileUrl && (
               <div className="text-xs">
-                <span className="text-slate-400 font-bold block">Tệp đính kèm:</span>
+                <span className="text-slate-400 font-bold block dark:text-slate-500">Tệp đính kèm:</span>
                 <a
-                  href={`http://localhost:5000/uploads/${selectedFeedback.filePath}`}
+                  href={getFeedbackFileUrl(selectedFeedback.fileUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 mt-1.5 px-3 py-1.5 border border-slate-200 hover:border-brand-500 rounded-xl text-brand-600 hover:underline transition font-bold"
+                  className="mt-1.5 inline-flex max-w-full items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 font-bold text-brand-700 transition hover:border-brand-500 hover:bg-brand-50 focus:outline-none focus:ring-4 focus:ring-brand-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-brand-300 dark:hover:border-brand-500 dark:hover:bg-brand-500/10"
                 >
-                  <FileText size={13} /> Tải tệp đính kèm
+                  <FileText className="shrink-0" size={14} />
+                  <span className="truncate">{getFeedbackFileName(selectedFeedback.fileUrl)}</span>
+                  <span className="shrink-0 text-[10px] font-semibold text-slate-400">Mở / tải xuống</span>
                 </a>
               </div>
             )}

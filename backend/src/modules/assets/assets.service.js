@@ -13,6 +13,7 @@ function resolveAssetLocation(asset) {
   if (!asset) return null;
 
   let resolvedLocation = null;
+  let status = asset.status;
 
   // 1. Fixed Asset: has its own location coordinates
   if (asset.locationId && asset.locationX !== null && asset.locationY !== null) {
@@ -28,23 +29,31 @@ function resolveAssetLocation(asset) {
   // 2. Mobile Asset: check active assignment
   else if (asset.assignments && asset.assignments.length > 0) {
     const activeAssignment = asset.assignments[0];
-    const employee = activeAssignment.employee;
-    if (employee && employee.locationId && employee.deskX !== null && employee.deskY !== null) {
-      resolvedLocation = {
-        locationId: employee.locationId,
-        locationName: employee.location?.name || null,
-        floorPlanUrl: employee.location?.floorPlanUrl || null,
-        x: employee.deskX,
-        y: employee.deskY,
-        type: "ASSIGNED",
-        employeeName: employee.fullName,
-        employeeCode: employee.employeeCode,
-      };
+    
+    // ONLY resolve location to employee desk if the assignment is confirmed
+    if (activeAssignment.confirmedAt) {
+      const employee = activeAssignment.employee;
+      if (employee && employee.locationId && employee.deskX !== null && employee.deskY !== null) {
+        resolvedLocation = {
+          locationId: employee.locationId,
+          locationName: employee.location?.name || null,
+          floorPlanUrl: employee.location?.floorPlanUrl || null,
+          x: employee.deskX,
+          y: employee.deskY,
+          type: "ASSIGNED",
+          employeeName: employee.fullName,
+          employeeCode: employee.employeeCode,
+        };
+      }
+    } else if (asset.status === "ASSIGNED") {
+      // Handover not confirmed yet! Show status as "PENDING_CONFIRMATION"
+      status = "PENDING_CONFIRMATION";
     }
   }
 
   return {
     ...asset,
+    status,
     resolvedLocation,
   };
 }
@@ -55,6 +64,50 @@ function createAssetsService({
   locRepository = locationsRepository,
   deptRepository = departmentsRepository,
 } = {}) {
+  async function createAsset(data) {
+    const existing = await repository.findByAssetCode(data.assetCode);
+    if (existing) {
+      throw new AppError({
+        message: "Asset code already exists",
+        statusCode: 400,
+        errorCode: ERROR_CODES.VALIDATION_ERROR,
+      });
+    }
+
+    const cat = await catRepository.findById(data.categoryId);
+    if (!cat) {
+      throw new AppError({
+        message: "Category not found",
+        statusCode: 404,
+        errorCode: "CATEGORY_NOT_FOUND",
+      });
+    }
+
+    if (data.locationId) {
+      const loc = await locRepository.findById(data.locationId);
+      if (!loc) {
+        throw new AppError({
+          message: "Location not found",
+          statusCode: 404,
+          errorCode: "LOCATION_NOT_FOUND",
+        });
+      }
+    }
+    if (data.ownerDepartmentId) {
+      const department = await deptRepository.findById(data.ownerDepartmentId);
+      if (!department) {
+        throw new AppError({
+          message: "Owner department not found",
+          statusCode: 404,
+          errorCode: "DEPARTMENT_NOT_FOUND",
+        });
+      }
+    }
+
+    const created = await repository.create(data);
+    return resolveAssetLocation(created);
+  }
+
   return Object.freeze({
     async getAllAssets(filters = {}) {
       const assets = await repository.findAll(filters);
@@ -73,48 +126,36 @@ function createAssetsService({
       return resolveAssetLocation(asset);
     },
 
-    async createAsset(data) {
-      const existing = await repository.findByAssetCode(data.assetCode);
-      if (existing) {
-        throw new AppError({
-          message: "Asset code already exists",
-          statusCode: 400,
-          errorCode: ERROR_CODES.VALIDATION_ERROR,
-        });
-      }
+    createAsset,
 
-      const cat = await catRepository.findById(data.categoryId);
-      if (!cat) {
-        throw new AppError({
-          message: "Category not found",
-          statusCode: 404,
-          errorCode: "CATEGORY_NOT_FOUND",
-        });
-      }
+    async importAssets(rows) {
+      const results = [];
 
-      if (data.locationId) {
-        const loc = await locRepository.findById(data.locationId);
-        if (!loc) {
-          throw new AppError({
-            message: "Location not found",
-            statusCode: 404,
-            errorCode: "LOCATION_NOT_FOUND",
+      for (const row of rows) {
+        try {
+          const created = await createAsset(row);
+          results.push({
+            rowNumber: row.rowNumber,
+            success: true,
+            id: created.id,
+            code: created.assetCode,
           });
-        }
-      }
-      if (data.ownerDepartmentId) {
-        const department = await deptRepository.findById(data.ownerDepartmentId);
-        if (!department) {
-          throw new AppError({
-            message: "Owner department not found",
-            statusCode: 404,
-            errorCode: "DEPARTMENT_NOT_FOUND",
+        } catch (error) {
+          results.push({
+            rowNumber: row.rowNumber,
+            success: false,
+            code: row.assetCode,
+            message: error.message || "Unable to import asset",
           });
         }
       }
 
-      const created = await repository.create(data);
-      return resolveAssetLocation(created);
+      return {
+        total: results.length,
+        imported: results.filter((item) => item.success).length,
+        failed: results.filter((item) => !item.success).length,
+        results,
+      };
     },
 
     async updateAsset(id, data) {

@@ -15,6 +15,9 @@ const SUPPORT_REQUEST_SELECT = Object.freeze({
   resolution: true,
   completedAt: true,
   cancelledAt: true,
+  rating: true,
+  feedback: true,
+  ratedAt: true,
   createdAt: true,
   updatedAt: true,
   asset: { select: { id: true, assetCode: true, name: true, status: true } },
@@ -390,6 +393,29 @@ function createSupportRequestsRepository(prismaClient = defaultPrisma) {
         where: { assetId, employeeId, status: "ACTIVE" },
       });
       return count > 0;
+    },
+
+    async rateRequest(id, { rating, feedback, ratedAt }, event) {
+      return runTransaction(prismaClient, async (tx) => {
+        const request = await requestModel(tx).update({
+          where: { id },
+          data: {
+            rating,
+            feedback,
+            ratedAt,
+          },
+          select: SUPPORT_REQUEST_SELECT,
+        });
+
+        await addEvent(tx, id, {
+          actorUserId: event.actorUserId,
+          type: "STATUS_CHANGED",
+          message: `Yêu cầu hỗ trợ đã được đánh giá dịch vụ: ${rating}/5 sao.`,
+          metadata: { rating, feedback },
+        });
+
+        return request;
+      });
     },
   });
 }

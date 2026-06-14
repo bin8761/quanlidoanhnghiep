@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useCallback, useContext, useLayoutEffect, useMemo, useState } from 'react'
 
 const translations = {
   vi: {
@@ -20,7 +21,7 @@ const translations = {
     all: 'Tất cả',
     submit: 'Gửi',
     loading: 'Đang tải...',
-    
+
     // Attendance widget
     attendanceToday: 'Chấm công hôm nay',
     checkIn: 'Check-In',
@@ -162,6 +163,9 @@ const translations = {
 }
 
 const fallbackDictionary = {
+  "Bạn đang sử dụng mật khẩu tạm thời": "You are using a temporary password",
+  "Hãy đổi mật khẩu để tăng tính bảo mật cho tài khoản của bạn.": "Change your password to improve your account security.",
+
   // Sidebar & Navigation
   "Tổng quan": "Dashboard",
   "Tài sản": "Assets",
@@ -172,7 +176,7 @@ const fallbackDictionary = {
   "Bảo trì": "Maintenance",
   "Kiểm kê": "Inventory",
   "Báo cáo": "Reports",
-  "Sơ đồ mặt bằng": "Locations",
+  "Sơ đồ mặt bằng": "Floor Plans",
   "Quản lý FAQ": "FAQ Management",
   "Góp ý & Phản hồi": "Feedback & Suggestions",
   "Lịch sử chấm công": "Attendance History",
@@ -195,6 +199,14 @@ const fallbackDictionary = {
   "Quét mã QR": "Scan QR Code",
   "Tìm kiếm nhanh...": "Quick Search...",
   "Hệ thống hoạt động": "System Active",
+  "Đã đồng bộ": "Synced",
+  "Đang đồng bộ": "Syncing",
+  "Mất kết nối": "Disconnected",
+  "Thông báo": "Notifications",
+  "Không có thông báo mới": "No new notifications",
+  "Đánh dấu tất cả đã đọc": "Mark all as read",
+  "Tất cả đã đọc": "All read",
+  "Chưa có thông báo.": "No notifications yet.",
   "Đi tới chức năng": "Go to Feature",
   "Tìm nhanh một khu vực trong không gian quản trị.": "Quickly find an area in the administration space.",
   "Nhập tên chức năng...": "Enter feature name...",
@@ -209,7 +221,6 @@ const fallbackDictionary = {
   "Hoàn thành": "Completed",
   "Tổng giờ làm": "Total Hours",
   "Chấm công tuần này": "Attendance this week",
-  "ngày": "days",
   "Tổng số tài sản": "Total Assets",
   "Đang sử dụng": "In Use",
   "Sẵn sàng sử dụng": "Available",
@@ -269,7 +280,6 @@ const fallbackDictionary = {
   "Nhật ký chấm công": "Attendance Log",
   "Theo dõi toàn bộ lịch sử chấm công Check-In và Check-Out hàng ngày của bạn.": "Track your daily Check-In and Check-Out attendance history.",
   "Số giờ làm việc": "Working hours",
-  "giờ": "hours",
 
   // Settings page
   "Tùy chỉnh hệ thống & hỗ trợ": "System Customization & Support",
@@ -281,20 +291,922 @@ const fallbackDictionary = {
   "Chưa chọn file nào": "No file chosen",
   "Bạn chưa gửi góp ý nào.": "You have not submitted any feedback.",
   "Không có lịch sử đăng nhập nào được ghi lại.": "No login history recorded."
+  ,
+  // Shared layouts and settings
+  "Đóng menu": "Close menu",
+  "Mở menu": "Open menu",
+  "Điều hướng quản trị": "Admin navigation",
+  "Điều hướng nhân viên": "Employee navigation",
+  "Tìm kiếm": "Search",
+  "Chuyển sang tiếng Anh": "Switch to English",
+  "Chuyển sang tiếng Việt": "Switch to Vietnamese",
+  "Chuyển sang chế độ sáng": "Switch to light mode",
+  "Chuyển sang chế độ tối": "Switch to dark mode",
+  "Cá nhân hóa cách không gian làm việc hiển thị trên thiết bị của bạn.": "Personalize how your workspace appears on this device.",
+  "Chọn độ sáng phù hợp với môi trường làm việc.": "Choose the appearance that best fits your environment.",
+  "Sáng rõ, phù hợp ban ngày": "Bright and clear for daytime use",
+  "Dịu mắt trong môi trường tối": "Comfortable viewing in low-light environments",
+  "Ngôn ngữ được lưu riêng trên trình duyệt này.": "Your language preference is saved in this browser.",
+
+  // Admin page titles and dashboard
+  "Quản trị tài sản": "Asset Management",
+  "Tổng quan vận hành": "Operations Overview",
+  "Số liệu được tổng hợp trực tiếp từ hoạt động quản lý tài sản.": "Metrics are aggregated directly from asset management operations.",
+  "Tổng tài sản": "Total Assets",
+  "Đang bàn giao": "Currently Assigned",
+  "Bảo trì cần xử lý": "Maintenance Pending",
+  "Phiên kiểm kê": "Inventory Sessions",
+  "Xem danh sách tài sản": "View asset list",
+  "Quản lý người sử dụng": "Manage assignees",
+  "Mở hàng đợi bảo trì": "Open maintenance queue",
+  "Theo dõi tiến độ": "Track progress",
+  "Hoạt động gần đây": "Recent Activity",
+  "Bàn giao và kiểm kê mới nhất": "Latest assignments and inventory activity",
+  "Xem lịch sử": "View history",
+  "Chưa có hoạt động": "No activity yet",
+  "Các lượt bàn giao và kiểm kê sẽ xuất hiện tại đây.": "Assignment and inventory activity will appear here.",
+  "Trạng thái tài sản": "Asset Status",
+  "Phân bổ theo dữ liệu hiện tại": "Distribution based on current data",
+  "Tỷ lệ tài sản đang sử dụng": "Assets in use",
+  "Xem báo cáo": "View reports",
+  "Làm mới dữ liệu": "Refresh data",
+  "Chào buổi sáng": "Good morning",
+  "Chào buổi chiều": "Good afternoon",
+  "Chào buổi tối": "Good evening",
+  "Cập nhật": "Updated",
+  "tài sản cần chuẩn hóa dữ liệu": "assets need data standardization",
+  "Trên": "Over",
+  "Đã chọn": "Selected",
+
+  // Core admin modules
+  "Vòng đời sử dụng tài sản": "Asset Lifecycle",
+  "Quản lý bàn giao": "Assignment Management",
+  "Bàn giao, thu hồi, chuyển người sử dụng và truy vết toàn bộ lịch sử tài sản.": "Assign, return, transfer and trace the complete asset history.",
+  "Tạo bàn giao": "Create Assignment",
+  "Tổng lượt bàn giao": "Total Assignments",
+  "Nhân viên đang sử dụng": "Employees Using Assets",
+  "Tiếp nhận và xử lý các yêu cầu hỗ trợ, bảo trì và sự cố tài sản.": "Receive and process support, maintenance and asset incident requests.",
+  "Vận hành hỗ trợ": "Support Operations",
+  "Tiếp nhận, duyệt, xử lý và hoàn tất ticket theo đúng nghiệp vụ.": "Receive, approve, process and complete tickets through the proper workflow.",
+  "Tạo yêu cầu": "Create Request",
+  "Quản lý kiểm kê": "Inventory Management",
+  "Tạo và theo dõi các phiên kiểm kê tài sản theo phòng ban.": "Create and track department asset inventory sessions.",
+  "Đối soát tài sản thực tế": "Physical Asset Reconciliation",
+  "Tạo đợt kiểm kê và ghi nhận tài sản đầy đủ, thiếu hoặc hư hỏng.": "Create inventory sessions and record assets as verified, missing or damaged.",
+  "Tạo phiên kiểm kê": "Create Inventory Session",
+  "Phân tích dữ liệu vận hành": "Operational Analytics",
+  "Báo cáo tài sản": "Asset Reports",
+  "KPI snapshot hiện tại, tài sản ghi nhận mới và kiểm soát chất lượng dữ liệu.": "Current KPI snapshot, newly recorded assets and data quality controls.",
+  "Theo danh mục": "By Category",
+  "Phòng ban sở hữu": "Owning Department",
+  "Phòng ban sử dụng": "Using Department",
+  "Tài sản được ghi nhận mới theo tháng": "New Assets by Month",
+  "Chất lượng dữ liệu": "Data Quality",
+  "Tài sản cần chuẩn hóa dữ liệu": "Assets Requiring Data Cleanup",
+  "Làm mới": "Refresh",
+  "Tất cả trạng thái": "All Statuses",
+  "Tất cả danh mục": "All Categories",
+  "Tất cả vị trí": "All Locations",
+  "Sẵn sàng": "Available",
+  "Đang bảo trì": "In Maintenance",
+  "Bị hỏng": "Broken",
+  "Thất lạc": "Lost",
+  "Đã thanh lý": "Disposed",
+  "Thêm sơ đồ": "Add Floor Plan",
+  "Tìm sơ đồ...": "Search floor plans...",
+  "Xem bản đồ": "View Map",
+  "Ghim vị trí": "Pin Locations",
+  "Cấu hình ghim vị trí": "Location Pinning",
+  "Chưa có sơ đồ văn phòng nào": "No Office Floor Plans",
+  "Thêm sơ đồ ngay": "Add a Floor Plan"
+  ,
+  // Shared CRUD and data tables
+  "Quản lý dữ liệu": "Data Management",
+  "Không tìm thấy dữ liệu": "No data found",
+  "Thử thay đổi từ khóa hoặc điều kiện lọc.": "Try changing the keyword or filter conditions.",
+  "Hiển thị": "Showing",
+  "kết quả": "results",
+  "Dữ liệu được cập nhật gần đây": "Data was updated recently",
+  "Thao tác": "Actions",
+  "Mô tả": "Description",
+  "Tên": "Name",
+  "Ngày bàn giao": "Assigned Date",
+  "Ngày kết thúc": "End Date",
+  "Thời gian": "Period",
+  "Tiến độ": "Progress",
+  "Xóa bộ lọc": "Clear Filters",
+  "Xóa lọc": "Clear Filters",
+  "Tất cả phòng ban": "All Departments",
+  "Tất cả nhân viên": "All Employees",
+  "Tất cả tài sản": "All Assets",
+  "Tất cả loại": "All Types",
+  "Tất cả mức": "All Priorities",
+  "Chưa có mô tả": "No description",
+  "Chưa xác định": "Not specified",
+  "Chưa bàn giao": "Not assigned",
+  "Đã bàn giao": "Assigned",
+  "Đã thu hồi": "Returned",
+  "Đã chuyển giao": "Transferred",
+  "Đã hoàn tất": "Completed",
+  "Đang xử lý": "In Progress",
+  "Chờ xử lý": "Pending",
+  "Chờ tiếp nhận": "Pending Review",
+  "Đã duyệt": "Approved",
+  "Chờ bổ sung": "Waiting for User",
+  "Hoàn tất": "Completed",
+  "Từ chối": "Rejected",
+  "Đã hủy": "Cancelled",
+  "Bản nháp": "Draft",
+  "Đang kiểm kê": "Inventory in Progress",
+  "Ưu tiên": "Priority",
+  "Ưu tiên cao": "High Priority",
+  "Thấp": "Low",
+  "Trung bình": "Medium",
+  "Cao": "High",
+  "Loại": "Type",
+  "Người yêu cầu": "Requester",
+  "Nội dung": "Content",
+  "Vị trí": "Location",
+
+  // Asset, employee, category and department management
+  "Quản lý tài sản": "Asset Management",
+  "Danh mục tài sản doanh nghiệp": "Enterprise Asset Catalog",
+  "Theo dõi thông tin, trạng thái và người đang sử dụng từng tài sản.": "Track information, status and current assignee for every asset.",
+  "Nhập Excel": "Import Excel",
+  "Thêm tài sản": "Add Asset",
+  "Mã tài sản": "Asset Code",
+  "Tên tài sản": "Asset Name",
+  "Đang sử dụng bởi": "Used By",
+  "Danh mục tài sản": "Asset Categories",
+  "Chuẩn hóa nhóm tài sản dùng trong toàn hệ thống.": "Standardize asset groups used throughout the system.",
+  "Thêm danh mục": "Add Category",
+  "Tên danh mục": "Category Name",
+  "Quản lý nhân viên": "Employee Management",
+  "Nhân sự sử dụng tài sản": "Asset Users",
+  "Quản lý hồ sơ nhân viên và liên kết với phòng ban trong doanh nghiệp.": "Manage employee profiles and their department relationships.",
+  "Thêm nhân viên": "Add Employee",
+  "Họ tên": "Full Name",
+  "Quản lý phòng ban": "Department Management",
+  "Cơ cấu doanh nghiệp": "Organization Structure",
+  "Tổ chức nhân sự và tài sản theo từng đơn vị trong doanh nghiệp.": "Organize employees and assets by business unit.",
+  "Thêm phòng ban": "Add Department",
+  "Tên phòng ban": "Department Name",
+  "Ngày cập nhật": "Updated Date",
+
+  // Assignment, maintenance and inventory
+  "Tổng yêu cầu": "Total Requests",
+  "Đang mở": "Open",
+  "Báo hỏng tài sản": "Report Broken Asset",
+  "Yêu cầu cấp phát mới": "New Allocation Request",
+  "Yêu cầu đổi tài sản": "Asset Exchange Request",
+  "Yêu cầu thu hồi tài sản": "Asset Recall Request",
+  "Yêu cầu cài phần mềm": "Software Installation Request",
+  "Yêu cầu cấp quyền": "Access Request",
+  "Yêu cầu hỗ trợ khác": "Other Support Request",
+  "Không liên kết": "Not Linked",
+  "Phiên đang thực hiện": "Active Sessions",
+  "Tài sản đã kiểm tra": "Assets Checked",
+  "Cần xử lý": "Needs Attention",
+  "Tên phiên": "Session Name",
+
+  // Reports
+  "Khoảng ngày chỉ áp dụng cho biểu đồ tài sản được ghi nhận mới. KPI snapshot, phân bổ và chất lượng dữ liệu luôn phản ánh trạng thái hiện tại.": "The date range only applies to the new-assets chart. KPI snapshots, distributions and data quality always reflect the current state.",
+  "tài sản có thể vận hành": "operational assets",
+  "lỗi dữ liệu được phát hiện": "data issues detected",
+  "Tính theo thời điểm tài sản được tạo trong hệ thống, không phải ngày mua hoặc ngày thanh lý.": "Based on when assets were created in the system, not their purchase or disposal dates.",
+  "Đang sử dụng nhưng không có bàn giao": "Assigned without an active assignment",
+  "Có bàn giao nhưng trạng thái không khớp": "Active assignment status mismatch",
+  "Có nhiều bàn giao đang hoạt động": "Multiple active assignments",
+  "Trạng thái không hợp lệ vẫn đang bàn giao": "Invalid status with active assignment",
+  "Thiếu phòng ban sở hữu": "Missing owning department",
+  "Thiếu vị trí cố định và vị trí người sử dụng": "Missing fixed and user locations",
+  "Thiếu serial number": "Missing serial number",
+  "Trùng serial number": "Duplicate serial number",
+  "Trang trước": "Previous Page",
+  "Trang sau": "Next Page",
+
+  // Supporting admin modules
+  "Cổng hỗ trợ & Hướng dẫn": "Support & Guidance",
+  "Quản lý bộ câu hỏi thường gặp hiển thị cho nhân viên trong phần Cài đặt.": "Manage frequently asked questions displayed to employees in Settings.",
+  "Thêm FAQ": "Add FAQ",
+  "Tương tác & Cải tiến": "Engagement & Improvement",
+  "Quản lý Góp ý & Phản hồi": "Feedback & Suggestions Management",
+  "Duyệt các đề xuất tính năng, báo lỗi và phản hồi chất lượng hệ thống từ nhân viên.": "Review feature suggestions, bug reports and system quality feedback from employees.",
+  "Quản lý nhân sự": "Workforce Management",
+  "Kiểm tra thời gian check-in, check-out và tổng số giờ làm việc thực tế của nhân sự.": "Review employee check-in, check-out and total working hours.",
+  "An ninh & Hệ thống": "Security & System",
+  "Lịch sử đăng nhập hệ thống": "System Login History",
+  "Ghi nhận hoạt động đăng nhập của toàn bộ tài khoản để kiểm soát an ninh thông tin.": "Track account login activity for information security oversight.",
+
+  // Seed labels shown in filters and reports
+  "Ban Giám đốc": "Executive Board",
+  "Phòng bảo trì": "Maintenance Department",
+  "Phòng Hành chính": "Administration Department",
+  "Phòng Kinh doanh": "Sales Department",
+  "Phòng kỹ thuật": "Engineering Department",
+  "Phòng Kỹ thuật": "Engineering Department",
+  "Phòng Marketing": "Marketing Department",
+  "Phòng Nhân sự": "Human Resources Department",
+  "Phòng Tài chính": "Finance Department",
+  "Chuột": "Mouse",
+  "Màn hình": "Monitor",
+  "Máy chiếu": "Projector",
+  "Máy chủ & Lưu trữ": "Servers & Storage",
+  "Máy in": "Printer",
+  "Thiết bị di động": "Mobile Device",
+  "Thiết bị mạng": "Network Equipment",
+  "Thiết bị ngoại vi": "Peripherals",
+  "Thiết bị phòng họp": "Meeting Room Equipment",
+  "Thiết bị văn phòng": "Office Equipment",
+  "Tầng 1 - Phòng Hành chính & Kinh doanh": "Floor 1 - Administration & Sales",
+  "Tầng 2 - Phòng Kỹ thuật & R&D": "Floor 2 - Engineering & R&D",
+  "Bàn làm việc": "Employee Desk",
+  "Thiết bị cố định": "Fixed Equipment"
+  ,
+  // Authentication
+  "Không gian quản trị doanh nghiệp": "Enterprise Administration",
+  "Chào mừng trở lại": "Welcome Back",
+  "Đăng nhập để quản lý tài sản, bàn giao, bảo trì và báo cáo trong một không gian làm việc thống nhất.": "Sign in to manage assets, assignments, maintenance and reports in one unified workspace.",
+  "Mật khẩu": "Password",
+  "Đăng nhập hệ thống": "Sign In",
+  "Đang đăng nhập...": "Signing in...",
+  "Chưa có tài khoản?": "Don't have an account?",
+  "Đăng ký bằng mã nhân viên": "Register with employee code",
+  "Quản trị an toàn và nhất quán": "Secure and Consistent Administration",
+  "Kiểm soát toàn diện tài sản doanh nghiệp.": "Complete Control of Enterprise Assets.",
+  "Từ cấp phát thiết bị đến bảo trì và kiểm kê, mọi hoạt động đều được tổ chức rõ ràng để đội ngũ vận hành hiệu quả hơn.": "From equipment allocation to maintenance and inventory, every operation is organized for a more efficient team.",
+  "Theo dõi toàn bộ vòng đời tài sản": "Track the Complete Asset Lifecycle",
+  "Bàn giao và bảo trì tập trung": "Centralized Assignments and Maintenance",
+  "Quản lý bàn giao và bảo trì tập trung": "Centralized Assignments and Maintenance",
+  "Báo cáo trạng thái theo thời gian thực": "Real-time Status Reports",
+
+  // Employee dashboard and assets
+  "Không gian làm việc cá nhân": "Personal Workspace",
+  "Chào bạn": "Hello",
+  "Theo dõi tài sản, công việc và các yêu cầu hỗ trợ của bạn tại một nơi.": "Track your assets, tasks and support requests in one place.",
+  "Tài sản đang giữ": "Assigned Assets",
+  "Yêu cầu đang xử lý": "Active Requests",
+  "Công việc cần làm": "Tasks to Complete",
+  "Tài sản gần đây": "Recent Assets",
+  "Thiết bị đang được bàn giao cho bạn": "Devices currently assigned to you",
+  "Xem tất cả": "View All",
+  "Bạn chưa được bàn giao tài sản nào.": "No assets have been assigned to you.",
+  "Việc cần hoàn thành": "Tasks to Complete",
+  "Các đầu việc liên quan đến tài sản": "Asset-related action items",
+  "Không có việc cần hoàn thành.": "No tasks to complete.",
+  "Thiết bị được bàn giao": "Assigned Devices",
+  "Danh sách thiết bị và tài sản hiện đang được bàn giao cho bạn.": "Devices and assets currently assigned to you.",
+  "Nhận ngày": "Received on",
+
+  // Employee requests and profile
+  "Trung tâm hỗ trợ": "Support Center",
+  "Gửi yêu cầu, theo dõi trạng thái xử lý và lịch sử phản hồi.": "Submit requests and track their processing status and response history.",
+  "Mã yêu cầu": "Request ID",
+  "Phụ trách": "Assignee",
+  "Chưa phân công": "Unassigned",
+  "Quản lý tài khoản": "Account Management",
+  "Hồ sơ nhân viên": "Employee Profile",
+  "Quản lý thông tin hồ sơ cá nhân, sơ yếu lý lịch và hồ sơ chứng chỉ đính kèm.": "Manage your personal profile, resume and attached certificates.",
+  "Mã NV": "Employee ID",
+
+  // Password
+  "Bảo mật tài khoản": "Account Security",
+  "Cập nhật mật khẩu đăng nhập. Đảm bảo mật khẩu mới đủ mạnh và bảo mật.": "Update your sign-in password and ensure the new password is strong and secure.",
+  "Mật khẩu được mã hóa và lưu trữ an toàn.": "Your password is encrypted and stored securely.",
+  "Mật khẩu hiện tại": "Current Password",
+  "Mật khẩu mới": "New Password",
+  "Ít nhất 8 ký tự, gồm chữ và số": "At least 8 characters including letters and numbers",
+  "Xác nhận mật khẩu mới": "Confirm New Password",
+  "Cập nhật mật khẩu": "Update Password",
+  "Nếu quên mật khẩu hiện tại, hãy liên hệ quản trị viên để được hỗ trợ.": "If you forgot your current password, contact an administrator for support.",
+  "Tiếng Việt": "Vietnamese"
+  ,
+  // Registration and remaining interactive states
+  "Quay lại đăng nhập": "Back to Sign In",
+  "Đăng ký tài khoản": "Create an Account",
+  "Sử dụng mã nhân viên và email công ty đã được lưu trong hệ thống để tạo tài khoản truy cập.": "Use the employee code and company email stored in the system to create your account.",
+  "Xác nhận mật khẩu": "Confirm Password",
+  "Tạo tài khoản": "Create Account",
+  "Chuyển giao": "Transfer",
+  "Thu hồi": "Return",
+  "Đang được sử dụng bởi": "Currently used by",
+  "Chuyển từ": "Transfer from",
+  "sang người sử dụng mới.": "to a new assignee.",
+  "Xóa tài liệu này?": "Delete this document?",
+  "Bạn có chắc chắn muốn xóa câu hỏi FAQ này không? Hành động này không thể hoàn tác.": "Are you sure you want to delete this FAQ? This action cannot be undone.",
+  "VD: Làm cách nào để đổi mật khẩu?": "Example: How do I change my password?",
+  "Ghim ở": "Pinned at"
+  ,
+  // Login History page
+  "Email tài khoản": "Account Email",
+  "Thời gian": "Time",
+  "Địa chỉ IP": "IP Address",
+  "Trình duyệt": "Browser",
+  "Hệ điều hành": "Operating System",
+  "Thiết bị": "Device",
+  "Trạng thái đăng nhập": "Login Status",
+  "Thành công": "Success",
+  "Thất bại": "Failed",
+  "Search theo email, IP hoặc hệ điều hành...": "Search by email, IP or operating system...",
+  "Không có lịch sử đăng nhập nào được ghi lại.": "No login history recorded.",
+
+  // Attendance History page
+  "Nhân viên": "Employee",
+  "Ngày": "Date",
+  "Số giờ làm việc": "Working Hours",
+  "Search theo tên nhân viên hoặc mã nhân viên": "Search by employee name or employee code",
+
+  // Feedback & Suggestions Management page
+  "Tiêu đề": "Title",
+  "Người gửi": "Sender",
+  "Phân loại": "Category",
+  "Độ ưu tiên": "Priority",
+  "Ngày gửi": "Submitted Date",
+  "Hành động": "Actions",
+  "Xem chi tiết": "View Details",
+  "Chi tiết góp ý & phản hồi": "Feedback Details",
+  "Xem chi tiết nội dung và cập nhật tiến độ xử lý góp ý.": "View detail content and update feedback processing progress.",
+  "Người gửi:": "Sender:",
+  "Tiêu đề:": "Title:",
+  "Cập nhật trạng thái xử lý": "Update Processing Status",
+  "Pending (Mới nhận)": "Pending (Newly received)",
+  "Pending (Mới Receiving)": "Pending (Newly received)",
+  "In Progress (Đang kiểm tra/thực hiện)": "In Progress (Reviewing/implementing)",
+  "Đã xử lý (Completed/Giải quyết xong)": "Resolved (Completed/Solved)",
+  "Resolved (Completed/Giải quyết xong)": "Resolved (Completed/Solved)",
+  "Rejected (Không giải quyết)": "Rejected (Won't fix)",
+  "Đóng": "Close",
+  "Cập nhật trạng thái": "Update Status",
+  "Lỗi hệ thống": "System Bug",
+  "Giao diện màu ở Cài Đặt bị khó nhìn": "Color UI in Settings is hard to read",
+  "Góp ý về tốc độ tải trang danh sách tài sản": "Feedback on asset list page load speed",
+  "Góp ý khác": "Other Feedback",
+  "Lỗi không tải được tệp đính kèm khi gửi yêu cầu": "Cannot upload attachment when submitting request",
+  "Đề xuất thêm tính năng nhắc nhở lịch bảo trì": "Suggest adding maintenance schedule reminder feature",
+  "Đề xuất tính năng": "Feature Request",
+  "Giao diện tối hiển thị lỗi ở màn hình báo cáo": "Dark mode renders incorrectly on reports screen",
+  "Giao diện & Trải nghiệm": "UI & Experience",
+  "Ngày gửi:": "Submitted:",
+  "Nội dung góp ý:": "Feedback Content:",
+  "Màu hệ thống đang bị lỗi khó nhìn.": "System colors are rendering incorrectly and hard to read.",
+  "Cập nhật trạng thái": "Update Status",
+  "Đã xử lý": "Resolved",
+  "Time gửi:": "Submitted",
+  "Search góp ý": "Search feedback",
+
+  // FAQ Management page
+  "Search câu hỏi, câu trả lời hoặc danh mục...": "Search questions, answers or categories...",
+  "Thêm mới FAQ": "Add New FAQ",
+  "Đăng nhập": "Login",
+  "Chấm công": "Attendance",
+  "Xuất dữ liệu": "Data Export",
+  "Tài khoản": "Account",
+  "Bảo mật": "Security",
+  "Góp ý & Hỗ trợ": "Feedback & Support",
+  "Câu hỏi": "Question",
+  "Câu trả lời": "Answer",
+  "Nhập nội dung câu trả lời hướng dẫn chi tiết tại đây...": "Enter detailed answer and instructions here...",
+  "Status hiển thị": "Display Status",
+  "Showing (Employees nhìn thấy)": "Visible (Employees can see)",
+  "Ẩn (Không hiển thị)": "Hidden (Not visible)",
+  "Hủy": "Cancel",
+  "Lưu lại": "Save",
+  "Không tìm thấy câu hỏi phù hợp.": "No matching questions found.",
+  "Góp ý & Hỗ trợ": "Feedback & Support",
+  "Tôi có thể liên hệ hỗ trợ kỹ thuật qua đâu?": "Where can I contact technical support?",
+  "Góp ý của tôi có được phản hồi không?": "Will my feedback receive a response?",
+  "Làm thế nào để gửi góp ý cho hệ thống?": "How do I submit feedback to the system?",
+  "Personal Info của tôi có được bảo mật không?": "Is my personal info kept secure?",
+  "Tại sao tôi thấy đăng nhập từ thiết bị lạ?": "Why do I see a login from an unfamiliar device?",
+  "Tôi muốn xem lịch sử đăng nhập của mình?": "How can I view my login history?",
+  "File PDF xuất ra bao gồm thông tin gì?": "What information does the exported PDF include?",
+  "Làm thế nào để đổi mật khẩu?": "How do I change my password?",
+  "File Excel xuất ra có định dạng như thế nào?": "What format does the exported Excel file have?",
+  "Tôi quên chấm công ra, phải làm sao?": "I forgot to check out — what should I do?",
+  "Tôi có thể xem lịch sử chấm công của mình không?": "Can I view my attendance history?",
+  "Reports có thể lọc theo tiêu chí gì?": "What criteria can I filter reports by?",
+  "Làm thế nào để Check-In/Check-Out?": "How do I check in and check out?",
+  "Tôi có thể xuất báo cáo tài sản ra file không?": "Can I export asset reports to a file?",
+  "Tôi muốn xem lịch sử bàn giao tài sản của mình?": "How can I view my asset assignment history?",
+  "Tôi có thể cập nhật thông tin hồ sơ cá nhân của mình hông?": "Can I update my personal profile information?",
+  "Tôi có thể cập nhật thông tin hồ sơ cá nhân của mình không?": "Can I update my personal profile information?",
+  "Ai có quyền thêm nhân viên vào hệ thống?": "Who has permission to add employees to the system?",
+  "Assets có các trạng thái nào?": "What statuses can assets have?",
+  "My Assets bị hỏng, tôi cần báo cáo như thế nào?": "My asset is broken — how do I report it?",
+  "Tôi có thể thêm tài sản mới vào hệ thống không?": "Can I add new assets to the system?",
+  "Tôi có thể đăng nhập từ nhiều thiết bị không?": "Can I log in from multiple devices?",
+  "Làm thế nào để xem danh sách tài sản đang được bàn giao cho tôi?": "How do I view assets currently assigned to me?",
+  "Lần đầu đăng nhập tôi cần làm gì?": "What should I do the first time I log in?",
+  "Tài khoản của tôi bị vô hiệu hóa, tôi phải liên hệ ai?": "My account is disabled — who should I contact?",
+  "Tôi quên mật khẩu, phải làm thế nào?": "I forgot my password — what should I do?",
+
+  // FAQ answers
+  "Bạn có thể gửi yêu cầu hỗ trợ qua mục 'Support Requests' hoặc 'Feedback & Suggestions'. Với các vấn đề khẩn cấp, hãy liên hệ trực tiếp phòng IT.": "You can submit support requests via 'Support Requests' or 'Feedback & Suggestions'. For urgent issues, contact the IT department directly.",
+  "Có, Admin sẽ xem xét và cập nhật trạng thái góp ý của bạn. Bạn có thể theo dõi trạng thái (Pending → In Progress → Đã xử lý) trong lịch sử góp ý của mình.": "Yes, an Admin will review and update the status of your feedback. You can track the status (Pending → In Progress → Resolved) in your feedback history.",
+  "Vào mục 'Feedback & Suggestions' trong thanh điều hướng hoặc Settings. Điền tiêu đề, nội dung, loại góp ý và mức độ ưu tiên. Bạn cũng có thể đính kèm file minh họa.": "Go to 'Feedback & Suggestions' in the sidebar or Settings. Fill in the title, content, type and priority. You can also attach an illustration file.",
+  "Có, hệ thống sử dụng mã hóa mật khẩu theo chuẩn bcrypt, JWT cho xác thực và chỉ hiển thị thông tin cần thiết theo từng vai trò. Dữ liệu được lưu trữ an toàn trên máy chủ.": "Yes, the system uses bcrypt password encryption, JWT for authentication, and only displays information relevant to each role. Data is stored securely on the server.",
+  "Nếu bạn phát hiện đăng nhập từ thiết bị không quen, hãy đổi mật khẩu ngay lập tức và liên hệ Admin để được hỗ trợ. Hệ thống lưu trữ IP và thông tin thiết bị cho mọi phiên đăng nhập.": "If you notice a login from an unfamiliar device, change your password immediately and contact an Admin. The system records the IP address and device info for every login session.",
+  "Vào 'Settings' → tab 'Bảo mật' hoặc chuyên mục 'Login History'. Bạn sẽ thấy thời gian đăng nhập, thiết bị, trình duyệt và địa chỉ IP của từng phiên.": "Go to 'Settings' → 'Security' tab or the 'Login History' section. You will see the login time, device, browser and IP address for each session.",
+  "File PDF bao gồm phần header với logo và ngày xuất, 4 chỉ số KPI quan trọng, bảng chi tiết tài sản (tối đa 100 dòng đầu), và footer với thông tin tổng kết. Nếu có nhiều hơn 100 tài sản, nên xuất Excel.": "The PDF includes a header with logo and export date, 4 key KPI metrics, an asset detail table (first 100 rows), and a summary footer. If there are more than 100 assets, export as Excel instead.",
+  "Vào mục 'Change Password' trong thanh điều hướng bên trái. Nhập mật khẩu hiện tại, mật khẩu mới và xác nhận mật khẩu mới. New Password phải đủ mạnh.": "Go to 'Change Password' in the left sidebar. Enter your current password, new password and confirmation. The new password must be strong enough.",
+  "File Excel xuất ra bao gồm 2 sheet: 'Asset Reports' với dữ liệu chi tiết được tô màu theo trạng thái, và 'Tóm tắt' với số liệu tổng hợp. Header được đánh dấu màu xanh đậm.": "The Excel file includes 2 sheets: 'Asset Reports' with color-coded detail data by status, and 'Summary' with aggregated figures. Headers are highlighted in dark blue.",
+  "Nếu bạn quên Check-Out, vui lòng liên hệ Admin để được hỗ trợ chỉnh sửa. Bạn cũng có thể gửi yêu cầu điều chỉnh qua hộp Feedback & Suggestions.": "If you forgot to check out, please contact an Admin for a correction. You can also submit an adjustment request via Feedback & Suggestions.",
+  "Có, bạn có thể xem lịch sử chấm công đầy đủ trong widget 'Attendance History' trên Dashboard. Thông tin bao gồm giờ check-in, check-out và tổng số giờ làm việc mỗi ngày.": "Yes, you can view your full attendance history in the 'Attendance History' widget on the Dashboard. It includes check-in time, check-out time and total working hours per day.",
+  "Reports có thể lọc theo: khoảng thời gian, trạng thái tài sản, danh mục, phòng ban sở hữu, phòng ban sử dụng và vị trí. Bộ lọc được áp dụng cho cả khi xuất file.": "Reports can be filtered by: date range, asset status, category, owning department, using department and location. Filters apply when exporting as well.",
+  "Trên Dashboard nhân viên, bạn sẽ thấy widget 'Attendance Today'. Nhấn nút 'Check-In' vào đầu giờ làm và 'Check-Out' khi kết thúc. Hệ thống tự động tính số giờ làm việc.": "On the employee Dashboard, you will see the 'Attendance Today' widget. Press 'Check-In' at the start of your shift and 'Check-Out' when finished. The system calculates working hours automatically.",
+  "Admin có thể xuất báo cáo ra 3 định dạng: CSV (tương thích Excel cũ), Excel (.xlsx) với định dạng màu sắc chuyên nghiệp, và PDF (.pdf) với bảng trình bày đẹp.": "Admins can export reports in 3 formats: CSV (compatible with older Excel), Excel (.xlsx) with professional color formatting, and PDF (.pdf) with a clean table layout.",
+  "Vào mục 'History' trong thanh điều hướng bên trái. Bạn có thể xem toàn bộ lịch sử bàn giao và bảo trì của mình.": "Go to 'History' in the left sidebar. You can view your complete assignment and maintenance history there.",
+  "Có, bạn có thể cập nhật một số thông tin cá nhân trong mục 'My Profile'. Một số thông tin quan trọng sẽ cần Admin phê duyệt hoặc chỉnh sửa.": "Yes, you can update some personal information in 'My Profile'. Certain key fields will require Admin approval or editing.",
+  "Chỉ Admin mới có quyền thêm nhân viên mới. Admin vào mục 'Employees' và nhấn 'Add Employee'.": "Only Admins can add new employees. Admins go to 'Employees' and click 'Add Employee'.",
+  "Hệ thống có 6 trạng thái: Available (AVAILABLE), Assigned (ASSIGNED), In Maintenance (MAINTENANCE), Hỏng hóc (BROKEN), Lost (LOST) và Thanh lý (DISPOSED).": "The system has 6 statuses: Available (AVAILABLE), Assigned (ASSIGNED), In Maintenance (MAINTENANCE), Broken (BROKEN), Lost (LOST) and Disposed (DISPOSED).",
+  "Vào mục 'Support Requests' → Create Request mới, chọn loại 'Maintenance/Sự cố', mô tả tình trạng và đính kèm ảnh nếu có. Admin sẽ xem xét và phản hồi.": "Go to 'Support Requests' → create a new request, select type 'Maintenance/Incident', describe the issue and attach a photo if available. An Admin will review and respond.",
+  "Chỉ Admin mới có quyền thêm, sửa và xóa tài sản. Employees chỉ có thể xem thông tin tài sản và gửi yêu cầu hỗ trợ liên quan đến tài sản.": "Only Admins can add, edit and delete assets. Employees can only view asset information and submit asset-related support requests.",
+  "Có, bạn có thể đăng nhập từ nhiều thiết bị khác nhau. Login History từ mỗi thiết bị sẽ được ghi lại trong phần Settings → Login History.": "Yes, you can log in from multiple devices. The login history from each device is recorded in Settings → Login History.",
+  "Bạn vào mục 'My Assets' trong thanh điều hướng bên trái. All Assets đang được bàn giao sẽ hiển thị tại đây.": "Go to 'My Assets' in the left sidebar. All assets currently assigned to you will be displayed there.",
+  "Khi đăng nhập lần đầu với tài khoản do Admin tạo, bạn sẽ được yêu cầu thay đổi mật khẩu mặc định trước khi tiếp tục sử dụng hệ thống.": "When logging in for the first time with an Admin-created account, you will be prompted to change the default password before continuing.",
+  "Vui lòng liên hệ với Admin hệ thống hoặc phòng IT để được kích hoạt lại tài khoản. Admin có thể kích hoạt/vô hiệu hóa tài khoản trong mục quản lý nhân viên.": "Please contact the system Admin or IT department to have your account reactivated. Admins can enable or disable accounts in the employee management section.",
+  "Bạn có thể sử dụng chức năng 'Quên mật khẩu' trên trang đăng nhập. Hệ thống sẽ gửi mã OTP xác thực về email của bạn để đặt lại mật khẩu.": "You can use the 'Forgot Password' feature on the login page. The system will send a verification OTP to your email to reset your password.",
+
+  // Floor Plans page
+  "Khu vực làm việc tầng 1 dành cho ban giám đốc, phòng kinh doanh và phòng hành chính nhân sự.": "Floor 1 workspace for the executive board, sales department and administration/HR department.",
+  "Khu vực làm việc tầng 2 dành cho đội ngũ phát triển công nghệ, máy chủ và vận hành mạng.": "Floor 2 workspace for the technology development team, servers and network operations.",
+  "Add Floor Plan mặt bằng": "Add Floor Plan",
+  "Tải lên ảnh sơ đồ tầng văn phòng để ghim các máy in, thiết bị cố định và bàn làm việc.": "Upload floor plan images to pin printers, fixed equipment and workstations.",
+  "Name sơ đồ văn phòng": "Floor Plan Name",
+  "Floor tầng": "Floor Level",
+  "Upload sơ đồ tầng": "Upload Floor Plan",
+  "Chọn File Ảnh": "Choose Image File",
+  "Đường dẫn ảnh sơ đồ mặt bằng (URL)": "Floor Plan Image URL",
+  "Có thể sử dụng ảnh online hoặc file ảnh nằm trong thư mục web công khai.": "Can use online images or image files in the public web folder.",
+  "Description các phòng hoặc bộ phận làm việc tại tầng này": "Description of rooms or departments working on this floor.",
+  "E.g.: /uploads/floorplans/floor5.png hoặc đường dẫn ảnh online": "E.g.: /uploads/floorplans/floor5.png or online image URL",
+  "E.g.: Văn phòng Tầng 5 - Khu Kỹ thuật": "E.g.: 5th Floor Office - Technical Area",
+  "thiết bị di động": "Mobile Devices",
+  "Sơ đồ khác": "Other Floor Plans",
+  "Đã ghim": "Pinned",
+  "Chưa ghim": "Unpinned",
+  "nhìn thấy": "View",
+  "E.g.: Inventory quý III/2026": "E.g.: Inventory Q3/2026",
+
+
+  // Employee My Profile page
+  "Học vấn & Trình độ": "Education & Qualifications",
+  "Thêm trình độ": "Add Qualification",
+  "Not updated thông tin học vấn.": "Education information not updated.",
+  "Skills chuyên môn": "Professional Skills",
+  "Nhập các kỹ năng, phân cách bằng dấu phẩy (,)": "Enter skills separated by commas (,)",
+  "Certificates chuyên môn": "Professional Certificates",
+  "Nhập các chứng chỉ, phân cách bằng dấu phẩy (,)": "Enter certificates separated by commas (,)",
+  "Lưu sơ yếu lý lịch": "Save Resume",
+  "Tải tài liệu đính kèm": "Upload Attachment",
+  "Type tài liệu": "Document Type",
+  "Chọn tệp tin": "Choose File",
+  "Chọn tệp PDF, DOCX, JPG...": "Choose PDF, DOCX, JPG...",
+  "Đính kèm tài liệu": "Attach Document",
+  "Tài liệu đã đính kèm (0)": "Attached Documents (0)",
+  "Chưa có tài liệu đính kèm nào được tải lên.": "No attachments have been uploaded yet.",
+  "Nhật ký thay đổi hồ sơ": "Profile Change Log",
+  "Chưa có nhật ký thay đổi nào được ghi nhận.": "No change log entries have been recorded.",
+  "VD: Node.js, React, SQL, Project Management": "E.g.: Node.js, React, SQL, Project Management",
+  "VD: AWS Certified Cloud Practitioner, PMP, IELTS 7.5": "E.g.: AWS Certified Cloud Practitioner, PMP, IELTS 7.5",
+  "Full Name người liên hệ": "Full Name of Contact Person",
+  "Số điện thoại liên hệ": "Phone Number of Contact Person",
+  "Trường học": "School",
+  "Chuyên ngành": "Major",
+  "Bằng cấp": "Degree",
+  "Năm tốt nghiệp": "Graduation Year",
+  "Trung cấp": "Diploma",
+  "Cao đẳng": "Associate Degree",
+  "Đại học": "Bachelor's Degree",
+  "Thạc sĩ": "Master's Degree",
+  "Tiến sĩ": "Doctoral Degree",
+  "Khác": "Other",
+  "Căn cước công dân": "Citizenship ID",
+  "Bằng cấp tốt nghiệp": "Graduation Degree",
+  "Tài liệu khác": "Other Documents",
+  "giờ": "hour",
+
+  // My Assets page
+  "Tìm theo mã hoặc tên tài sản...": "Search by asset code or name...",
+  "Không tìm thấy tài sản": "No assets found",
+  "Thử tìm kiếm bằng từ khóa khác.": "Try searching with different keywords.",
+  "Search trang và chức năng": "Search page and function",
+
+  // Change Password page
+  "Nhập mật khẩu đang dùng": "Enter your current password",
+  "Nhập mật khẩu mới": "Enter your new password",
+  "Nhập lại mật khẩu mới": "Re-enter your new password",
+  "Password cũ": "Old Password",
+  "Xác thực OTP Email": "Email OTP Authentication",
+  "Email đã đăng nhập": "Email has been logged in",
+  "Email không tồn tại": "Email does not exist",
+  "Sai email hoặc OTP": "Invalid email or OTP",
+  "Email không tồn tại": "Email not found",
+  "Gửi mã OTP": "Send OTP",
+  "Mã xác thực (OTP)": "OTP Authentication",
+  "Xác nhận mật khẩu": "Confirm Password",
+  "Xác nhận mật khẩu mới": "Confirm New Password",
+  "Nhập 6 chữ số OTP từ Email": "Enter 6 digits OTP from Email",
+  "Nhập sai OTP": "Invalid OTP",
+  "Email không tồn tại": "Email not found",
+
+
+  // Settings page feedback form
+  "VD: Giao diện tối lỗi ở màn hình báo cáo": "E.g.: Dark mode error on reports screen",
+  "VD: Giao diện tối hiển thị lỗi ở màn hình báo cáo": "E.g.: Dark mode renders incorrectly on reports screen",
+  "Description chi tiết góp ý hoặc phản hồi của bạn...": "Describe your feedback or suggestion in detail...",
+  "Monitor danh sách tài sản tải khá chậm khi có nhiều dữ liệu. Có thể thêm phân trang hoặc lazy load để tăng trải nghiệm người dùng.": "The asset list loads slowly when there is a large amount of data. Adding pagination or lazy loading could improve the user experience.",
+  "Hôm qua tôi cố gắng tải lên một ảnh định dạng png dung lượng 1.2MB trong phần Support Requests nhưng hệ thống liên tục báo lỗi kết nối máy chủ.": "Yesterday I tried to upload a 1.2MB PNG image in Support Requests but the system kept showing a server connection error.",
+  "Hiện tại hệ thống đã có chức năng lập lịch bảo trì nhưng chưa gửi thông báo/mail nhắc nhở cho người được phân công trước ngày bảo trì. Việc này có thể dẫn đến trễ lịch.": "The system currently has a maintenance scheduling feature but does not send notification/email reminders to assignees before the maintenance date. This can lead to missed schedules.",
+  "Khi chuyển sang giao diện tối, một số bảng trong mục báo cáo vẫn hiển thị chữ màu xám đen rất khó đọc. Mong đội kỹ thuật khắc phục sớm.": "When switching to dark mode, some tables in the reports section still display dark gray text that is very hard to read. Please fix this soon.",
+
+  // Asset Management page
+  "Tìm theo mã, tên hoặc serial...": "Search by code, name or serial...",
+  "Thông tin tài sản được sử dụng trong bàn giao, bảo trì, kiểm kê và báo cáo.": "Asset information is used in assignments, maintenance, inventory and reports.",
+  "Huỷ": "Cancel",
+  "VD: LT-0249": "E.g.: LT-0249",
+  "VD: Dell Latitude 5440": "E.g.: Dell Latitude 5440",
+  "Chọn danh mục": "Select category",
+  "Nhập số serial": "Enter serial number",
+  "Số serial": "Serial Number",
+  "Ngày mua": "Purchase Date",
+  "Giá trị (VND)": "Value (VND)",
+  "VD: 25000000": "E.g.: 25000000",
+  "Hình ảnh tài sản": "Asset Image",
+  "Click để chọn hoặc kéo thả ảnh vào đây": "Click to select or drag and drop an image here",
+  "Ghi chú": "Notes",
+  "Thông tin bổ sung về tài sản": "Additional information about the asset",
+  "PNG, JPG, WEBP tối đa 5MB": "PNG, JPG, WEBP up to 5MB",
+  "Cập nhật tài sản": "Update Asset",
+  "Cập nhật danh mục": "Update Category",
+  "Cập nhật nhân viên": "Update Employee",
+  "Cập nhật phòng ban": "Update Department",
+  "Nhập tài sản từ Excel": "Import assets from Excel",
+  "Xem trước và kiểm tra dữ liệu trước khi thêm hàng loạt tài sản vào hệ thống.": "Preview and check data before adding multiple assets to the system.",
+
+  // Asset Categories page
+  "Tìm danh mục...": "Search categories...",
+  "Thông tin này sẽ được sử dụng khi tạo và phân loại tài sản.": "This information will be used when creating and classifying assets.",
+  "VD: Laptop": "E.g.: Laptop",
+  "Description ngắn về nhóm tài sản": "Brief description of the asset group",
+  "Description ngắn về tài sản": "Brief description of the asset",
+  "Máy tính xách tay dành cho nhân viên.": "Laptop computers for employees.",
+  "Monitor máy tính và thiết bị hiển thị.": "Computer monitors and display devices.",
+  "Thiết bị trình chiếu cho phòng họp.": "Projection equipment for meeting rooms.",
+  "Thiết bị Server, tủ đĩa NAS, tủ Rack và bộ lưu điện UPS.": "Server equipment, NAS drives, rack cabinets and UPS power backups.",
+  "Printer và thiết bị phục vụ in ấn.": "Printers and printing equipment.",
+  "Điện thoại và máy tính bảng phục vụ công việc.": "Phones and tablets for work use.",
+  "Router, Switch, Firewall và thiết bị Access Point phát Wifi.": "Routers, switches, firewalls and Wi-Fi access points.",
+  "Bàn phím, chuột và phụ kiện máy tính.": "Keyboards, mice and computer accessories.",
+  "Monitor TV họp lớn, loa hội nghị họp trực tuyến.": "Large-screen TVs for meetings and conference speakers for online calls.",
+  "Máy hủy tài liệu, máy scan độc lập, điện thoại để bàn IP Phone.": "Document shredders, standalone scanners and IP desk phones.",
+
+  // Employee Management page
+  "Employee Profile là điều kiện để tạo tài khoản USER và bàn giao tài sản.": "An Employee Profile is required to create a USER account and assign assets.",
+  "Employee Code tự động sinh": "Employee Code auto-generated",
+  "Hệ thống sẽ tự động tạo mã nhân viên theo định dạng EMPO01, EMPO02... khi lưu.": "The system will automatically generate an employee code in the format EMP001, EMP002... when saved.",
+  "(Tự động sinh)": "(Auto-generated)",
+  "Nhập họ và tên": "Enter full name",
+  "Chưa phân phòng ban": "No department assigned",
+  "Cho phép nhân viên tự cập nhật thông tin cá nhân": "Allow employee to self-update personal information",
+  "Người liên hệ khẩn cấp": "Emergency Contact",
+  "Mối quan hệ": "Relationship",
+  "Cập nhật nhân viên:": "Update Employee:",
+  "Hệ thống sẽ tự động tạo mã nhân viên theo định dạng": "The system will automatically generate an employee code in the format",
+  "khi lưu.": "when saved.",
+  "Tìm theo mã, tên hoặc email": "Search by code, name or email",
+  "Xuất hồ sơ": "Export profile",
+  "Tỉnh/Thành phố": "Province/City",
+  "Chưa chọn": "Not selected",
+  "Chưa chọn địa chỉ — bấm để chọn": "No address selected - click to select",
+  "Số nhà, đường, ngõ/hẻm": "House number, street, alley/lane",
+  "Xác nhận địa chỉ": "Confirm Address",
+  "Tỉnh / Thành phố": "Province / City",
+  "-- Chọn tỉnh/thành --": "-- Select province/city --",
+  "VD:": "E.g.:",
+  "Xuất Excel": "Export Excel",
+  "Nhân viên": "Employee",
+  "Nhập nhân viên từ Excel": "Import Employee from Excel",
+  "Kiểm tra mã nhân viên, email và phòng ban trước khi tạo hàng loạt hồ sơ.": "Check employee code, email and department before creating mass records.",
+  "Bắt đầu với file mẫu chuẩn": "Start with template file",
+  "Giữ nguyên tên cột để hệ thống đọc dữ liệu chính xác.": "Keep the column names as they are so the system can read the data correctly.",
+  "Tải file mẫu": "Download template",
+  "Chọn file Excel để xem trước": "Select the Excel file to preview.",
+  "Hỗ trợ .xlsx, tối đa 500 dòng": "Supports .xlsx files, up to 500 lines.",
+  "Nhập 0 dòng hợp lệ": "0 valid rows imported",
+
+
+  // Department Management page
+  "Departments được sử dụng để phân nhóm nhân viên và phạm vi kiểm kê.": "Departments are used to group employees and define inventory scope.",
+  "Description chức năng của phòng ban": "Describe the department's function",
+  "Lãnh đạo và quản lý chiến lược phát triển doanh nghiệp.": "Leadership and strategic management of business development.",
+  "Quản lý cơ sở vật chất và hoạt động nội bộ.": "Management of facilities and internal operations.",
+  "Assignee khách hàng, hợp đồng và hoạt động bán hàng.": "Handling clients, contracts and sales activities.",
+  "Phát triển, vận hành và hỗ trợ hệ thống công nghệ.": "Development, operations and support of technology systems.",
+  "Quản lý thương hiệu, chạy chiến dịch và truyền thông.": "Brand management, campaign execution and communications.",
+  "Tuyển dụng, đào tạo, quản lý nhân sự và chế độ phúc lợi.": "Recruitment, training, personnel management and employee benefits.",
+  "Quản lý ngân sách, thanh toán và báo cáo tài chính.": "Budget management, payments and financial reporting.",
+  "Lưu thay đổi": "Save Changes",
+  "Tìm theo tên hoặc mô tả phòng ban...": "Search by name or department description ...",
+  "Tổng phòng ban": "Total departments",
+  "Tổng nhân viên": "Total employees",
+  "Total Assets": "Total Assets",
+  "Tổng giá trị tài sản": "Total asset value",
+  "Tìm theo tên, mã phòng ban hoặc mô tả...": "Search by name, department code or description...",
+  "Mã PB": "PB Code",
+  "Chi nhánh": "Branch",
+  "Trưởng bộ phận": "Department Head",
+  "Nhân sự": "Employees",
+  "Tổng giá trị": "Total Value",
+  "Mặc định": "Default",
+  "Hoạt động": "Active",
+  "Chưa chỉ định": "Not assigned",
+  "người": "People",
+  "thiết bị": "Devices",
+  "đơn vị": "Unit",
+  "Cấu trúc cơ bản quản lý hành chính, tổ chức và ngân sách.": "Basic structure for administrative, organizational, and budget management.",
+  "Mã phòng ban": "Department Code",
+  "E.g.: Phòng Công nghệ thông tin": "E.g.: Information Technology Department",
+  "Không chỉ định (Trống)": "Unassigned (Empty)",
+  "Departments cha": "Parent Department",
+  "Không có (Cấp cao nhất)": "None (Top Level)",
+  "E.g.: Branch miền Bắc": "E.g.: Northern Branch",
+  "Tạm ngưng": "Suspended",
+  "Giải thể": "Dissolved",
+  "Email phòng ban": "Department Email",
+  "Date thành lập": "Establishment Date",
+  "Ngân sách năm": "Annual Budget",
+  "Trưởng phòng": "Department Head",
+  "Thông tin chung": "General Information",
+  "Chưa có": "None",
+  "Chọn nhân viên": "Select Employee",
+  "Cấp cao nhất": "Top Level",
+  "Tình hình ngân sách": "Budget Status",
+  "Đã sử dụng": "Used",
+  "Còn lại": "Remaining",
+  "Hạn mức tài sản": "Asset Limit",
+  "Đã cấp / Tối đa": "Allocated / Maximum",
+  "Không hạn chế": "Unlimited",
+  "Quản lý tài sản": "Asset Management",
+  "Điều chỉnh": "Adjustment",
+  "Đang có": "Existing",
+  "Đề xuất": "Proposed",
+  "Tối đa": "Maximum",
+  "Tìm nhân viên trong phòng ban...": "Search employees in the department...",
+  "Không có tài sản nào thuộc sở hữu của phòng ban này.": "No assets are owned by this department.",
+  "Yêu cầu": "Required",
+  "Không có yêu cầu tài sản nào từ nhân viên thuộc phòng ban.": "No asset requests from employees in the department.",
+  "Tìm kiếm yêu cầu...": "Search requests...",
+  "Mã yêu cầu": "Request Code",
+  "Nhân viên yêu cầu": "Requesting Employee",
+  "Ngày yêu cầu": "Request Date",
+  "Tổng giá trị đề xuất": "Total Proposed Value",
+  "Quản lý yêu cầu": "Manage Requests",
+  "Đã duyệt": "Approved",
+  "Chờ duyệt": "Pending Approval",
+  "Phân bổ theo danh mục": "Allocate by Category",
+  "Chưa có tài sản": "No assets",
+  "Chỉ số hỏng hóc & Maintenance ": "Breakdown & Maintenance Stats",
+  "Tỷ lệ hư hỏng (Broken/Lost)": "Breakdown (Broken/Lost) Rate",
+  "Tổng chi phí bảo trì (đã hoàn thành)": "Total Maintenance Cost (Completed)",
+  "Tổng số lượt yêu cầu bảo trì": "Total Maintenance Request Count",
+  "Số lượt yêu cầu đã hoàn thành": "Completed Request Count",
+  "Dự báo Khấu hao (Hàng năm)": "Depreciation Forecast (Annual)",
+  "Tổng nguyên giá tài sản": "Total Asset Value",
+  "Thời gian sử dụng ước tính": "Estimated Useful Life",
+  "Số năm còn lại trước khi hết khấu hao": "Years Remaining Before Depreciation Complete",
+  "Giá trị còn lại (Book Value)": "Residual Value (Book Value)",
+  "Giá trị thanh lý dự kiến": "Estimated Salvage Value",
+  "Tổng tài sản (Cộng dồn)": "Total Assets (Cumulative)",
+  "Tổng giá trị khấu hao tích lũy": "Total Accumulated Depreciation Value",
+  "Giá trị còn lại thuần (Book Value)": "Net Residual Value (Book Value)",
+  "Mục tiêu": "Target",
+  "Quản lý rủi ro": "Risk Management",
+  "Không có rủi ro rủi ro tài chính cụ thể.": "No specific financial risks identified.",
+  "Cần theo dõi tỷ lệ hư hỏng cao hơn mức trung bình.": "Higher-than-average breakdown rate needs monitoring.",
+  "Cần đánh giá lại tuổi thọ tài sản hoặc kế hoạch thay thế.": "Need to reassess asset lifespan or replacement plan.",
+  "Thiết lập bảo trì phòng ngừa để tối ưu hóa chi phí.": "Establish preventive maintenance to optimize costs.",
+  "Xem danh sách tài sản rủi ro": "View Risk Assets List",
+  "Số lượng rủi ro": "Risk Count",
+  "Thiếu": "Insufficient",
+  "Đủ": "Sufficient",
+  "Số năm": "Years",
+  "Khấu hao năm (10%)": "Annual Depreciation (10%)",
+  "Giá trị còn lại": "Remaining Value",
+  "Tổng nguyên giá": "Total Value",
+  "Mục tiêu thay thế": "Target Replacement",
+  "* Dữ liệu dựa trên tỷ lệ khấu hao giả định chung 10% mỗi năm đối với toàn bộ danh mục tài sản thuộc phòng ban.": "* Data is based on a general assumed depreciation rate of 10% per year for all assets in the department.",
+  "Người thực hiện": "Executor",
+  "Content thay đổi": "Content Changed",
+  "Updated hạn mức danh mục tài sản": "Updated category asset limit",
+  "Lưu hạn mức": "Save limit",
+  "Chỉ số hỏng hóc": "Breakdown Stats",
+  "Updated hạn mức": "Updated limit",
+
+  // Assignment Management page
+  "Create Assignment tài sản": "Create Asset Assignment",
+  "Chỉ tài sản sẵn sàng và nhân viên đang hoạt động mới có thể được chọn.": "Only available assets and active employees can be selected.",
+  "Employees nhận": "Receiving Employee",
+  "Chọn tài sản sẵn sàng": "Select an available asset",
+  "Chọn nhân viên": "Select an employee",
+  "Để trống để dùng hôm nay": "Leave blank to use today's date",
+  "Tình trạng, phụ kiện kèm theo...": "Condition, included accessories...",
+  "Xác nhận bàn giao": "Confirm Assignment",
+  "Chuyển từ": "Transfer from",
+  "sang người sử dụng mới.": "to a new assignee.",
+  "Nhân viên nhận mới": "New Receiving Employee",
+  "Ghi chú chuyển giao": "Transfer Notes",
+  "Xác nhận chuyển giao": "Confirm Transfer",
+  "Tình trạng sau thu hồi": "Condition After Return",
+  "Biên bản / ghi chú": "Record / Notes",
+  "Xác nhận thu hồi": "Confirm Return",
+  "Tìm mã tài sản, tên hoặc nhân viên": "Search by asset code, name or employee",
+  "nhận": "Receiving",
+
+  // Maintenance page
+  "Tìm tài sản, nhân viên hoặc nội dung...": "Search by asset, employee or content...",
+  "Cần chia thêm VLAN khách (Guest WiFi VLAN 50) để cách ly truy cập với mạng nội bộ văn phòng.": "A guest WiFi VLAN (VLAN 50) needs to be added to isolate guest access from the internal office network.",
+  "Bàn phím Logitech MX Keys bị đổ nước trà, phím Spacebar và phím Enter bị kẹt cứng bấm không nhận.": "The Logitech MX Keys keyboard had tea spilled on it — the Spacebar and Enter keys are stuck and unresponsive.",
+  "Sóng Wifi ở khu vực bàn thiết kế chập chờn, thường xuyên bị ngắt kết nối vào buổi chiều khi đông người dùng.": "The WiFi signal at the design workstation area is unstable and frequently disconnects in the afternoon during peak usage.",
+  "Tài liệu sau khi quét bằng khay nạp tự động ADF bị lệch góc khoảng 3-5 độ.": "Documents scanned via the ADF automatic feeder come out skewed by approximately 3–5 degrees.",
+  "Điện thoại bị rơi vỡ mặt kính màn hình trong quá trình đi công tác gặp gỡ khách hàng.": "The phone screen cracked after being dropped during a business trip to meet clients.",
+  "Printer Canon thường xuyên bị kẹt giấy ở khay nạp và phát tiếng kêu lộc cộc.": "The Canon printer frequently jams in the paper tray and makes a rattling noise.",
+  "Monitor MacBook Pro thỉnh thoảng có hiện tượng giật sọc ngang màu xanh ở cạnh dưới.": "The MacBook Pro display occasionally shows horizontal blue lines flickering along the bottom edge.",
+  "Bộ lưu điện UPS APC báo động lỗi ắc quy (Replace Battery). Cần mua cụm ắc quy dự phòng mới và thay thế gấp.": "The APC UPS is showing a battery error (Replace Battery). A new battery pack needs to be purchased and replaced urgently.",
+  "Cấu hình cổng VPN và thiết lập các quy tắc bảo mật mạng (Firewall rules) cho văn phòng làm việc mới.": "Configure VPN ports and set up network security rules (firewall rules) for the new office location.",
+  "Hệ thống RAID báo động một ổ đĩa SSD SAS 1.92TB bị hỏng cần thay thế dự phòng nóng.": "The RAID system is alerting that a 1.92TB SAS SSD drive has failed and needs a hot-swap replacement.",
+  "Pin sụt nhanh và cần vệ sinh thiết bị.": "Battery drains quickly and device needs cleaning.",
+  "Printer thường xuyên kẹt giấy và xuất hiện vệt mực.": "Printer frequently jams and leaves ink smears.",
+  "Quạt tản nhiệt phát tiếng ồn lớn khi chạy tác vụ nặng.": "Cooling fan makes loud noise under heavy workloads.",
+  "Create Request hỗ trợ": "Create Support Request",
+  "Admin có thể ghi nhận yêu cầu thay cho nhân viên.": "Admins can log requests on behalf of employees.",
+  "Type yêu cầu": "Request Type",
+  "Mức ưu tiên": "Priority Level",
+  "Chọn tài sản": "Select Asset",
+  "Chi tiết yêu cầu": "Request Details",
+
+  // Inventory page
+  "Chọn phạm vi và danh sách tài sản cần đối soát.": "Select the scope and list of assets to be reconciled.",
+  "Create Inventory Session": "Create Inventory Session",
+  "Tạo phiên": "Create Session",
+  "VD: Inventory quý III/2026": "E.g.: Inventory Q3/2026",
+  "Chọn phòng ban": "Select Department",
+  "Ngày bắt đầu": "Start Date",
+  "End Date dự kiến": "Expected End Date",
+  "Status khởi tạo": "Initial Status",
+  "Assets kiểm kê": "Assets to Inventory",
+  "Đã chọn 0": "0 selected",
+  "Tìm phiên hoặc phòng ban...": "Search sessions or departments...",
+  "Inventory quý II/2026 - Kỹ thuật": "Inventory Q2/2026 - Engineering",
+  "Inventory tháng 5/2026 - Hành chính": "Inventory May 2026 - Administration",
+
+  //Support Requests
+  "Tạo yêu cầu mới": "Create New Request",
+  "Chọn đúng loại yêu cầu để bộ phận phụ trách xử lý theo flow phù hợp.": "Select the correct request type so the responsible department can process it according to the appropriate flow.",
+  "Description sự cố": "Issue Description",
+  "Nhập chi tiết yêu cầu hỗ trợ": "Enter detailed support request",
+  "Gửi yêu cầu": "Submit Request",
+
+  //Self-service guide page
+  "Cẩm nang tự phục vụ": "Self-service guide",
+  "Tra cứu hướng dẫn sử dụng thiết bị, phần mềm và quy trình làm việc tại doanh nghiệp.": "Search for instructions on using equipment, software, and work processes within the company.",
+  "Submit Request hỗ trợ": "Submit support request",
+  "Search câu hỏi, hướng dẫn, phần mềm, thiết bị...": "Search questions, guides, software, equipment...",
+  "hướng dẫn": "Guide",
+  "Không tìm thấy hướng dẫn nào khớp với từ khóa tìm kiếm của bạn.": "No guide found matching your search keyword.",
+  "Submit Request cho IT": "Submit Request for IT",
+  "Bạn vẫn cần trợ giúp?": "Still need help?",
+  "Nếu cẩm nang không giải quyết được vấn đề của bạn, hãy tạo phiếu hỗ trợ để kỹ thuật viên IT của chúng tôi hỗ trợ ngay.": "If the guide doesn't solve your problem, create a support ticket for our IT technicians to assist you immediately.",
+  "Tạo phiếu hỗ trợ": "Create Support Ticket",
+  "Tự phục vụ & Hướng dẫn": "Self-service & Guides",
+  "Search câu hỏi, Guide, phần mềm, thiết bị...": "Search questions, guides, software, equipment...",
+
+  //Support Chatbox
+  "Trợ lý ảo EAM": "EAM Virtual Assistant",
+  "Trí tuệ nhân tạo": "Artificial Intelligence",
+  "Xin chào!": "Hello!",
+  "Tôi là Trợ lý ảo EAM. Hãy hỏi tôi về tài sản đang dùng hoặc yêu cầu bảo trì.": "I am the EAM Virtual Assistant. Ask me about assets in use or maintenance requests.",
+  "Tài sản": "Asset",
+  "Phiếu yêu cầu": "Request Ticket",
+  "Gặp Admin": "Meet Admin",
+  "Nhập câu hỏi tại đây": "Type your question here",
+  "Hỗ trợ trực tuyến": "Online Support",
+  "Tìm nhân viên...": "Search employee...",
+  "Tất cả": "All",
+  "Không tìm thấy phiên chat nào.": "No chat session found.",
+  "Chọn cuộc trò chuyện": "Select a conversation",
+  "Chọn một nhân sự từ danh sách hàng đợi bên trái để bắt đầu tiếp Receiving hỗ trợ trực tiếp.": "Select an employee from the queue on the left to start providing direct support.",
+  "Hỗ trợ viên đang online": "Support agent online",
+  "Trợ giúp trực tuyến": "Online support",
+  "Không thể kết nối đến máy chủ.": "Cannot connect to server.",
+  "Gửi tin nhắn thất bại. Vui lòng thử lại.": "Failed to send message. Please try again.",
+  "Phiên hội thoại đã đóng. Vui lòng mở lại sau.": "Chat session has been closed. Please reopen later.",
 }
 
 const LanguageContext = createContext()
+const TRANSLATABLE_ATTRIBUTES = ['placeholder', 'title', 'aria-label']
+
+function translateUiString(value) {
+  if (!value || typeof value !== 'string') return value
+  if (fallbackDictionary[value]) return fallbackDictionary[value]
+
+  return Object.entries(fallbackDictionary)
+    .sort(([left], [right]) => right.length - left.length)
+    .reduce(
+      (translated, [source, target]) => translated.includes(source)
+        ? translated.split(source).join(target)
+        : translated,
+      value,
+    )
+}
 
 export function LanguageProvider({ children }) {
   const [locale, setLocale] = useState(() => {
-    return localStorage.getItem('eam_locale') || 'vi'
+    return localStorage.getItem('eam_locale') === 'en' ? 'en' : 'vi'
   })
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     localStorage.setItem('eam_locale', locale)
+    document.documentElement.lang = locale
+    document.documentElement.dataset.locale = locale
   }, [locale])
 
-  const t = (key) => {
+  useLayoutEffect(() => {
+    const trackedTextNodes = new Map()
+    const trackedAttributes = new Map()
+
+    function translateTextNode(node) {
+      if (!node.nodeValue?.trim()) return
+      const translated = translateUiString(node.nodeValue)
+      if (translated === node.nodeValue) return
+
+      if (!trackedTextNodes.has(node)) trackedTextNodes.set(node, node.nodeValue)
+      node.nodeValue = translated
+    }
+
+    function translateElementAttributes(element) {
+      for (const attribute of TRANSLATABLE_ATTRIBUTES) {
+        const value = element.getAttribute(attribute)
+        if (!value) continue
+        const translated = translateUiString(value)
+        if (translated === value) continue
+
+        if (!trackedAttributes.has(element)) trackedAttributes.set(element, new Map())
+        const originals = trackedAttributes.get(element)
+        if (!originals.has(attribute)) originals.set(attribute, value)
+        element.setAttribute(attribute, translated)
+      }
+    }
+
+    function translateTree(root) {
+      if (root.nodeType === Node.TEXT_NODE) {
+        translateTextNode(root)
+        return
+      }
+      if (!(root instanceof Element)) return
+
+      translateElementAttributes(root)
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT)
+      let current = walker.nextNode()
+      while (current) {
+        if (current.nodeType === Node.TEXT_NODE) translateTextNode(current)
+        else translateElementAttributes(current)
+        current = walker.nextNode()
+      }
+    }
+
+    if (locale !== 'en') return undefined
+
+    translateTree(document.body)
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === 'characterData') translateTextNode(mutation.target)
+        mutation.addedNodes.forEach(translateTree)
+        if (mutation.type === 'attributes') translateElementAttributes(mutation.target)
+      }
+    })
+
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: TRANSLATABLE_ATTRIBUTES,
+      characterData: true,
+      childList: true,
+      subtree: true,
+    })
+
+    return () => {
+      observer.disconnect()
+      trackedTextNodes.forEach((original, node) => {
+        if (node.isConnected) node.nodeValue = original
+      })
+      trackedAttributes.forEach((attributes, element) => {
+        if (!element.isConnected) return
+        attributes.forEach((original, attribute) => element.setAttribute(attribute, original))
+      })
+    }
+  }, [locale])
+
+  const t = useCallback((key) => {
     if (!key) return ''
     if (translations[locale] && translations[locale][key]) {
       return translations[locale][key]
@@ -303,10 +1215,12 @@ export function LanguageProvider({ children }) {
       return fallbackDictionary[key]
     }
     return translations['vi'][key] || key
-  }
+  }, [locale])
+
+  const value = useMemo(() => ({ locale, setLocale, t }), [locale, t])
 
   return (
-    <LanguageContext.Provider value={{ locale, setLocale, t }}>
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   )

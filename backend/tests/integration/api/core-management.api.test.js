@@ -30,6 +30,7 @@ describe("API integration: core management APIs (Person 2)", () => {
       update: jest.fn(),
       delete: jest.fn(),
       count: jest.fn(),
+      groupBy: jest.fn().mockResolvedValue([]),
     };
 
     // Also override employee to add count and other methods if needed
@@ -82,10 +83,26 @@ describe("API integration: core management APIs (Person 2)", () => {
 
     // Mock maintenance requests query
     harness.prisma.maintenanceRequest = {
-      findMany: jest.fn(),
+      findMany: jest.fn().mockResolvedValue([]),
       findUnique: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+    };
+
+    // Alias supportRequest to maintenanceRequest for test compatibility
+    harness.prisma.supportRequest = harness.prisma.maintenanceRequest;
+
+    // Mock department audit logs query
+    harness.prisma.departmentAuditLog = {
+      create: jest.fn().mockResolvedValue({}),
+      findMany: jest.fn().mockResolvedValue([]),
+    };
+
+    // Mock department asset quotas query
+    harness.prisma.departmentAssetQuota = {
+      deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
+      createMany: jest.fn().mockResolvedValue({ count: 0 }),
+      findMany: jest.fn().mockResolvedValue([]),
     };
   });
 
@@ -108,7 +125,9 @@ describe("API integration: core management APIs (Person 2)", () => {
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
-      expect(response.body.data).toEqual(mockList);
+      expect(response.body.data).toEqual([
+        { id: 1, name: "IT", description: "Information Technology", totalAssetValue: 0 }
+      ]);
     });
 
     test("POST /api/departments allows ADMIN and rejects USER", async () => {
@@ -118,25 +137,71 @@ describe("API integration: core management APIs (Person 2)", () => {
       const userToken = harness.signTokenForUser(user);
 
       harness.prisma.department.findUnique.mockResolvedValue(null);
-      harness.prisma.department.create.mockResolvedValue({ id: 1, name: "Finance" });
+      harness.prisma.department.create.mockResolvedValue({ id: 1, code: "FIN", name: "Finance" });
 
       // Admin request
       const adminResponse = await harness.request
         .post("/api/departments")
         .set("Authorization", `Bearer ${adminToken}`)
-        .send({ name: "Finance", description: "Finance Department" });
+        .send({ code: "FIN", name: "Finance", description: "Finance Department" });
 
       expect(adminResponse.status).toBe(201);
-      expect(adminResponse.body.data).toEqual({ id: 1, name: "Finance" });
+      expect(adminResponse.body.data).toEqual({ id: 1, code: "FIN", name: "Finance" });
 
       // User request
       const userResponse = await harness.request
         .post("/api/departments")
         .set("Authorization", `Bearer ${userToken}`)
-        .send({ name: "Finance" });
+        .send({ code: "FIN", name: "Finance" });
 
       expect(userResponse.status).toBe(403);
       expect(userResponse.body.success).toBe(false);
+    });
+
+    test("GET /api/departments/:id?detail=true returns detailed department", async () => {
+      const user = harness.getUserById(harness.seeds.ids.activeUserId);
+      const token = harness.signTokenForUser(user);
+      const mockDetail = {
+        id: 1,
+        code: "IT",
+        name: "IT",
+        description: "Information Technology",
+        managerId: "emp-1",
+        manager: { id: "emp-1", fullName: "John Doe", email: "john@company.local" },
+        employees: [{ id: "emp-2", fullName: "Jane Doe", position: "Dev" }],
+        ownedAssets: [{ id: "asset-1", name: "Laptop", value: 15000000 }],
+        _count: { employees: 1, ownedAssets: 1 }
+      };
+
+      harness.prisma.department.findUnique.mockResolvedValue(mockDetail);
+
+      const response = await harness.request
+        .get("/api/departments/1?detail=true")
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.name).toBe("IT");
+      expect(response.body.data.totalAssetValue).toBe(15000000);
+      expect(response.body.data.employees).toHaveLength(1);
+    });
+
+    test("POST /api/departments rejects if manager employee not found", async () => {
+      const admin = harness.getUserById(harness.seeds.ids.adminUserId);
+      const token = harness.signTokenForUser(admin);
+
+      harness.prisma.department.findUnique.mockResolvedValue(null);
+      // Mock employee findUnique to return null for manager validation
+      harness.prisma.employee.findUnique.mockResolvedValue(null);
+
+      const response = await harness.request
+        .post("/api/departments")
+        .set("Authorization", `Bearer ${token}`)
+        .send({ code: "RD", name: "R&D", managerId: "00000000-0000-0000-0000-000000000000" });
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toContain("Trưởng phòng được gán không tồn tại");
     });
   });
 

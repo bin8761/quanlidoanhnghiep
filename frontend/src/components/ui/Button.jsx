@@ -2,9 +2,9 @@ const variants = {
   primary:
     'border-brand-700 bg-brand-700 text-white shadow-[0_6px_16px_rgba(25,120,82,0.18)] hover:border-brand-800 hover:bg-brand-800 hover:shadow-[0_8px_20px_rgba(25,120,82,0.24)] focus-visible:ring-brand-500/25',
   secondary:
-    'border-slate-200 bg-white text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 focus-visible:ring-slate-400/20',
+    'border-slate-200 bg-white text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 focus-visible:ring-slate-400/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:shadow-none dark:hover:border-slate-600 dark:hover:bg-slate-700 dark:hover:text-white',
   ghost:
-    'border-transparent bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus-visible:ring-slate-400/20',
+    'border-transparent bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus-visible:ring-slate-400/20 dark:text-slate-300 dark:hover:bg-white/7 dark:hover:text-white',
   danger:
     'border-red-600 bg-red-600 text-white shadow-sm hover:bg-red-700 focus-visible:ring-red-500/25',
 }

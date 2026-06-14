@@ -9,6 +9,7 @@ import {
 } from '../api/notifications'
 import { useAuth } from '../auth/auth-context'
 import { NotificationsContext } from './notifications-context'
+import { normalizeNotification, normalizeNotifications } from './normalizeNotification'
 
 function mergeNotification(items, notification) {
   return [notification, ...items.filter((item) => item.id !== notification.id)].slice(0, 20)
@@ -31,7 +32,7 @@ export function NotificationsProvider({ children }) {
         getUnreadNotificationCount(),
       ])
 
-      setNotifications(listResponse.data || [])
+      setNotifications(normalizeNotifications(listResponse.data))
       setUnreadCount(countResponse.data?.count || 0)
     } finally {
       setIsLoading(false)
@@ -48,7 +49,7 @@ export function NotificationsProvider({ children }) {
     Promise.all([listNotifications({ limit: 20 }), getUnreadNotificationCount()])
       .then(([listResponse, countResponse]) => {
         if (cancelled) return
-        setNotifications(listResponse.data || [])
+        setNotifications(normalizeNotifications(listResponse.data))
         setUnreadCount(countResponse.data?.count || 0)
       })
       .catch(() => undefined)
@@ -65,7 +66,7 @@ export function NotificationsProvider({ children }) {
     })
 
     stream.addEventListener('notification', (event) => {
-      const notification = JSON.parse(event.data)
+      const notification = normalizeNotification(JSON.parse(event.data))
       setNotifications((current) => mergeNotification(current, notification))
       setUnreadCount((current) => current + 1)
       toast.info(notification.title)
@@ -83,7 +84,7 @@ export function NotificationsProvider({ children }) {
 
   const markRead = useCallback(async (id) => {
     const response = await markNotificationAsRead(id)
-    const updated = response.data
+    const updated = normalizeNotification(response.data)
 
     setNotifications((current) => current.map((item) => (item.id === id ? updated : item)))
     setUnreadCount((current) => Math.max(current - 1, 0))

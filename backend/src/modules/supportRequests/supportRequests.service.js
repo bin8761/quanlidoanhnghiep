@@ -203,6 +203,76 @@ function createSupportRequestsService({ supportRepository = repository, notifica
         wrapWorkflowError(error);
       }
     },
+
+    async cancel(id, context = {}) {
+      const request = await supportRepository.findById(id);
+      if (!request) throw requestError("Support request not found", 404);
+
+      if (context.authenticatedUser?.role !== ADMIN) {
+        const requesterId = await resolveRequester({
+          supportRepository,
+          authenticatedUser: context.authenticatedUser,
+          requestedRequesterId: request.requesterId,
+        });
+        if (request.requesterId !== requesterId) {
+          throw forbiddenError("Users can only cancel their own support requests");
+        }
+      }
+
+      if (request.status !== "PENDING" && request.status !== "APPROVED") {
+        throw requestError("Only pending or approved support requests can be cancelled");
+      }
+
+      const updated = await supportRepository.updateStatus(
+        id,
+        {
+          status: "CANCELLED",
+          resolution: "Yêu cầu được hủy bởi người gửi",
+        },
+        { actorUserId: context.authenticatedUser?.userId },
+      );
+
+      await notifyUpdated(updated);
+      await syncSupportRequestTask(updated);
+      return updated;
+    },
+
+    async rate(id, { rating, feedback }, context = {}) {
+      const request = await supportRepository.findById(id);
+      if (!request) throw requestError("Support request not found", 404);
+
+      if (request.status !== "COMPLETED") {
+        throw requestError("Chỉ có thể đánh giá chất lượng dịch vụ cho yêu cầu hỗ trợ đã hoàn thành.");
+      }
+
+      if (context.authenticatedUser?.role !== ADMIN) {
+        const requesterId = await resolveRequester({
+          supportRepository,
+          authenticatedUser: context.authenticatedUser,
+          requestedRequesterId: request.requesterId,
+        });
+        if (request.requesterId !== requesterId) {
+          throw forbiddenError("Người dùng chỉ có thể đánh giá yêu cầu hỗ trợ của chính mình.");
+        }
+      }
+
+      if (request.rating !== null && request.rating !== undefined) {
+        throw requestError("Yêu cầu hỗ trợ này đã được đánh giá dịch vụ.");
+      }
+
+      const updated = await supportRepository.rateRequest(
+        id,
+        {
+          rating,
+          feedback: feedback || null,
+          ratedAt: new Date(),
+        },
+        { actorUserId: context.authenticatedUser?.userId }
+      );
+
+      await notifyUpdated(updated);
+      return updated;
+    },
   });
 }
 

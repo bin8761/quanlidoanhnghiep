@@ -6,10 +6,14 @@ describe("departments.service", () => {
       findAll: jest.fn(),
       findById: jest.fn(),
       findByName: jest.fn(),
+      findByCode: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
       countEmployees: jest.fn(),
+      countChildren: jest.fn(),
+      getAssetValueStats: jest.fn().mockResolvedValue({}),
+      createAuditLog: jest.fn().mockResolvedValue({}),
       ...repositoryOverrides,
     };
 
@@ -34,7 +38,7 @@ describe("departments.service", () => {
 
     const result = await departmentsService.getAllDepartments();
     expect(repository.findAll).toHaveBeenCalled();
-    expect(result).toEqual(list);
+    expect(result).toEqual([{ id: 1, name: "IT", totalAssetValue: 0 }]);
   });
 
   test("getDepartmentById returns department if found", async () => {
@@ -75,7 +79,7 @@ describe("departments.service", () => {
 
     const result = await departmentsService.createDepartment(data);
     expect(repository.findByName).toHaveBeenCalledWith("HR");
-    expect(repository.create).toHaveBeenCalledWith(data);
+    expect(repository.create).toHaveBeenCalledWith({ ...data, managerId: null });
     expect(result).toEqual(created);
   });
 
@@ -99,6 +103,7 @@ describe("departments.service", () => {
       repositoryOverrides: {
         findById: jest.fn().mockResolvedValue(dept),
         countEmployees: jest.fn().mockResolvedValue(0),
+        countChildren: jest.fn().mockResolvedValue(0),
         delete: jest.fn().mockResolvedValue(dept),
       },
     });

@@ -41,3 +41,24 @@ export function logout() {
 export async function register({ employeeCode, email, password, confirmPassword }) {
   return api.post('/auth/register', { employeeCode, email, password, confirmPassword })
 }
+
+/**
+ * Gửi yêu cầu mã OTP quên mật khẩu về email.
+ */
+export async function sendForgotPasswordOtp({ email }) {
+  return api.post('/auth/forgot-password', { email })
+}
+
+/**
+ * Xác thực mã OTP quên mật khẩu.
+ */
+export async function verifyForgotPasswordOtp({ email, otp }) {
+  return api.post('/auth/verify-forgot-password-otp', { email, otp })
+}
+
+/**
+ * Đặt lại mật khẩu mới sử dụng mã OTP đã xác thực.
+ */
+export async function resetPassword({ email, otp, newPassword, confirmNewPassword }) {
+  return api.post('/auth/reset-password', { email, otp, newPassword, confirmNewPassword })
+}

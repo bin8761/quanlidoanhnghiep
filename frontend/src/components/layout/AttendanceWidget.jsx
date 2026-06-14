@@ -5,7 +5,7 @@ import { useLanguage } from '../../hooks/useLanguage'
 import { Clock, LogIn, LogOut, Calendar } from 'lucide-react'
 
 export default function AttendanceWidget() {
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const [status, setStatus] = useState(null)
   const [loading, setLoading] = useState(true)
   const [time, setTime] = useState(new Date())
@@ -16,7 +16,7 @@ export default function AttendanceWidget() {
     return () => clearInterval(timer)
   }, [])
 
-  const fetchStatus = async () => {
+  async function fetchStatus() {
     try {
       const data = await attendanceApi.getStatus()
       setStatus(data)
@@ -70,8 +70,9 @@ export default function AttendanceWidget() {
   const hasCheckedIn = !!today.checkIn
   const hasCheckedOut = !!today.checkOut
 
-  const formattedTime = time.toLocaleTimeString('vi-VN')
-  const formattedDate = time.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+  const dateLocale = locale === 'en' ? 'en-US' : 'vi-VN'
+  const formattedTime = time.toLocaleTimeString(dateLocale)
+  const formattedDate = time.toLocaleDateString(dateLocale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 
   return (
     <div className="surface overflow-hidden transition-all duration-300 hover:shadow-xl border border-slate-100 dark:border-slate-800">
@@ -87,7 +88,7 @@ export default function AttendanceWidget() {
               ? (hasCheckedOut ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30') 
               : 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30'
           }`}>
-            {hasCheckedIn ? (hasCheckedOut ? 'Hoàn thành' : 'Đang làm việc') : 'Chưa Check-In'}
+            {hasCheckedIn ? (hasCheckedOut ? t('Hoàn thành') : t('Đang làm việc')) : t('Chưa Check-In')}
           </span>
         </div>
       </div>
@@ -105,21 +106,21 @@ export default function AttendanceWidget() {
             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t('checkIn')}</span>
             <span className="text-sm font-bold mt-1 text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
               <LogIn size={13} className={hasCheckedIn ? "text-emerald-500" : "text-slate-300"} />
-              {today.checkIn ? new Date(today.checkIn).toLocaleTimeString('vi-VN') : '--:--'}
+              {today.checkIn ? new Date(today.checkIn).toLocaleTimeString(dateLocale) : '--:--'}
             </span>
           </div>
           <div className="p-3 bg-slate-50 dark:bg-slate-800/20 rounded-xl border border-slate-100/30 dark:border-slate-800/20 flex flex-col justify-between">
             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{t('checkOut')}</span>
             <span className="text-sm font-bold mt-1 text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
               <LogOut size={13} className={hasCheckedOut ? "text-emerald-500" : "text-slate-300"} />
-              {today.checkOut ? new Date(today.checkOut).toLocaleTimeString('vi-VN') : '--:--'}
+              {today.checkOut ? new Date(today.checkOut).toLocaleTimeString(dateLocale) : '--:--'}
             </span>
           </div>
         </div>
 
         {/* Weekly Stats */}
         <div className="flex justify-between items-center text-[10px] font-semibold text-slate-500 dark:text-slate-400 px-1">
-          <span className="flex items-center gap-1"><Calendar size={12} /> Chấm công tuần này: <strong className="text-slate-700 dark:text-slate-200">{stats.totalDays} ngày</strong></span>
+          <span className="flex items-center gap-1"><Calendar size={12} /> {t('Chấm công tuần này')}: <strong className="text-slate-700 dark:text-slate-200">{stats.totalDays} {locale === 'en' ? 'days' : 'ngày'}</strong></span>
           <span>{t('totalHours')}: <strong className="text-brand-600 dark:text-emerald-400">{stats.totalHours.toFixed(2)}h</strong></span>
         </div>
 

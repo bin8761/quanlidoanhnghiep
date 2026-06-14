@@ -26,6 +26,10 @@ import PageHeader from '../../components/ui/PageHeader'
 import Button from '../../components/ui/Button'
 import FormField from '../../components/ui/FormField'
 import Toast from '../../components/ui/Toast'
+import VietnamAddressSelector from '../../components/ui/VietnamAddressSelector'
+import SearchableSelect from '../../components/ui/SearchableSelect'
+import AvatarUpload from '../../components/ui/AvatarUpload'
+import { VIETNAMESE_ETHNICITIES, NATIONALITIES } from '../../data/vietnam-static'
 import useAutoDismiss from '../../hooks/useAutoDismiss'
 import { employeeApi } from '../../api/employees'
 import { Link } from 'react-router-dom'
@@ -75,7 +79,7 @@ function toInputDateString(isoString) {
 }
 
 export default function EmployeeProfilePage() {
-  const { user } = useAuth()
+  const { user, updateCurrentUser } = useAuth()
   const [profile, setProfile] = useState(null)
   const [attachments, setAttachments] = useState([])
   const [logs, setLogs] = useState([])
@@ -87,6 +91,7 @@ export default function EmployeeProfilePage() {
 
   // Edit Forms
   const [personalForm, setPersonalForm] = useState({
+    avatarUrl: '',
     fullName: '',
     phone: '',
     personalEmail: '',
@@ -135,6 +140,7 @@ export default function EmployeeProfilePage() {
       // Personal form init
       const emergency = empData.emergencyContact || {}
       setPersonalForm({
+        avatarUrl: empData.avatarUrl || '',
         fullName: empData.fullName || '',
         phone: empData.phone || '',
         personalEmail: empData.personalEmail || '',
@@ -176,6 +182,411 @@ export default function EmployeeProfilePage() {
     loadProfileData()
   }, [user])
 
+  const handleAvatarChange = async (avatarUrl) => {
+    if (!profile?.id) {
+      throw new Error('Không tìm thấy hồ sơ nhân viên.')
+    }
+
+    try {
+      const updatedEmployee = await employeeApi.update(profile.id, {
+        avatarUrl: avatarUrl || null,
+      })
+
+      setProfile(updatedEmployee)
+      setPersonalForm((current) => ({
+        ...current,
+        avatarUrl: updatedEmployee.avatarUrl || '',
+      }))
+      updateCurrentUser({ avatarUrl: updatedEmployee.avatarUrl || null })
+      setToast({
+        type: 'success',
+        message: avatarUrl
+          ? 'Cập nhật ảnh đại diện thành công.'
+          : 'Đã xóa ảnh đại diện.',
+      })
+    } catch (err) {
+      throw new Error(err.message || 'Không thể cập nhật ảnh đại diện.', { cause: err })
+    }
+  }
+
+  const handleExportPDF = () => {
+    if (!profile) return
+
+    const printWindow = window.open('', '_blank')
+    if (!printWindow) {
+      setToast({ type: 'error', message: 'Vui lòng cho phép mở pop-up để xuất file PDF.' })
+      return
+    }
+
+    const educationHtml = resumeForm.education.length > 0
+      ? resumeForm.education.map(item => `
+        <div class="education-item">
+          <div class="edu-header">
+            <strong>${item.school || 'Chưa cập nhật'}</strong>
+            <span>${item.graduateYear ? `Năm tốt nghiệp: ${item.graduateYear}` : ''}</span>
+          </div>
+          <div class="edu-details">${item.major || 'Chưa cập nhật'} (${item.degree || 'Đại học'})</div>
+        </div>
+      `).join('')
+      : '<p class="empty-text">Chưa cập nhật thông tin học vấn.</p>'
+
+    const skillsHtml = resumeForm.skills
+      ? resumeForm.skills.split(',').map(s => `<span class="tag">${s.trim()}</span>`).join(' ')
+      : '<p class="empty-text">Chưa cập nhật kỹ năng.</p>'
+
+    const certsHtml = resumeForm.certificates
+      ? resumeForm.certificates.split(',').map(c => `<span class="tag tag-teal">${c.trim()}</span>`).join(' ')
+      : '<p class="empty-text">Chưa cập nhật chứng chỉ.</p>'
+
+    const emergency = profile.emergencyContact || {}
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Hồ sơ nhân viên - ${profile.fullName}</title>
+        <meta charset="utf-8">
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+          body {
+            font-family: 'Inter', sans-serif;
+            color: #1e293b;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 40px;
+            font-size: 13px;
+            line-height: 1.6;
+          }
+          @media print {
+            body {
+              padding: 0;
+            }
+            .no-print {
+              display: none;
+            }
+          }
+          .header-container {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 24px;
+            margin-bottom: 30px;
+          }
+          .avatar-placeholder {
+            width: 90px;
+            height: 90px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: 800;
+            text-transform: uppercase;
+          }
+          .avatar-img {
+            width: 90px;
+            height: 90px;
+            border-radius: 16px;
+            object-fit: cover;
+            border: 1px solid #e2e8f0;
+          }
+          .header-info h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 800;
+            color: #0f172a;
+          }
+          .header-info p {
+            margin: 4px 0 0 0;
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 500;
+          }
+          .badge-container {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+          }
+          .badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 9999px;
+            text-transform: uppercase;
+            border: 1px solid #e2e8f0;
+          }
+          .badge-green {
+            background-color: #f0fdf4;
+            color: #166534;
+            border-color: #bbf7d0;
+          }
+          .badge-blue {
+            background-color: #eff6ff;
+            color: #1e40af;
+            border-color: #bfdbfe;
+          }
+          .section {
+            margin-bottom: 25px;
+          }
+          .section-title {
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #0f172a;
+            letter-spacing: 0.1em;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 6px;
+            margin-bottom: 15px;
+          }
+          .grid {
+            display: grid;
+            grid-template-cols: 1fr 1fr;
+            gap: 15px 30px;
+          }
+          .info-block {
+            display: flex;
+            flex-direction: column;
+          }
+          .info-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin-bottom: 2px;
+          }
+          .info-value {
+            font-weight: 600;
+            color: #334155;
+          }
+          .education-item {
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px dashed #e2e8f0;
+          }
+          .education-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+          }
+          .edu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
+          .edu-header strong {
+            font-size: 13px;
+            color: #1e293b;
+          }
+          .edu-header span {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 500;
+          }
+          .edu-details {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 2px;
+          }
+          .tag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            background-color: #f1f5f9;
+            color: #475569;
+            border-radius: 6px;
+            margin-right: 6px;
+            margin-bottom: 6px;
+          }
+          .tag-teal {
+            background-color: #f0fdfa;
+            color: #0d9488;
+          }
+          .empty-text {
+            font-style: italic;
+            color: #94a3b8;
+            margin: 0;
+          }
+          .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 11px;
+            color: #94a3b8;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 15px;
+          }
+          .print-btn-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+          }
+          .print-btn {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+            transition: all 0.2s;
+          }
+          .print-btn:hover {
+            background-color: #059669;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="print-btn-container no-print">
+          <button class="print-btn" onclick="window.print()">In hồ sơ / Lưu PDF</button>
+        </div>
+
+        <div class="header-container">
+          <div>
+            ${profile.avatarUrl 
+              ? `<img class="avatar-img" src="${profile.avatarUrl}" alt="${profile.fullName}">`
+              : `<div class="avatar-placeholder">${profile.fullName.slice(0, 2).toUpperCase()}</div>`
+            }
+          </div>
+          <div class="header-info">
+            <h1>${profile.fullName}</h1>
+            <p>${profile.position || 'Nhân viên'} · ${profile.department?.name || 'Chưa phân phòng'}</p>
+            <div class="badge-container">
+              <span class="badge badge-green">${profile.status === 'ACTIVE' ? 'Đang hoạt động' : 'Ngừng hoạt động'}</span>
+              <span class="badge badge-blue">Mã NV: ${profile.employeeCode}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Thông tin công việc</div>
+          <div class="grid">
+            <div class="info-block">
+              <span class="info-label">Mã nhân viên</span>
+              <span class="info-value">${profile.employeeCode}</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Email công việc</span>
+              <span class="info-value">${profile.email}</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Chức vụ</span>
+              <span class="info-value">${profile.position || 'Nhân viên'}</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Ngày vào làm</span>
+              <span class="info-value">${formatDate(profile.joinDate)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Thông tin cá nhân</div>
+          <div class="grid">
+            <div class="info-block">
+              <span class="info-label">Số điện thoại</span>
+              <span class="info-value">${profile.phone || 'Chưa cập nhật'}</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Email cá nhân</span>
+              <span class="info-value">${profile.personalEmail || 'Chưa cập nhật'}</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Ngày sinh</span>
+              <span class="info-value">${formatDate(profile.dateOfBirth)}</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Giới tính</span>
+              <span class="info-value">${profile.gender || 'Chưa cập nhật'}</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Dân tộc</span>
+              <span class="info-value">${profile.ethnicity || 'Chưa cập nhật'}</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Quốc tịch</span>
+              <span class="info-value">${profile.nationality || 'Chưa cập nhật'}</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Số CCCD</span>
+              <span class="info-value">${profile.identityCardNumber || 'Chưa cập nhật'}</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Quê quán</span>
+              <span class="info-value">${profile.hometown || 'Chưa cập nhật'}</span>
+            </div>
+            <div class="info-block" style="grid-column: span 2;">
+              <span class="info-label">Địa chỉ thường trú</span>
+              <span class="info-value">${profile.permanentAddress || 'Chưa cập nhật'}</span>
+            </div>
+            <div class="info-block" style="grid-column: span 2;">
+              <span class="info-label">Địa chỉ hiện tại</span>
+              <span class="info-value">${profile.currentAddress || 'Chưa cập nhật'}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Liên hệ khẩn cấp</div>
+          <div class="grid">
+            <div class="info-block">
+              <span class="info-label">Họ và tên</span>
+              <span class="info-value">${emergency.name || 'Chưa cập nhật'}</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Mối quan hệ</span>
+              <span class="info-value">${emergency.relation || 'Chưa cập nhật'}</span>
+            </div>
+            <div class="info-block">
+              <span class="info-label">Số điện thoại liên hệ</span>
+              <span class="info-value">${emergency.phone || 'Chưa cập nhật'}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Trình độ học vấn</div>
+          <div class="education-list">
+            ${educationHtml}
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Kỹ năng chuyên môn</div>
+          <div>
+            ${skillsHtml}
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Chứng chỉ chuyên môn</div>
+          <div>
+            ${certsHtml}
+          </div>
+        </div>
+
+        <div class="footer">
+          Hồ sơ được trích xuất tự động từ hệ thống EAM Workspace vào lúc ${new Date().toLocaleString('vi-VN')}
+        </div>
+
+        <script>
+          window.onload = function() {
+            window.print();
+          }
+        </script>
+      </body>
+      </html>
+    `
+
+    printWindow.document.write(htmlContent)
+    printWindow.document.close()
+  }
+
   // Update Personal Info
   const handlePersonalSubmit = async (e) => {
     e.preventDefault()
@@ -186,6 +597,7 @@ export default function EmployeeProfilePage() {
     setIsSaving(true)
     try {
       const payload = {
+        avatarUrl: personalForm.avatarUrl || null,
         fullName: personalForm.fullName.trim(),
         phone: personalForm.phone.trim() || null,
         personalEmail: personalForm.personalEmail.trim() || null,
@@ -206,9 +618,11 @@ export default function EmployeeProfilePage() {
       await employeeApi.update(profile.id, payload)
       setToast({ type: 'success', message: 'Cập nhật thông tin cá nhân thành công.' })
       
-      // Reload logs and data
+      // Reload logs and data, sync form state
       const updatedEmp = await employeeApi.getById(profile.id)
       setProfile(updatedEmp)
+      // Sync avatarUrl back so the header shows the saved avatar
+      setPersonalForm(c => ({ ...c, avatarUrl: updatedEmp.avatarUrl || '' }))
       const newLogs = await employeeApi.getLogs(profile.id)
       setLogs(newLogs)
     } catch (err) {
@@ -354,11 +768,16 @@ export default function EmployeeProfilePage() {
   }
 
   return (
-    <div className="animate-fade-up space-y-6">
+    <div className="employee-profile-page animate-fade-up space-y-6">
       <PageHeader
         eyebrow="Quản lý tài khoản"
         title="Hồ sơ nhân viên"
         description="Quản lý thông tin hồ sơ cá nhân, sơ yếu lý lịch và hồ sơ chứng chỉ đính kèm."
+        actions={
+          <Button onClick={handleExportPDF}>
+            <Download size={16} /> Xuất hồ sơ (PDF)
+          </Button>
+        }
       />
 
       {/* Lock Banner */}
@@ -375,13 +794,21 @@ export default function EmployeeProfilePage() {
       <section className="surface overflow-hidden">
         <div className="bg-slate-950 px-5 py-7 text-white sm:px-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-4">
-              <span className="grid size-16 shrink-0 place-items-center rounded-2xl bg-brand-500 text-xl font-extrabold text-white">
-                {profile.fullName.split(' ').slice(-2).map((part) => part[0]).join('')}
-              </span>
+          <div className="flex items-center gap-4">
+              {/* Avatar */}
+              <div className="shrink-0">
+                <AvatarUpload
+                  value={personalForm.avatarUrl || profile.avatarUrl || ''}
+                  onChange={handleAvatarChange}
+                  name={profile.fullName}
+                  size="md"
+                  disabled={!profile.allowProfileUpdate}
+                  showLabel={false}
+                />
+              </div>
               <div>
                 <h3 className="text-xl font-extrabold">{profile.fullName}</h3>
-                <p className="mt-1 text-sm text-white/60">{profile.position || 'Staff'} · {profile.department?.name || 'Chưa phân phòng'}</p>
+                <p className="mt-1 text-sm text-white/60">{profile.position || 'Nhân viên'} · {profile.department?.name || 'Chưa phân phòng'}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <span className="inline-flex rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[10px] font-bold text-emerald-300">
                     {profile.status === 'ACTIVE' ? 'Đang hoạt động' : 'Ngừng hoạt động'}
@@ -475,7 +902,7 @@ export default function EmployeeProfilePage() {
                   </div>
                   <div>
                     <span className="text-[10px] font-bold text-slate-400 block uppercase">Chức vụ</span>
-                    <span className="text-sm font-semibold text-slate-800">{profile.position || 'Staff'}</span>
+                    <span className="text-sm font-semibold text-slate-800">{profile.position || 'Nhân viên'}</span>
                   </div>
                   <div>
                     <span className="text-[10px] font-bold text-slate-400 block uppercase">Ngày vào làm</span>
@@ -545,45 +972,72 @@ export default function EmployeeProfilePage() {
                   disabled={!profile.allowProfileUpdate || isSaving}
                   onChange={e => setPersonalForm(c => ({ ...c, identityCardNumber: e.target.value }))}
                 />
-                <FormField
-                  label="Quê quán"
-                  name="hometown"
-                  value={personalForm.hometown}
-                  disabled={!profile.allowProfileUpdate || isSaving}
-                  onChange={e => setPersonalForm(c => ({ ...c, hometown: e.target.value }))}
-                />
-                <FormField
+                {/* Quê quán - chọn tỉnh/thành */}
+                <div className="lg:col-span-1">
+                  <SearchableSelect
+                    label="Quê quán (Tỉnh/Thành phố)"
+                    options={[
+                      { value: '', label: '-- Chưa chọn --' },
+                      ...[
+                        'Hà Nội','TP Hồ Chí Minh','Đà Nẵng','Hải Phòng','Cần Thơ',
+                        'An Giang','Bà Rịa - Vũng Tàu','Bắc Giang','Bắc Kạn','Bạc Liêu',
+                        'Bắc Ninh','Bến Tre','Bình Định','Bình Dương','Bình Phước',
+                        'Bình Thuận','Cà Mau','Cao Bằng','Đắk Lắk','Đắk Nông',
+                        'Điện Biên','Đồng Nai','Đồng Tháp','Gia Lai','Hà Giang',
+                        'Hà Nam','Hà Tĩnh','Hải Dương','Hậu Giang','Hòa Bình',
+                        'Hưng Yên','Khánh Hòa','Kiên Giang','Kon Tum','Lai Châu',
+                        'Lâm Đồng','Lạng Sơn','Lào Cai','Long An','Nam Định',
+                        'Nghệ An','Ninh Bình','Ninh Thuận','Phú Thọ','Phú Yên',
+                        'Quảng Bình','Quảng Nam','Quảng Ngãi','Quảng Ninh','Quảng Trị',
+                        'Sóc Trăng','Sơn La','Tây Ninh','Thái Bình','Thái Nguyên',
+                        'Thanh Hóa','Thừa Thiên Huế','Tiền Giang','Trà Vinh','Tuyên Quang',
+                        'Vĩnh Long','Vĩnh Phúc','Yên Bái'
+                      ].map(t => ({ value: t, label: t }))
+                    ]}
+                    value={personalForm.hometown}
+                    onChange={val => setPersonalForm(c => ({ ...c, hometown: val }))}
+                    placeholder="Chọn tỉnh/thành quê quán"
+                    disabled={!profile.allowProfileUpdate || isSaving}
+                  />
+                </div>
+                {/* Dân tộc - dropdown cố định */}
+                <SearchableSelect
                   label="Dân tộc"
-                  name="ethnicity"
+                  options={[
+                    { value: '', label: '-- Chưa chọn --' },
+                    ...VIETNAMESE_ETHNICITIES.map(e => ({ value: e, label: e }))
+                  ]}
                   value={personalForm.ethnicity}
+                  onChange={val => setPersonalForm(c => ({ ...c, ethnicity: val }))}
+                  placeholder="Chọn dân tộc"
                   disabled={!profile.allowProfileUpdate || isSaving}
-                  onChange={e => setPersonalForm(c => ({ ...c, ethnicity: e.target.value }))}
                 />
-                <FormField
+                {/* Quốc tịch - searchable */}
+                <SearchableSelect
                   label="Quốc tịch"
-                  name="nationality"
+                  options={[{ value: '', label: '-- Chưa chọn --' }, ...NATIONALITIES]}
                   value={personalForm.nationality}
+                  onChange={val => setPersonalForm(c => ({ ...c, nationality: val }))}
+                  placeholder="Tìm và chọn quốc tịch"
                   disabled={!profile.allowProfileUpdate || isSaving}
-                  onChange={e => setPersonalForm(c => ({ ...c, nationality: e.target.value }))}
                 />
               </div>
 
+              {/* Địa chỉ thường trú và hiện tại */}
               <div className="grid gap-5 sm:grid-cols-2">
-                <FormField
-                  as="textarea"
+                <VietnamAddressSelector
                   label="Địa chỉ thường trú"
-                  name="permanentAddress"
                   value={personalForm.permanentAddress}
+                  onChange={val => setPersonalForm(c => ({ ...c, permanentAddress: val }))}
+                  includeStreet={true}
                   disabled={!profile.allowProfileUpdate || isSaving}
-                  onChange={e => setPersonalForm(c => ({ ...c, permanentAddress: e.target.value }))}
                 />
-                <FormField
-                  as="textarea"
+                <VietnamAddressSelector
                   label="Địa chỉ hiện tại"
-                  name="currentAddress"
                   value={personalForm.currentAddress}
+                  onChange={val => setPersonalForm(c => ({ ...c, currentAddress: val }))}
+                  includeStreet={true}
                   disabled={!profile.allowProfileUpdate || isSaving}
-                  onChange={e => setPersonalForm(c => ({ ...c, currentAddress: e.target.value }))}
                 />
               </div>
 

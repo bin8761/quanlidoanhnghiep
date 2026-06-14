@@ -28,7 +28,7 @@ describe('passwordChangeGuard middleware', () => {
     expect(error.errorCode).toBe('AUTH_UNAUTHORIZED');
   });
 
-  test('blocks access when user must change password', async () => {
+  test('allows access and exposes state when user should change password', async () => {
     const findUserById = jest.fn().mockResolvedValue({
       id: USER_ID,
       mustChangePassword: true,
@@ -50,13 +50,12 @@ describe('passwordChangeGuard middleware', () => {
 
     await passwordChangeGuard(request, response, next);
 
-    const error = next.mock.calls[0][0];
     expect(findUserById).toHaveBeenCalledWith({
       where: { id: USER_ID },
       select: { mustChangePassword: true },
     });
-    expect(error).toBeTruthy();
-    expect(error.errorCode).toBe('AUTH_PASSWORD_CHANGE_REQUIRED');
+    expect(response.locals.authUserState).toEqual({ mustChangePassword: true });
+    expect(next).toHaveBeenCalledWith();
   });
 
   test('allows access when user no longer needs password change', async () => {

@@ -125,6 +125,42 @@ describe("assets.service", () => {
     });
   });
 
+  test("importAssets returns row-level success and failure results", async () => {
+    const rows = [
+      { rowNumber: 2, assetCode: "AST01", name: "Laptop", categoryId: 1 },
+      { rowNumber: 3, assetCode: "AST02", name: "Monitor", categoryId: 1 },
+    ];
+    const { assetsService, repository } = loadAssetsService({
+      repositoryOverrides: {
+        findByAssetCode: jest.fn()
+          .mockResolvedValueOnce(null)
+          .mockResolvedValueOnce({ id: ASSET_ID, assetCode: "AST02" }),
+        create: jest.fn().mockResolvedValue({
+          id: ASSET_ID,
+          assetCode: "AST01",
+          name: "Laptop",
+        }),
+      },
+      catRepositoryOverrides: {
+        findById: jest.fn().mockResolvedValue({ id: 1 }),
+      },
+    });
+
+    const result = await assetsService.importAssets(rows);
+
+    expect(result).toMatchObject({ total: 2, imported: 1, failed: 1 });
+    expect(result.results).toEqual([
+      expect.objectContaining({ rowNumber: 2, success: true, code: "AST01" }),
+      expect.objectContaining({
+        rowNumber: 3,
+        success: false,
+        code: "AST02",
+        message: "Asset code already exists",
+      }),
+    ]);
+    expect(repository.create).toHaveBeenCalledTimes(1);
+  });
+
   test("updateAsset throws validation error if changing status from ASSIGNED while actively assigned", async () => {
     const asset = { id: ASSET_ID, name: "Dell Laptop", status: "ASSIGNED", categoryId: 1 };
     const data = { status: "AVAILABLE" };

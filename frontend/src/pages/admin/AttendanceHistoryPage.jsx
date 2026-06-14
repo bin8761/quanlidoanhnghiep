@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { attendanceApi } from '../../api/attendance'
 import PageHeader from '../../components/ui/PageHeader'
 import Button from '../../components/ui/Button'
 import DataTable from '../../components/ui/DataTable'
 import { toast } from 'react-toastify'
-import { CalendarCheck, RefreshCw, FileDown } from 'lucide-react'
+import { CalendarCheck, RefreshCw } from 'lucide-react'
+import { matchesSearch } from '../../utils/search'
 
 export default function AttendanceHistoryPage() {
   const [history, setHistory] = useState([])
@@ -12,7 +13,22 @@ export default function AttendanceHistoryPage() {
   const [search, setSearch] = useState('')
 
   useEffect(() => {
-    fetchHistory()
+    let active = true
+
+    attendanceApi.getAllHistory()
+      .then((data) => {
+        if (active) setHistory(Array.isArray(data) ? data : (data.items || []))
+      })
+      .catch(() => {
+        if (active) toast.error('Không thể tải lịch sử chấm công')
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
   }, [])
 
   const fetchHistory = async () => {
@@ -20,7 +36,7 @@ export default function AttendanceHistoryPage() {
       setLoading(true)
       const data = await attendanceApi.getAllHistory()
       setHistory(Array.isArray(data) ? data : (data.items || []))
-    } catch (error) {
+    } catch {
       toast.error('Không thể tải lịch sử chấm công')
     } finally {
       setLoading(false)
@@ -55,6 +71,19 @@ export default function AttendanceHistoryPage() {
     }
   ]
 
+  const filteredHistory = useMemo(
+    () => history.filter((record) => matchesSearch(search, [
+      record.employee?.fullName,
+      record.employee?.employeeCode,
+      record.employee?.email,
+      record.date,
+      record.checkIn ? new Date(record.checkIn).toLocaleString('vi-VN') : '',
+      record.checkOut ? new Date(record.checkOut).toLocaleString('vi-VN') : '',
+      record.totalHours,
+    ])),
+    [history, search],
+  )
+
   return (
     <div className="animate-fade-up">
       <PageHeader
@@ -77,7 +106,9 @@ export default function AttendanceHistoryPage() {
         ) : (
           <DataTable
             columns={columns}
-            rows={history}
+            rows={filteredHistory}
+            searchValue={search}
+            onSearchChange={setSearch}
             searchPlaceholder="Tìm kiếm theo tên nhân viên hoặc mã nhân viên..."
           />
         )}

@@ -1,19 +1,18 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useLayoutEffect, useState } from 'react'
 
 const ThemeContext = createContext()
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('eam_theme') || 'light'
+    const savedTheme = localStorage.getItem('eam_theme')
+    return savedTheme === 'dark' ? 'dark' : 'light'
   })
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = window.document.documentElement
-    if (theme === 'dark') {
-      root.classList.add('dark')
-    } else {
-      root.classList.remove('dark')
-    }
+    root.classList.toggle('dark', theme === 'dark')
+    root.dataset.theme = theme
     localStorage.setItem('eam_theme', theme)
   }, [theme])
 

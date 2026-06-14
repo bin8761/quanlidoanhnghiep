@@ -12,8 +12,10 @@ const router = express.Router();
 router.get("/", authenticate, passwordChangeGuard, validateRequest(validators.list), controller.list);
 router.post("/", authenticate, passwordChangeGuard, validateRequest(validators.create), controller.create);
 router.get("/:id", authenticate, passwordChangeGuard, validateRequest(validators.getById), controller.getById);
+router.post("/:id/cancel", authenticate, passwordChangeGuard, controller.cancel);
 router.patch("/:id/status", authenticate, passwordChangeGuard, authorize(ADMIN), validateRequest(validators.updateStatus), controller.updateStatus);
 router.put("/:id/status", authenticate, passwordChangeGuard, authorize(ADMIN), validateRequest(validators.updateStatus), controller.updateStatus);
 router.post("/:id/fulfill", authenticate, passwordChangeGuard, authorize(ADMIN), validateRequest(validators.fulfill), controller.fulfill);
+router.post("/:id/rate", authenticate, passwordChangeGuard, validateRequest(validators.rate), controller.rate);
 
 module.exports = router;

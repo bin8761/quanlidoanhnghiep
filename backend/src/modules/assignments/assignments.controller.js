@@ -20,6 +20,16 @@ module.exports = Object.freeze({
     }
   },
 
+  async confirm(req, res, next) {
+    try {
+      const { assignmentId, signatureUrl, notes } = req.body;
+      const assignment = await assignmentsService.confirmAssignment(req.user, assignmentId, { signatureUrl, notes });
+      return sendSuccess(res, { statusCode: 200, message: "Assignment confirmed successfully", data: assignment });
+    } catch (error) {
+      return next(error);
+    }
+  },
+
   async assign(req, res, next) {
     try {
       const assignment = await assignmentsService.assignAsset(req.body);

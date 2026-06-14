@@ -52,4 +52,11 @@ module.exports = Object.freeze({
       notes: z.string().trim().max(1000).optional().nullable(),
     }),
   }),
+  rate: Object.freeze({
+    params: uuidParamSchema,
+    body: z.object({
+      rating: z.number({ required_error: "Rating is required" }).int().min(1).max(5),
+      feedback: z.string().trim().max(1000).optional().nullable(),
+    }),
+  }),
 });

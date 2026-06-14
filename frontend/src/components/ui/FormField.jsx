@@ -14,6 +14,8 @@ export default function FormField({
     'placeholder:text-slate-400 hover:border-slate-300',
     'focus:border-brand-500 focus:ring-4 focus:ring-brand-500/12',
     'disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400',
+    'dark:border-slate-700 dark:bg-slate-900/45 dark:text-slate-100 dark:shadow-none',
+    'dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-emerald-500',
     as === 'textarea' ? 'min-h-28 resize-y' : '',
     props.className || '',
   ]
@@ -48,7 +50,7 @@ export default function FormField({
   return (
     <div className="grid gap-1.5">
       <div className="flex items-center justify-between gap-3">
-        <label className="text-xs font-bold text-slate-700" htmlFor={name}>
+        <label className="text-xs font-bold text-slate-700 dark:text-slate-300" htmlFor={name}>
           {label}
         </label>
         {hint && <span className="text-[11px] text-slate-400">{hint}</span>}

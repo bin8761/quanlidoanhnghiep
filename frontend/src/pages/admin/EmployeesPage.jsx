@@ -11,11 +11,13 @@ import {
   History,
   UploadCloud,
   FileCheck,
-  Download
+  Download,
+  FileSpreadsheet
 } from 'lucide-react'
 import { departmentApi } from '../../api/departments'
 import { employeeApi } from '../../api/employees'
 import { locationApi } from '../../api/locations'
+import { API_BASE_URL } from '../../api/client'
 import { ResourceError, ResourceTableSkeleton } from '../../components/admin/ResourceFeedback'
 import Button from '../../components/ui/Button'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
@@ -25,7 +27,13 @@ import Modal from '../../components/ui/Modal'
 import PageHeader from '../../components/ui/PageHeader'
 import StatusBadge from '../../components/ui/StatusBadge'
 import Toast from '../../components/ui/Toast'
+import VietnamAddressSelector from '../../components/ui/VietnamAddressSelector'
+import SearchableSelect from '../../components/ui/SearchableSelect'
+import { VIETNAMESE_ETHNICITIES, NATIONALITIES } from '../../data/vietnam-static'
 import useAutoDismiss from '../../hooks/useAutoDismiss'
+import ExcelImportModal from '../../components/admin/ExcelImportModal'
+import { EMPLOYEE_TEMPLATE, buildEmployeeImportRow } from '../../utils/excelImport'
+import AvatarUpload from '../../components/ui/AvatarUpload'
 
 const FIELD_LABELS = {
   fullName: 'Họ và tên',
@@ -78,15 +86,62 @@ function getFileTypeFromExtension(filename) {
   return 'OTHER'
 }
 
+function getFullImageUrl(url) {
+  if (!url) return ''
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url
+  // API_BASE_URL = 'http://localhost:5000/api' -> strip '/api' to get base host
+  const baseHost = API_BASE_URL.replace(/\/api$/, '')
+  return `${baseHost}${url}`
+}
+
+function EmployeeAvatar({ avatarUrl, fullName }) {
+  const [imgError, setImgError] = useState(false)
+  useEffect(() => {
+    setImgError(false)
+  }, [avatarUrl])
+
+  if (avatarUrl && !imgError) {
+    return (
+      <img
+        src={getFullImageUrl(avatarUrl)}
+        alt={fullName}
+        className="size-8 shrink-0 rounded-full object-cover border border-slate-200"
+        onError={() => setImgError(true)}
+      />
+    )
+  }
+
+  const initials = fullName
+    ? fullName.split(' ').slice(-2).map(p => p[0]).join('').toUpperCase()
+    : '?'
+
+  return (
+    <span className="grid size-8 shrink-0 place-items-center rounded-full bg-brand-100 text-[10px] font-extrabold text-brand-700 border border-brand-200">
+      {initials}
+    </span>
+  )
+}
+
+const POSITION_OPTIONS = Object.freeze([
+  { value: 'Giám đốc', label: 'Giám đốc' },
+  { value: 'Trưởng phòng', label: 'Trưởng phòng' },
+  { value: 'Phó phòng', label: 'Phó phòng' },
+  { value: 'Nhân viên', label: 'Nhân viên' },
+  { value: 'Kỹ thuật viên', label: 'Kỹ thuật viên' },
+  { value: 'Kế toán', label: 'Kế toán' },
+  { value: 'Khác', label: 'Khác' },
+])
+
 const EMPTY_FORM = Object.freeze({
   employeeCode: '',
   fullName: '',
   email: '',
   departmentId: '',
   status: 'ACTIVE',
-  position: 'Staff',
+  position: 'Nhân viên',
   joinDate: '',
   allowProfileUpdate: true,
+  avatarUrl: '',
   phone: '',
   personalEmail: '',
   dateOfBirth: '',
@@ -111,20 +166,21 @@ export default function EmployeesPage() {
   const [filters, setFilters] = useState({ keyword: '', status: '', departmentId: '' })
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
-  
+
   const [editingEmployee, setEditingEmployee] = useState(null)
   const [editingEmployeeDetail, setEditingEmployeeDetail] = useState(null)
   const [editModalTab, setEditModalTab] = useState('job')
   const [isLoadingEdit, setIsLoadingEdit] = useState(false)
   const [attachments, setAttachments] = useState([])
   const [logs, setLogs] = useState([])
-  
+
   const [deletingEmployee, setDeletingEmployee] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [formErrors, setFormErrors] = useState({})
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [toast, setToast] = useState(null)
+  const [showImport, setShowImport] = useState(false)
 
   // Pinning desk states
   const [pinningEmployee, setPinningEmployee] = useState(null)
@@ -196,9 +252,10 @@ export default function EmployeesPage() {
         email: detail.email || '',
         departmentId: detail.departmentId ? String(detail.departmentId) : '',
         status: detail.status || 'ACTIVE',
-        position: detail.position || 'Staff',
+        position: detail.position || 'Nhân viên',
         joinDate: toInputDateString(detail.joinDate),
         allowProfileUpdate: detail.allowProfileUpdate ?? true,
+        avatarUrl: detail.avatarUrl || '',
         phone: detail.phone || '',
         personalEmail: detail.personalEmail || '',
         dateOfBirth: toInputDateString(detail.dateOfBirth),
@@ -268,9 +325,10 @@ export default function EmployeesPage() {
           email: form.email.trim(),
           departmentId: form.departmentId ? Number(form.departmentId) : null,
           status: form.status,
-          position: form.position?.trim() || 'Staff',
+          position: form.position?.trim() || 'Nhân viên',
           joinDate: form.joinDate ? new Date(form.joinDate) : new Date(),
           allowProfileUpdate: form.allowProfileUpdate,
+          avatarUrl: form.avatarUrl || null,
           phone: form.phone?.trim() || null,
           personalEmail: form.personalEmail?.trim() || null,
           dateOfBirth: form.dateOfBirth ? new Date(form.dateOfBirth) : null,
@@ -299,7 +357,7 @@ export default function EmployeesPage() {
           email: form.email.trim(),
           departmentId: form.departmentId ? Number(form.departmentId) : null,
           status: form.status,
-          position: form.position?.trim() || 'Staff',
+          position: form.position?.trim() || 'Nhân viên',
           joinDate: form.joinDate ? new Date(form.joinDate) : new Date()
         }
         await employeeApi.create(payload)
@@ -322,7 +380,7 @@ export default function EmployeesPage() {
     setPinCoords(employee.deskX !== null ? { x: employee.deskX, y: employee.deskY } : null)
     setSelectedLocId(employee.locationId ? String(employee.locationId) : '')
     setSelectedLocDetail(null)
-    
+
     try {
       const data = await locationApi.list()
       setLocList(data)
@@ -398,6 +456,70 @@ export default function EmployeesPage() {
     }
   }
 
+  const handleExportExcel = () => {
+    if (employees.length === 0) {
+      setToast({ type: 'warning', message: 'Không có dữ liệu nhân viên để xuất.' })
+      return
+    }
+
+    const headers = [
+      'Mã nhân viên',
+      'Họ và tên',
+      'Email',
+      'Phòng ban',
+      'Chức vụ',
+      'Ngày sinh',
+      'Giới tính',
+      'Số điện thoại',
+      'Email cá nhân',
+      'Quê quán',
+      'Dân tộc',
+      'Quốc tịch',
+      'Số CCCD',
+      'Địa chỉ thường trú',
+      'Địa chỉ hiện tại',
+      'Ngày vào làm',
+      'Trạng thái'
+    ]
+
+    const rows = employees.map(emp => [
+      emp.employeeCode || '',
+      emp.fullName || '',
+      emp.email || '',
+      emp.department?.name || 'Chưa phân phòng',
+      emp.position || 'Nhân viên',
+      emp.dateOfBirth ? new Date(emp.dateOfBirth).toLocaleDateString('vi-VN') : '',
+      emp.gender || '',
+      emp.phone || '',
+      emp.personalEmail || '',
+      emp.hometown || '',
+      emp.ethnicity || '',
+      emp.nationality || '',
+      emp.identityCardNumber || '',
+      emp.permanentAddress || '',
+      emp.currentAddress || '',
+      emp.joinDate ? new Date(emp.joinDate).toLocaleDateString('vi-VN') : '',
+      emp.status === 'ACTIVE' ? 'Đang hoạt động' : 'Ngừng hoạt động'
+    ])
+
+    const csvContent = '\uFEFF' + [headers, ...rows]
+      .map(row => row.map(cell => {
+        const stringified = String(cell).replace(/"/g, '""')
+        return `"${stringified}"`
+      }).join(','))
+      .join('\r\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `danh_sach_nhan_vien_${new Date().toISOString().split('T')[0]}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    setToast({ type: 'success', message: 'Xuất danh sách nhân viên thành công.' })
+  }
+
   const departmentOptions = [
     { value: '', label: 'Chưa phân phòng ban' },
     ...departments.map((department) => ({ value: String(department.id), label: department.name })),
@@ -405,7 +527,16 @@ export default function EmployeesPage() {
 
   const columns = [
     { key: 'employeeCode', label: 'Mã nhân viên' },
-    { key: 'fullName', label: 'Họ tên' },
+    {
+      key: 'fullName',
+      label: 'Họ tên',
+      render: (value, employee) => (
+        <div className="flex items-center gap-2.5">
+          <EmployeeAvatar avatarUrl={employee.avatarUrl} fullName={value} />
+          <span className="font-semibold text-slate-800">{value}</span>
+        </div>
+      )
+    },
     { key: 'email', label: 'Email' },
     {
       key: 'department',
@@ -454,10 +585,20 @@ export default function EmployeesPage() {
         title="Quản lý nhân viên"
         description="Quản lý hồ sơ nhân viên và liên kết với phòng ban trong doanh nghiệp."
         actions={(
-          <Button className="w-full sm:w-auto" type="button" onClick={openCreateModal}>
-            <Plus size={17} />
-            Thêm nhân viên
-          </Button>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <Button className="w-full sm:w-auto" variant="secondary" type="button" onClick={() => setShowImport(true)}>
+              <FileSpreadsheet size={17} />
+              Nhập Excel
+            </Button>
+            <Button className="w-full sm:w-auto" variant="secondary" type="button" onClick={handleExportExcel}>
+              <Download size={17} />
+              Xuất Excel
+            </Button>
+            <Button className="w-full sm:w-auto" type="button" onClick={openCreateModal}>
+              <Plus size={17} />
+              Thêm nhân viên
+            </Button>
+          </div>
         )}
       />
 
@@ -508,6 +649,30 @@ export default function EmployeesPage() {
         />
       )}
 
+      {showImport && (
+        <ExcelImportModal
+          title="Nhập nhân viên từ Excel"
+          description="Kiểm tra mã nhân viên, email và phòng ban trước khi tạo hàng loạt hồ sơ."
+          entityLabel="nhân viên"
+          template={EMPLOYEE_TEMPLATE}
+          lookups={{ departments }}
+          buildRow={buildEmployeeImportRow}
+          duplicateKeys={[
+            { key: 'employeeCode', label: 'Mã nhân viên', optional: true },
+            { key: 'email', label: 'Email' },
+          ]}
+          onImport={employeeApi.importRows}
+          onImported={async (result) => {
+            await loadEmployees(filters)
+            setToast({
+              type: result.failed ? 'warning' : 'success',
+              message: `Đã nhập thành công ${result.imported}/${result.total} nhân viên.`,
+            })
+          }}
+          onClose={() => setShowImport(false)}
+        />
+      )}
+
       {editingEmployee && (
         <Modal
           title={editingEmployee.id ? `Cập nhật nhân viên: ${form.fullName}` : 'Thêm nhân viên'}
@@ -542,11 +707,10 @@ export default function EmployeesPage() {
                         key={tab.id}
                         type="button"
                         onClick={() => setEditModalTab(tab.id)}
-                        className={`flex items-center gap-2 border-b-2 py-4 text-xs font-bold transition focus:outline-none whitespace-nowrap ${
-                          active
+                        className={`flex items-center gap-2 border-b-2 py-4 text-xs font-bold transition focus:outline-none whitespace-nowrap ${active
                             ? 'border-brand-600 text-brand-700'
                             : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'
-                        }`}
+                          }`}
                       >
                         <Icon size={15} />
                         {tab.label}
@@ -560,6 +724,25 @@ export default function EmployeesPage() {
                 {/* TAB 1: Job Info */}
                 {editModalTab === 'job' && (
                   <div className="grid gap-5">
+                    {/* Avatar row */}
+                    <div className="flex items-center gap-5 rounded-xl border border-slate-100 bg-slate-50/60 p-4">
+                      <AvatarUpload
+                        value={form.avatarUrl}
+                        onChange={val => setForm(c => ({ ...c, avatarUrl: val }))}
+                        name={form.fullName}
+                        size="md"
+                        showLabel={true}
+                      />
+                      <div className="flex-1 space-y-1">
+                        <p className="text-xs font-bold text-slate-700">'Ảnh đại diện nhân viên</p>
+                        <p className="text-[11px] text-slate-400">Chấp nhận PNG, JPG, WEBP tối đa 5MB. Ảnh sẽ được tự động cắt và tối ưu.</p>
+                        {form.avatarUrl && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                            ✓ Đã có ảnh đại diện
+                          </span>
+                        )}
+                      </div>
+                    </div>
                     <div className="grid gap-5 sm:grid-cols-2">
                       <FormField
                         label="Mã nhân viên"
@@ -589,11 +772,12 @@ export default function EmployeesPage() {
                         onChange={updateField}
                       />
                       <FormField
+                        as="select"
                         label="Chức vụ"
                         name="position"
                         value={form.position}
-                        placeholder="VD: Kỹ sư phần mềm"
                         onChange={updateField}
+                        options={POSITION_OPTIONS}
                       />
                     </div>
                     <div className="grid gap-5 sm:grid-cols-2">
@@ -686,41 +870,66 @@ export default function EmployeesPage() {
                         value={form.identityCardNumber}
                         onChange={updateField}
                       />
-                      <FormField
-                        label="Quê quán"
-                        name="hometown"
+                      {/* Quê quán - dropdown tỉnh/thành */}
+                      <SearchableSelect
+                        label="Quê quán (Tỉnh/Thành phố)"
+                        options={[
+                          { value: '', label: '-- Chưa chọn --' },
+                          ...[
+                            'Hà Nội', 'TP Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ',
+                            'An Giang', 'Bà Rịa - Vũng Tàu', 'Bắc Giang', 'Bắc Kạn', 'Bạc Liêu',
+                            'Bắc Ninh', 'Bến Tre', 'Bình Định', 'Bình Dương', 'Bình Phước',
+                            'Bình Thuận', 'Cà Mau', 'Cao Bằng', 'Đắk Lắk', 'Đắk Nông',
+                            'Điện Biên', 'Đồng Nai', 'Đồng Tháp', 'Gia Lai', 'Hà Giang',
+                            'Hà Nam', 'Hà Tĩnh', 'Hải Dương', 'Hậu Giang', 'Hòa Bình',
+                            'Hưng Yên', 'Khánh Hòa', 'Kiên Giang', 'Kon Tum', 'Lai Châu',
+                            'Lâm Đồng', 'Lạng Sơn', 'Lào Cai', 'Long An', 'Nam Định',
+                            'Nghệ An', 'Ninh Bình', 'Ninh Thuận', 'Phú Thọ', 'Phú Yên',
+                            'Quảng Bình', 'Quảng Nam', 'Quảng Ngãi', 'Quảng Ninh', 'Quảng Trị',
+                            'Sóc Trăng', 'Sơn La', 'Tây Ninh', 'Thái Bình', 'Thái Nguyên',
+                            'Thanh Hóa', 'Thừa Thiên Huế', 'Tiền Giang', 'Trà Vinh', 'Tuyên Quang',
+                            'Vĩnh Long', 'Vĩnh Phúc', 'Yên Bái'
+                          ].map(t => ({ value: t, label: t }))
+                        ]}
                         value={form.hometown}
-                        onChange={updateField}
+                        onChange={val => setForm(c => ({ ...c, hometown: val }))}
+                        placeholder="Chọn tỉnh/thành"
                       />
                     </div>
                     <div className="grid gap-5 sm:grid-cols-2">
-                      <FormField
+                      {/* Dân tộc - dropdown 54 dân tộc */}
+                      <SearchableSelect
                         label="Dân tộc"
-                        name="ethnicity"
+                        options={[
+                          { value: '', label: '-- Chưa chọn --' },
+                          ...VIETNAMESE_ETHNICITIES.map(e => ({ value: e, label: e }))
+                        ]}
                         value={form.ethnicity}
-                        onChange={updateField}
+                        onChange={val => setForm(c => ({ ...c, ethnicity: val }))}
+                        placeholder="Chọn dân tộc"
                       />
-                      <FormField
+                      {/* Quốc tịch - searchable autocomplete */}
+                      <SearchableSelect
                         label="Quốc tịch"
-                        name="nationality"
+                        options={[{ value: '', label: '-- Chưa chọn --' }, ...NATIONALITIES]}
                         value={form.nationality}
-                        onChange={updateField}
+                        onChange={val => setForm(c => ({ ...c, nationality: val }))}
+                        placeholder="Tìm và chọn quốc tịch"
                       />
                     </div>
+                    {/* Địa chỉ bằng API cấp hành chính */}
                     <div className="grid gap-5 sm:grid-cols-2">
-                      <FormField
-                        as="textarea"
+                      <VietnamAddressSelector
                         label="Địa chỉ thường trú"
-                        name="permanentAddress"
                         value={form.permanentAddress}
-                        onChange={updateField}
+                        onChange={val => setForm(c => ({ ...c, permanentAddress: val }))}
+                        includeStreet={true}
                       />
-                      <FormField
-                        as="textarea"
+                      <VietnamAddressSelector
                         label="Địa chỉ hiện tại"
-                        name="currentAddress"
                         value={form.currentAddress}
-                        onChange={updateField}
+                        onChange={val => setForm(c => ({ ...c, currentAddress: val }))}
+                        includeStreet={true}
                       />
                     </div>
                     <div className="space-y-3">
@@ -1048,7 +1257,7 @@ export default function EmployeesPage() {
               {/* Auto-generated employee code notice */}
               <div className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
                 <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-emerald-100 text-emerald-700">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
                 </span>
                 <div>
                   <p className="text-xs font-bold text-emerald-800">Mã nhân viên tự động sinh</p>
@@ -1174,7 +1383,7 @@ export default function EmployeesPage() {
                       alt={selectedLocDetail.name}
                       className="max-w-full max-h-[300px] object-contain block"
                     />
-                    
+
                     {pinCoords && (
                       <div
                         style={{ left: `${pinCoords.x}%`, top: `${pinCoords.y}%` }}
@@ -1198,9 +1407,9 @@ export default function EmployeesPage() {
               <Button type="button" variant="secondary" onClick={() => setPinningEmployee(null)}>
                 Hủy
               </Button>
-              <Button 
-                type="button" 
-                disabled={isSavingPin || !selectedLocId} 
+              <Button
+                type="button"
+                disabled={isSavingPin || !selectedLocId}
                 onClick={handleSavePin}
               >
                 {isSavingPin && <span className="size-4 animate-spin-soft rounded-full border-2 border-white/30 border-t-white" />}

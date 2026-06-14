@@ -27,7 +27,7 @@ export default function EmployeeAssetsPage() {
   )
 
   return (
-    <div className="animate-fade-up">
+    <div className="employee-assets-page animate-fade-up">
       <PageHeader
         eyebrow="Thiết bị được bàn giao"
         title="Tài sản của tôi"
@@ -37,7 +37,7 @@ export default function EmployeeAssetsPage() {
       <div className="surface mb-5 flex min-h-11 items-center gap-3 px-4 sm:max-w-md">
         <Search className="text-slate-400" size={17} />
         <input
-          className="min-w-0 flex-1 border-0 bg-transparent text-sm outline-none placeholder:text-slate-400"
+          className="min-w-0 flex-1 border-0 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500"
           aria-label="Tìm tài sản"
           placeholder="Tìm theo mã hoặc tên tài sản..."
           value={query}
@@ -53,8 +53,8 @@ export default function EmployeeAssetsPage() {
               to={`/employee/assets/${item.asset?.assetCode}`}
               className="metric-card block overflow-hidden"
             >
-              <div className="flex items-start justify-between border-b border-slate-100 bg-slate-50/70 p-5">
-                <span className="grid size-12 place-items-center rounded-xl bg-brand-50 text-brand-700">
+              <div className="flex items-start justify-between border-b border-slate-100 bg-slate-50/70 p-5 dark:border-slate-700 dark:bg-slate-900/35">
+                <span className="grid size-12 place-items-center rounded-xl bg-brand-50 text-brand-700 dark:bg-emerald-500/10 dark:text-emerald-300">
                   <Laptop size={22} />
                 </span>
 
@@ -62,22 +62,22 @@ export default function EmployeeAssetsPage() {
               </div>
 
               <div className="p-5">
-                <h3 className="text-base font-extrabold text-slate-900">{item.asset?.name}</h3>
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100">{item.asset?.name}</h3>
 
-                <p className="mt-1 text-xs font-semibold text-brand-700">{item.asset?.assetCode}</p>
+                <p className="mt-1 text-xs font-semibold text-brand-700 dark:text-emerald-400">{item.asset?.assetCode}</p>
 
                 <dl className="mt-5 grid gap-3 text-xs">
-                  <div className="flex items-center gap-3 text-slate-500">
+                  <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
                     <Tag size={15} />
                     <dd>{item.asset?.category?.name || 'Chưa phân loại'}</dd>
                   </div>
 
-                  <div className="flex items-center gap-3 text-slate-500">
+                  <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
                     <Hash size={15} />
                     <dd>{item.asset?.serialNumber || '—'}</dd>
                   </div>
 
-                  <div className="flex items-center gap-3 text-slate-500">
+                  <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
                     <CalendarDays size={15} />
                     <dd>Nhận ngày {new Date(item.assignedAt).toLocaleDateString('vi-VN')}</dd>
                   </div>
@@ -89,13 +89,13 @@ export default function EmployeeAssetsPage() {
       ) : (
         <div className="surface grid min-h-64 place-items-center border-dashed text-center">
           <div>
-            <Boxes className="mx-auto text-slate-300" size={34} />
+            <Boxes className="mx-auto text-slate-300 dark:text-slate-600" size={34} />
 
-            <h3 className="mt-3 text-sm font-bold text-slate-700">
+            <h3 className="mt-3 text-sm font-bold text-slate-700 dark:text-slate-200">
               Không tìm thấy tài sản
             </h3>
 
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
               Thử tìm kiếm bằng từ khóa khác.
             </p>
           </div>

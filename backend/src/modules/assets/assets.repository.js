@@ -47,6 +47,8 @@ const ASSET_SELECT = Object.freeze({
     select: {
       id: true,
       employeeId: true,
+      confirmedAt: true,
+      signatureUrl: true,
       employee: {
         select: {
           id: true,

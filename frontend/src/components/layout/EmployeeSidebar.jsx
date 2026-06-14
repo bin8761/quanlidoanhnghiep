@@ -10,6 +10,7 @@ import {
   LockKeyhole,
   History,
   Settings,
+  HelpCircle,
 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../auth/auth-context'
@@ -19,6 +20,7 @@ const navItemDefs = [
   { to: '/employee/dashboard', labelKey: 'Tổng quan', icon: Gauge },
   { to: '/employee/assets', labelKey: 'Tài sản của tôi', icon: Boxes },
   { to: '/employee/requests', labelKey: 'Yêu cầu hỗ trợ', icon: Headphones },
+  { to: '/employee/faq', labelKey: 'Cẩm nang tự phục vụ', icon: HelpCircle },
   { to: '/employee/profile', labelKey: 'Hồ sơ cá nhân', icon: CircleUserRound },
   { to: '/employee/change-password', labelKey: 'Đổi mật khẩu', icon: LockKeyhole },
   { to: '/employee/history', labelKey: 'Lịch sử', icon: History },
@@ -48,14 +50,15 @@ export default function EmployeeSidebar({ open, onClose }) {
         <button
           className="ml-auto grid size-9 place-items-center rounded-xl text-white/55 transition hover:bg-white/10 hover:text-white lg:hidden"
           type="button"
-          title="Đóng menu"
+          aria-label={t('Đóng menu')}
+          title={t('Đóng menu')}
           onClick={onClose}
         >
           <X size={18} />
         </button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Điều hướng nhân viên">
+      <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label={t('Điều hướng nhân viên')}>
         <p className="px-3 pb-2 text-[10px] font-extrabold tracking-[0.14em] text-white/35 uppercase">
           {t('Không gian cá nhân')}
         </p>
@@ -106,7 +109,8 @@ export default function EmployeeSidebar({ open, onClose }) {
             <button
               className="grid size-9 place-items-center rounded-xl text-white/45 transition hover:bg-red-500/15 hover:text-red-300"
               type="button"
-              title="Đăng xuất"
+              aria-label={t('Đăng xuất')}
+              title={t('Đăng xuất')}
               onClick={logout}
             >
               <LogOut size={17} />

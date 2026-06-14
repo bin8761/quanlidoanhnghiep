@@ -14,7 +14,6 @@ router.post(
   "/upload",
   authenticate,
   passwordChangeGuard,
-  authorize(ADMIN),
   uploadSingleImage("image"),
   assetsController.uploadAssetImage,
 );
@@ -32,6 +31,15 @@ router.get(
   passwordChangeGuard,
   validateRequest(assetsValidators.getById),
   assetsController.getAsset,
+);
+
+router.post(
+  "/import",
+  authenticate,
+  passwordChangeGuard,
+  authorize(ADMIN),
+  validateRequest(assetsValidators.import),
+  assetsController.importAssets,
 );
 
 router.post(

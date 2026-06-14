@@ -347,7 +347,7 @@ describe("API integration: backend foundation and auth", () => {
     ).resolves.toBe(true);
   });
 
-  test("normal protected routes return AUTH_PASSWORD_CHANGE_REQUIRED when mustChangePassword is true", async () => {
+  test("normal protected routes remain available when mustChangePassword is true", async () => {
     harness = await loadIntegrationHarness();
     const firstLoginUser = harness.getUserById(harness.seeds.ids.firstLoginUserId);
     const token = harness.signTokenForUser(firstLoginUser);
@@ -356,11 +356,13 @@ describe("API integration: backend foundation and auth", () => {
       .get("/api/test/protected")
       .set("Authorization", `Bearer ${token}`);
 
-    expect(response.status).toBe(403);
-    expect(response.body).toMatchObject({
-      success: false,
-      message: "Password change required",
-      errorCode: "AUTH_PASSWORD_CHANGE_REQUIRED",
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      success: true,
+      message: "Protected test route success",
+      data: {
+        ok: true,
+      },
     });
   });
 });

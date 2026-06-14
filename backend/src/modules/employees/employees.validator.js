@@ -9,6 +9,18 @@ const uuidParamSchema = z.object({
   id: z.string().trim().uuid("ID must be a valid UUID"),
 });
 
+const employeeImportRowSchema = z.object({
+  rowNumber: z.coerce.number().int().positive(),
+  employeeCode: z.string().trim().max(50).optional().nullable(),
+  fullName: trimmedRequiredString("Full name").max(100),
+  email: trimmedRequiredString("Email").email(),
+  departmentId: z.coerce.number().int().positive().optional().nullable(),
+  status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
+  position: z.string().trim().max(100).optional(),
+  joinDate: z.string().datetime().optional().nullable(),
+  phone: z.string().trim().max(50).optional().nullable(),
+});
+
 const employeesValidators = Object.freeze({
   getById: Object.freeze({
     params: uuidParamSchema,
@@ -38,6 +50,11 @@ const employeesValidators = Object.freeze({
       nationality: z.string().trim().max(50).optional().nullable(),
       identityCardNumber: z.string().trim().max(50).optional().nullable(),
       allowProfileUpdate: z.boolean().optional(),
+    }),
+  }),
+  import: Object.freeze({
+    body: z.object({
+      rows: z.array(employeeImportRowSchema).min(1).max(500),
     }),
   }),
   update: Object.freeze({

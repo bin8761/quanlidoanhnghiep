@@ -48,6 +48,19 @@ const employeesController = {
     }
   },
 
+  async importEmployees(req, res, next) {
+    try {
+      const result = await employeesService.importEmployees(req.body.rows);
+      return sendSuccess(res, {
+        statusCode: 200,
+        message: "Employee import completed",
+        data: result,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  },
+
   async updateEmployee(req, res, next) {
     try {
       const { id } = req.params;
