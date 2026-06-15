@@ -163,6 +163,10 @@ const translations = {
 }
 
 const fallbackDictionary = {
+  "Quản lý tổ chức": "Organization",
+  "Phân tích": "Analytics",
+  "Hỗ trợ": "Support",
+  "Hệ thống": "System",
   "Bạn đang sử dụng mật khẩu tạm thời": "You are using a temporary password",
   "Hãy đổi mật khẩu để tăng tính bảo mật cho tài khoản của bạn.": "Change your password to improve your account security.",
 

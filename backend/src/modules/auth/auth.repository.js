@@ -1,5 +1,17 @@
 const { OTP_MAX_ATTEMPTS_DEFAULT } = require("../../shared/constants/otpPolicy");
 
+const EMPLOYEE_AUTH_SELECT = Object.freeze({
+  id: true,
+  employeeCode: true,
+  fullName: true,
+  avatarUrl: true,
+  email: true,
+  departmentId: true,
+  status: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 const USER_AUTH_SELECT = Object.freeze({
   id: true,
   employeeId: true,
@@ -11,17 +23,9 @@ const USER_AUTH_SELECT = Object.freeze({
   lastLoginAt: true,
   createdAt: true,
   updatedAt: true,
-});
-
-const EMPLOYEE_AUTH_SELECT = Object.freeze({
-  id: true,
-  employeeCode: true,
-  fullName: true,
-  email: true,
-  departmentId: true,
-  status: true,
-  createdAt: true,
-  updatedAt: true,
+  employee: {
+    select: EMPLOYEE_AUTH_SELECT,
+  },
 });
 
 const PASSWORD_RESET_OTP_SELECT = Object.freeze({
@@ -52,6 +56,7 @@ function mapUserForAuth(userRecord) {
     lastLoginAt: userRecord.lastLoginAt,
     createdAt: userRecord.createdAt,
     updatedAt: userRecord.updatedAt,
+    employee: mapEmployeeForAuth(userRecord.employee),
   };
 }
 
@@ -64,6 +69,7 @@ function mapEmployeeForAuth(employeeRecord) {
     id: employeeRecord.id,
     employeeCode: employeeRecord.employeeCode,
     fullName: employeeRecord.fullName,
+    avatarUrl: employeeRecord.avatarUrl,
     email: employeeRecord.email,
     departmentId: employeeRecord.departmentId,
     status: employeeRecord.status,
