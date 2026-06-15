@@ -5,6 +5,7 @@
 Đây là kiến trúc AWS chốt cho backend hiện tại của dự án, ưu tiên chi phí thấp nhưng vẫn giữ mức hợp lý cho 6 trụ cột của AWS Well-Architected ở giai đoạn MVP.
 
 Lưu ý: trong kiến trúc tổng của hệ thống, người dùng không gọi thẳng backend. Luồng đúng là `User -> FE -> BE`. Tài liệu này chỉ mô tả phần backend phía sau frontend; bản ghép tổng thể nằm ở `docs/codebase/fullstack-aws-final-architecture.md`.
+Giai đoạn test/demo nội bộ hiện tại dùng URL mặc định của AWS, nên chưa cần chốt custom domain.
 
 ## Kiến Trúc Chốt
 

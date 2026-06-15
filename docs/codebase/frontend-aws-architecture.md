@@ -10,6 +10,7 @@ Frontend của hệ thống Enterprise Asset Management là một React SPA. Yê
 - vẫn đáp ứng hợp lý 6 trụ cột AWS Well-Architected
 
 Phần tổng thể ghép FE + BE được ghi ở `docs/codebase/fullstack-aws-final-architecture.md`.
+Giai đoạn test/demo nội bộ hiện tại dùng URL mặc định của AWS, chưa cần mua domain riêng.
 
 ## Kiến trúc được chốt
 

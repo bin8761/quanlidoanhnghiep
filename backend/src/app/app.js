@@ -17,7 +17,30 @@ const LOCAL_FRONTEND_ORIGINS = [
   "http://127.0.0.1:5173",
 ];
 
+function getProductionFrontendOrigins() {
+  const rawOrigins = process.env.FRONTEND_ORIGINS;
+  const singleOrigin = process.env.FRONTEND_ORIGIN;
+  const origins = [];
+
+  if (typeof rawOrigins === "string" && rawOrigins.trim() !== "") {
+    origins.push(
+      ...rawOrigins
+        .split(",")
+        .map((origin) => origin.trim())
+        .filter(Boolean),
+    );
+  }
+
+  if (typeof singleOrigin === "string" && singleOrigin.trim() !== "") {
+    origins.push(singleOrigin.trim());
+  }
+
+  return new Set(origins);
+}
+
 function createCorsOptions() {
+  const productionFrontendOrigins = getProductionFrontendOrigins();
+
   return {
     origin(origin, callback) {
       if (!origin) {
@@ -25,6 +48,10 @@ function createCorsOptions() {
       }
 
       if (env.nodeEnv !== "production" && LOCAL_FRONTEND_ORIGINS.includes(origin)) {
+        return callback(null, true);
+      }
+
+      if (env.nodeEnv === "production" && productionFrontendOrigins.has(origin)) {
         return callback(null, true);
       }
 

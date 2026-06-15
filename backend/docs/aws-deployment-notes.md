@@ -112,10 +112,14 @@ npx prisma migrate status
 - `NODE_ENV=production`
 - `PORT=8080` hoặc cổng do nền tảng cung cấp
 - `DATABASE_URL=mysql://USER:PASSWORD@RDS_ENDPOINT:3306/DB_NAME`
-- `JWT_ACCESS_SECRET`
-- `JWT_REFRESH_SECRET`
+- `JWT_SECRET`
+- `JWT_EXPIRES_IN`
+- `DEFAULT_USER_PASSWORD`
+- `OTP_EXPIRES_SECONDS`
+- `OTP_MAX_ATTEMPTS`
 - Các biến `MAIL_*` nếu bật email đặt lại mật khẩu
 - `S3_BUCKET`, `AWS_REGION` và các biến liên quan nếu bật tải tệp lên S3
+- `FRONTEND_ORIGIN` hoặc `FRONTEND_ORIGINS` nếu FE chạy từ Amplify hoặc URL production khác
 
 ## Quy Trình Triển Khai
 
