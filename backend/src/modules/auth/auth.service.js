@@ -157,6 +157,14 @@ function mapUserToSafeAuthResponse(userRecord) {
     employeeId: userRecord.employeeId,
     mustChangePassword: userRecord.mustChangePassword,
     isActive: userRecord.isActive,
+    employee: userRecord.employee
+      ? {
+          id: userRecord.employee.id,
+          employeeCode: userRecord.employee.employeeCode,
+          fullName: userRecord.employee.fullName,
+          avatarUrl: userRecord.employee.avatarUrl ?? null,
+        }
+      : null,
   };
 }
 

@@ -197,7 +197,15 @@ export default function EmployeeProfilePage() {
         ...current,
         avatarUrl: updatedEmployee.avatarUrl || '',
       }))
-      updateCurrentUser({ avatarUrl: updatedEmployee.avatarUrl || null })
+      updateCurrentUser({
+        employee: {
+          ...user?.employee,
+          id: updatedEmployee.id,
+          employeeCode: updatedEmployee.employeeCode,
+          fullName: updatedEmployee.fullName,
+          avatarUrl: updatedEmployee.avatarUrl || null,
+        },
+      })
       setToast({
         type: 'success',
         message: avatarUrl
@@ -621,6 +629,15 @@ export default function EmployeeProfilePage() {
       // Reload logs and data, sync form state
       const updatedEmp = await employeeApi.getById(profile.id)
       setProfile(updatedEmp)
+      updateCurrentUser({
+        employee: {
+          ...user?.employee,
+          id: updatedEmp.id,
+          employeeCode: updatedEmp.employeeCode,
+          fullName: updatedEmp.fullName,
+          avatarUrl: updatedEmp.avatarUrl || null,
+        },
+      })
       // Sync avatarUrl back so the header shows the saved avatar
       setPersonalForm(c => ({ ...c, avatarUrl: updatedEmp.avatarUrl || '' }))
       const newLogs = await employeeApi.getLogs(profile.id)

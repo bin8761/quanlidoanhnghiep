@@ -12,9 +12,11 @@ import {
   Settings,
   HelpCircle,
 } from 'lucide-react'
+import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../auth/auth-context'
 import { useLanguage } from '../../hooks/useLanguage'
+import { resolveMediaUrl } from '../../utils/mediaUrl'
 
 const navItemDefs = [
   { to: '/employee/dashboard', labelKey: 'Tổng quan', icon: Gauge },
@@ -30,7 +32,18 @@ const navItemDefs = [
 export default function EmployeeSidebar({ open, onClose }) {
   const { user, logout } = useAuth()
   const { t } = useLanguage()
-  const initials = user?.email?.slice(0, 2).toUpperCase() || 'NV'
+  const employeeName = user?.employee?.fullName || t('Nhân viên')
+  const avatarUrl = user?.employee?.avatarUrl
+  const [failedAvatarUrl, setFailedAvatarUrl] = useState('')
+  const initials = user?.employee?.fullName
+    ? user.employee.fullName
+        .trim()
+        .split(/\s+/)
+        .slice(-2)
+        .map((part) => part[0])
+        .join('')
+        .toUpperCase()
+    : user?.email?.slice(0, 2).toUpperCase() || 'NV'
   const navItems = navItemDefs.map(item => ({ ...item, label: t(item.labelKey) }))
 
   return (
@@ -99,11 +112,20 @@ export default function EmployeeSidebar({ open, onClose }) {
       <div className="p-3">
         <div className="rounded-[14px] border border-white/10 bg-white/6 p-1.5">
           <div className="flex items-center gap-3 p-2">
-            <span className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-brand-600 text-xs font-extrabold">
-              {initials}
+            <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-[10px] bg-brand-600 text-xs font-extrabold">
+              {avatarUrl && failedAvatarUrl !== avatarUrl ? (
+                <img
+                  className="size-full object-cover"
+                  src={resolveMediaUrl(avatarUrl)}
+                  alt=""
+                  onError={() => setFailedAvatarUrl(avatarUrl)}
+                />
+              ) : initials}
             </span>
             <span className="min-w-0 flex-1">
-              <strong className="block truncate text-xs font-bold">{t('Nhân viên')}</strong>
+              <strong className="block truncate text-xs font-bold" title={employeeName}>
+                {employeeName}
+              </strong>
               <span className="mt-0.5 block truncate text-[10px] text-white/45">{user?.email}</span>
             </span>
             <button
