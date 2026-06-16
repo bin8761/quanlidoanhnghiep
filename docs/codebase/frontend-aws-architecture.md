@@ -11,31 +11,32 @@ Frontend của hệ thống Enterprise Asset Management là một React SPA. Yê
 
 Phần tổng thể ghép FE + BE được ghi ở `docs/codebase/fullstack-aws-final-architecture.md`.
 Giai đoạn test/demo nội bộ hiện tại dùng URL mặc định của AWS, chưa cần mua domain riêng.
+Auth hiện tại là `JWT-only` ở backend, nên `Amazon Cognito` không nằm trong luồng chính của bản chốt hiện tại.
 
 ## Kiến trúc được chốt
 
 ### Thành phần chính
 
 - `AWS Amplify Hosting` để host và deploy frontend
-- `Amazon Route 53` để quản lý domain
-- `AWS Certificate Manager` để cấp chứng chỉ TLS/HTTPS
-- `Amazon Cognito` để xác thực người dùng nếu FE cần đăng nhập
 - `Amazon S3` để lưu file upload hoặc tài nguyên tĩnh nếu cần
+- `Amazon Route 53` để quản lý domain ở giai đoạn production
+- `AWS Certificate Manager` để cấp chứng chỉ TLS/HTTPS ở giai đoạn production
+- `Amazon Cognito` để xác thực người dùng nếu sau này chuyển sang managed auth
 
 ### Luồng triển khai
 
 1. Source code frontend được đẩy lên repository.
 2. `AWS Amplify Hosting` tự build và deploy ứng dụng.
-3. `Amazon Route 53` trỏ domain về ứng dụng Amplify.
-4. `AWS Certificate Manager` cung cấp HTTPS cho domain custom.
-5. `Amazon Cognito` phục vụ luồng xác thực nếu ứng dụng cần đăng nhập.
+3. `Amazon Route 53` trỏ domain về ứng dụng Amplify khi dùng custom domain.
+4. `AWS Certificate Manager` cung cấp HTTPS cho domain custom khi lên production.
+5. `Amazon Cognito` chỉ dùng nếu sau này chuyển sang managed auth.
 6. `Amazon S3` phục vụ file upload hoặc tài nguyên tĩnh nếu cần.
 
 ## Vì sao chọn kiến trúc này
 
 - FE là ứng dụng tĩnh sau khi build, nên không cần `Application Load Balancer`, `Amazon EC2`, `Amazon ECS`, hay database.
 - `AWS Amplify Hosting` phù hợp với React SPA, có CI/CD tích hợp sẵn, giảm công vận hành.
-- `Amazon Route 53` và `AWS Certificate Manager` là lớp tối thiểu để có domain và HTTPS chuẩn.
+- `Amazon Route 53` và `AWS Certificate Manager` là lớp tối thiểu để có domain và HTTPS chuẩn khi lên production.
 - `Amazon Cognito` và `Amazon S3` chỉ được dùng khi ứng dụng có yêu cầu auth hoặc upload/static assets.
 - Phương án này giữ chi phí thấp hơn đáng kể so với việc dựng một lớp compute riêng cho FE.
 
@@ -119,8 +120,8 @@ Lý do: FE là SPA tĩnh, không cần lớp ứng dụng server-side riêng.
 
 Kiến trúc FE tối ưu hiện tại là:
 
-`Amazon Route 53` -> `AWS Amplify Hosting` -> React SPA
+`AWS Amplify Hosting` -> React SPA
 
-với `AWS Certificate Manager` cho TLS/HTTPS, và `Amazon Cognito` / `Amazon S3` khi có nhu cầu chức năng tương ứng.
+với `Amazon Route 53` và `AWS Certificate Manager` chỉ khi dùng custom domain production, và `Amazon Cognito` / `Amazon S3` khi có nhu cầu chức năng tương ứng.
 
 Đây là phương án đơn giản nhất, rẻ, và đủ tốt cho giai đoạn hiện tại.

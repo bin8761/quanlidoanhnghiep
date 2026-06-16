@@ -26,7 +26,6 @@ Quy ước hiện tại:
 ### Frontend
 
 - `AWS Amplify Hosting`
-- `Amazon Cognito`
 - `Amazon S3`
 
 ### Backend
@@ -48,9 +47,9 @@ Quy ước hiện tại:
 
 1. Người dùng truy cập URL mặc định của `AWS Amplify Hosting`.
 2. Frontend được tải từ `AWS Amplify Hosting`.
-3. Frontend gọi `Amazon Cognito` cho đăng nhập, đăng ký, quên mật khẩu nếu cần.
-4. Frontend gọi API backend qua DNS name mặc định của `Application Load Balancer`.
-5. `Application Load Balancer` chuyển request vào backend instance trong `AWS Elastic Beanstalk`.
+3. Frontend gọi API backend qua DNS name mặc định của `Application Load Balancer`.
+4. `Application Load Balancer` chuyển request vào backend instance trong `AWS Elastic Beanstalk`.
+5. Backend tự xử lý đăng nhập, đăng ký, quên mật khẩu và phát hành `JWT` sau khi xác thực thành công.
 6. Backend xử lý business logic.
 7. Backend đọc và ghi dữ liệu qua `Amazon Relational Database Service for MySQL Single-AZ`.
 8. Backend lưu file lên `Amazon S3`.
@@ -66,8 +65,8 @@ Quy ước hiện tại:
 ### Main flow
 
 - `User -> Amplify`
-- `Amplify -> Cognito`
 - `Amplify -> ALB -> Elastic Beanstalk`
+- `Backend -> JWT`
 
 ### Supporting flow
 
@@ -94,11 +93,12 @@ Kiến trúc tổng này vẫn ưu tiên chi phí thấp:
 - BE giữ `1 EC2 instance` và `Single-AZ` ở giai đoạn hiện tại
 - chưa bật các thành phần đắt hơn như `Amazon ElastiCache for Redis`, `Multi-AZ`, `AWS Web Application Firewall`, hay `NAT Gateway`
 - chưa cần `Route 53` và `AWS Certificate Manager` custom domain cho giai đoạn test/demo nội bộ
+- auth hiện tại là `JWT-only`, backend tự quản lý user/password thay vì dùng `Amazon Cognito`
 
 ## Kết luận
 
 Kiến trúc chốt cần xem như một khối duy nhất:
 
-`User -> AWS Amplify Hosting -> Cognito / S3 -> Application Load Balancer -> AWS Elastic Beanstalk -> RDS / S3 / SES / Parameter Store / Secrets Manager / CloudWatch`
+`User -> AWS Amplify Hosting -> Application Load Balancer -> AWS Elastic Beanstalk -> RDS / S3 / SES / Parameter Store / Secrets Manager / CloudWatch`
 
 Đây là luồng đúng để dùng khi triển khai và khi vẽ diagram.
