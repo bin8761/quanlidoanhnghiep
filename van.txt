@@ -1,0 +1,58 @@
+Em chào Anh/Chị admin và mọi người, em xin đại diện nhóm trình bày sơ bộ về dự án "CloudDoc – Hệ thống Quản lý và Lưu trữ Tài liệu thông minh trên AWS".
+CloudDoc là hệ thống quản lý và lưu trữ tài liệu thông minh, được thiết kế, triển khai và vận hành hoàn toàn trên Amazon Web Services. Hệ thống phục vụ người dùng cuối với ba chức năng cốt lõi: phân phối nội dung tĩnh, tiếp nhận và xử lý tài liệu tải lên, và xử lý tác vụ bất đồng bộ ở phía hậu trường.
+Về kiến trúc tổng quan, hệ thống triển khai trong một Region, trên một VPC trải rộng hai Availability Zone, với các thành phần chính gồm: CloudFront, Amazon S3 (Static & Upload), S3 Glacier, Internet Gateway, NAT Gateway, Application Load Balancer, EC2, RDS PostgreSQL (chính – dự phòng), SQS, SNS và CloudWatch.
+Tech Stack:
+* Frontend: React – được build thành file tĩnh và host trên Amazon S3 (Static), phân phối qua CloudFront
+* Backend: Node.js + Express.js – chạy trên Amazon EC2 trong private subnet, xử lý API và nghiệp vụ hệ thống
+1.LUỒNG NGƯỜI DÙNG (USER FLOW)
+* Người dùng (USER) tương tác qua 2 đường đi độc lập:
+  - Gửi HTTPS Request đến Amazon CloudFront – entry point cho toàn bộ lưu lượng ứng dụng
+  - Tải tệp trực tiếp lên S3 (Upload) bằng Presigned URL – không đi qua backend, giảm tải và tối ưu băng thông
+2.LUỒNG XỬ LÝ ỨNG DỤNG (APPLICATION FLOW)
+* USER gửi HTTPS Request đến CloudFront
+* Nội dung tĩnh (Frontend React):
+  - CloudFront truy xuất các file build của React (HTML/CSS/JS) từ S3 (Static)
+  - CloudFront cache và phân phối file tĩnh đến gần người dùng
+* Yêu cầu động (Backend Node.js + Express.js):
+  - CloudFront chuyển tiếp request đến Internet Gateway
+  - Internet Gateway đưa lưu lượng vào VPC đến Application Load Balancer
+  - ALB phân phối request đến 2 EC2, mỗi EC2 ở một Availability Zone riêng biệt
+  - Mỗi EC2 chạy ứng dụng Node.js + Express.js, xử lý API và nghiệp vụ hệ thống
+* EC2 đọc/ghi dữ liệu trên RDS PostgreSQL; kết nối ra ngoài qua NAT Gateway
+3.LỚP DỮ LIỆU (DATA LAYER)
+* Cơ sở dữ liệu quan hệ:
+  - Amazon RDS PostgreSQL triển khai 2 phiên bản: Primary (AZ-1) và Standby (AZ-2), đều nằm trong private subnet
+  - Synchronous Replication – nhân bản đồng bộ từ Primary sang Standby, bảo đảm tính nhất quán và sẵn sàng chuyển đổi khi sự cố
+* Kho lưu trữ đối tượng:
+  - S3 (Static): lưu file build React, là origin của CloudFront
+  - S3 (Upload): tiếp nhận tệp tài liệu tải lên trực tiếp từ người dùng
+  - S3 Glacier: lưu trữ lạnh dài hạn
+4.LUỒNG TÍCH HỢP VÀ XỬ LÝ DỮ LIỆU
+* S3 (Upload) gửi thông điệp đến Amazon SQS khi có tệp mới
+* SQS phân phối tác vụ đến EC2 (AZ-1) và EC2 (AZ-2) để xử lý bất đồng bộ, phân tán tải
+* S3 (Upload) tự động chuyển tệp sang S3 Glacier sau 30 ngày theo chính sách vòng đời, giảm chi phí lưu trữ
+5.KIẾN TRÚC MẠNG (NETWORK ARCHITECTURE)
+* 1 VPC trải trên 2 Availability Zone, mỗi AZ có public subnet và private subnet
+* Public subnet: chứa NAT Gateway – cho phép EC2 kết nối ra Internet mà không cần IP công khai
+* Private subnet: chứa EC2 và RDS PostgreSQL, không thể truy cập trực tiếp từ Internet
+* Luồng vào: Internet → Internet Gateway → Application Load Balancer → EC2 (private subnet)
+* Luồng ra: EC2 (private subnet) → NAT Gateway (public subnet) → Internet
+6.HIGH AVAILABILITY & DISASTER RECOVERY
+* Triển khai trên 2 Availability Zone trong cùng 1 Region
+* Tầng ứng dụng: 2 EC2 ở 2 AZ, ALB tự động chuyển tải nếu một AZ gặp sự cố
+* Tầng dữ liệu: RDS PostgreSQL theo mô hình Primary – Standby trên 2 AZ, nhân bản đồng bộ, tự động failover khi primary lỗi
+7.BẢO MẬT (SECURITY ARCHITECTURE)
+* Mã hóa đường truyền: người dùng truy cập qua HTTPS
+* Phân tách mạng: EC2 và RDS nằm trong private subnet, không thể truy cập trực tiếp từ Internet
+* Kiểm soát lưu lượng vào: mọi request bắt buộc qua Internet Gateway → ALB trước khi đến EC2
+* Kiểm soát lưu lượng ra: EC2 dùng NAT Gateway, không gán IP public trực tiếp
+* Tải tệp an toàn: dùng presigned URL có thời hạn, không phơi lộ quyền ghi S3 trực tiếp
+8.GIÁM SÁT VÀ VẬN HÀNH (MONITORING & OPERATIONS)
+* Cả 2 EC2 gửi chỉ số vận hành đến Amazon CloudWatch
+* CloudWatch phát cảnh báo khi CPU ≥ 80% và đẩy thông báo đến Amazon SNS
+* SNS phát tán thông báo đến đội vận hành
+* Toàn bộ tạo thành vòng giám sát chủ động: thu thập metrics → phát hiện ngưỡng → cảnh báo tức thời
+9.KẾT LUẬN TỔNG QUAN KIẾN TRÚC
+Tóm lại, kiến trúc CloudDoc được thiết kế theo mô hình ứng dụng web nhiều tầng, triển khai trên AWS trong một Region với VPC trải rộng trên hai Availability Zone. Frontend React được host tĩnh trên S3 và phân phối qua CloudFront; Backend Node.js + Express.js chạy trên EC2 trong private subnet, nhận tải qua ALB. Tài liệu được tải lên S3 bằng presigned URL, xử lý bất đồng bộ qua SQS, lưu trữ dài hạn trên Glacier. Dữ liệu được bảo vệ bởi RDS PostgreSQL nhân bản đồng bộ. Toàn hệ thống được giám sát chủ động qua CloudWatch và SNS.
+Thiết kế đáp ứng các mục tiêu cốt lõi: khả năng mở rộng nhờ ALB và SQS; tính sẵn sàng cao nhờ triển khai đa AZ; bảo mật nhờ phân tách mạng và HTTPS; vận hành hiệu quả nhờ giám sát tự động và chính sách vòng đời dữ liệu.
+Em xin kết thúc phần trình bày. Kính mong nhận được ý kiến đóng góp của anh/chị và mọi người.
