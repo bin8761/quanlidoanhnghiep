@@ -46,6 +46,8 @@ export function NotificationsProvider({ children }) {
     }
 
     let cancelled = false
+    let pollIntervalId = null
+    let usingPollingFallback = false
     const clearDisconnectTimer = () => {
       if (disconnectTimerRef.current) {
         window.clearTimeout(disconnectTimerRef.current)
@@ -53,22 +55,38 @@ export function NotificationsProvider({ children }) {
       }
     }
 
-    Promise.all([listNotifications({ limit: 20 }), getUnreadNotificationCount()])
-      .then(([listResponse, countResponse]) => {
-        if (cancelled) return
-        setNotifications(normalizeNotifications(listResponse.data))
-        setUnreadCount(countResponse.data?.count || 0)
-      })
-      .catch(() => undefined)
+    const loadSnapshot = async ({ markConnected = true } = {}) => {
+      const [listResponse, countResponse] = await Promise.all([
+        listNotifications({ limit: 20 }),
+        getUnreadNotificationCount(),
+      ])
+
+      if (cancelled) return
+
+      setNotifications(normalizeNotifications(listResponse.data))
+      setUnreadCount(countResponse.data?.count || 0)
+      if (markConnected) {
+        setConnectionStatus('connected')
+      }
+    }
+
+    setConnectionStatus('connecting')
+
+    loadSnapshot().catch(() => {
+      if (!cancelled) setConnectionStatus('disconnected')
+    })
+
+    pollIntervalId = window.setInterval(() => {
+      loadSnapshot({ markConnected: false }).catch(() => undefined)
+    }, 30000)
 
     const stream = createNotificationsStream()
     if (!stream) {
       return () => {
         cancelled = true
+        if (pollIntervalId) window.clearInterval(pollIntervalId)
       }
     }
-
-    setConnectionStatus('connecting')
 
     stream.addEventListener('connected', () => {
       clearDisconnectTimer()
@@ -85,6 +103,8 @@ export function NotificationsProvider({ children }) {
     })
 
     stream.onerror = () => {
+      if (usingPollingFallback) return
+
       clearDisconnectTimer()
 
       if (document.visibilityState === 'hidden') {
@@ -93,18 +113,27 @@ export function NotificationsProvider({ children }) {
 
       setConnectionStatus('connecting')
       disconnectTimerRef.current = window.setTimeout(() => {
-        if (!navigator.onLine || stream.readyState === EventSource.CLOSED) {
+        if (!navigator.onLine) {
           setConnectionStatus('disconnected')
           return
         }
 
-        setConnectionStatus('connecting')
+        loadSnapshot()
+          .then(() => {
+            usingPollingFallback = true
+            stream.close()
+          })
+          .catch(() => setConnectionStatus('disconnected'))
       }, 8000)
     }
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         clearDisconnectTimer()
+        if (usingPollingFallback) {
+          setConnectionStatus('connected')
+          return
+        }
         setConnectionStatus(stream.readyState === EventSource.OPEN ? 'connected' : 'connecting')
       }
     }
@@ -114,6 +143,7 @@ export function NotificationsProvider({ children }) {
     return () => {
       cancelled = true
       clearDisconnectTimer()
+      if (pollIntervalId) window.clearInterval(pollIntervalId)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       stream.close()
     }

@@ -25,6 +25,7 @@ export function markAllNotificationsAsRead() {
 export function createNotificationsStream() {
   const token = getAccessToken()
   if (!token) return null
+  if (API_BASE_URL.startsWith('/')) return null
 
   const url = new URL(`${API_BASE_URL}/notifications/stream`, window.location.origin)
   url.searchParams.set('token', token)
