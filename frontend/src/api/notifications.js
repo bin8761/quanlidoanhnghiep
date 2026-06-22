@@ -26,7 +26,7 @@ export function createNotificationsStream() {
   const token = getAccessToken()
   if (!token) return null
 
-  const url = new URL(`${API_BASE_URL}/notifications/stream`)
+  const url = new URL(`${API_BASE_URL}/notifications/stream`, window.location.origin)
   url.searchParams.set('token', token)
 
   return new EventSource(url.toString())
