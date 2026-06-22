@@ -1,4 +1,5 @@
 const AppError = require("../shared/errors/AppError");
+const prisma = require("../config/database");
 const ERROR_CODES = require("../shared/errors/errorCodes");
 const { isUuidString } = require("../shared/utils/id.util");
 const { verifyAccessToken } = require("../shared/utils/token.util");
@@ -11,6 +12,14 @@ function createUnauthorizedError() {
     message: "Unauthorized",
     statusCode: 401,
     errorCode: ERROR_CODES.AUTH_UNAUTHORIZED,
+  });
+}
+
+function createInactiveAccountError() {
+  return new AppError({
+    message: "Account is inactive",
+    statusCode: 403,
+    errorCode: ERROR_CODES.AUTH_ACCOUNT_INACTIVE,
   });
 }
 
@@ -60,19 +69,71 @@ function toSafeAuthenticatedUser(payload) {
   });
 }
 
-function authenticate(req, res, next) {
+async function readAuthenticatedUserState(userId) {
+  return prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      isActive: true,
+      employee: {
+        select: {
+          status: true,
+        },
+      },
+    },
+  });
+}
+
+function assertActiveUser(userRecord) {
+  if (!userRecord) {
+    throw createUnauthorizedError();
+  }
+
+  if (userRecord.isActive !== true) {
+    throw createInactiveAccountError();
+  }
+
+  if (userRecord.employee && userRecord.employee.status !== "ACTIVE") {
+    throw createInactiveAccountError();
+  }
+}
+
+function mapPersistedUserToSafeAuthenticatedUser(userRecord) {
+  return Object.freeze({
+    userId: userRecord.id,
+    email: userRecord.email,
+    role: userRecord.role,
+  });
+}
+
+async function authenticate(req, res, next) {
+  let decodedUser;
+
   try {
     const authorizationHeader = req.headers?.[AUTHORIZATION_HEADER];
     const token = parseBearerToken(authorizationHeader);
     const decodedPayload = verifyAccessToken(token);
-    const safeUser = toSafeAuthenticatedUser(decodedPayload);
+    decodedUser = toSafeAuthenticatedUser(decodedPayload);
+  } catch {
+    return next(createUnauthorizedError());
+  }
+
+  try {
+    const persistedUser = await readAuthenticatedUserState(decodedUser.userId);
+    assertActiveUser(persistedUser);
+
+    const safeUser = mapPersistedUserToSafeAuthenticatedUser(persistedUser);
 
     req.user = safeUser;
     res.locals.user = safeUser;
 
     return next();
-  } catch {
-    return next(createUnauthorizedError());
+  } catch (error) {
+    return next(error);
   }
 }
 
