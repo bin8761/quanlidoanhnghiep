@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import {
   createNotificationsStream,
@@ -21,6 +21,7 @@ export function NotificationsProvider({ children }) {
   const [unreadCount, setUnreadCount] = useState(0)
   const [connectionStatus, setConnectionStatus] = useState('idle')
   const [isLoading, setIsLoading] = useState(false)
+  const disconnectTimerRef = useRef(null)
 
   const refresh = useCallback(async () => {
     if (!isAuthenticated) return
@@ -45,6 +46,12 @@ export function NotificationsProvider({ children }) {
     }
 
     let cancelled = false
+    const clearDisconnectTimer = () => {
+      if (disconnectTimerRef.current) {
+        window.clearTimeout(disconnectTimerRef.current)
+        disconnectTimerRef.current = null
+      }
+    }
 
     Promise.all([listNotifications({ limit: 20 }), getUnreadNotificationCount()])
       .then(([listResponse, countResponse]) => {
@@ -61,11 +68,16 @@ export function NotificationsProvider({ children }) {
       }
     }
 
+    setConnectionStatus('connecting')
+
     stream.addEventListener('connected', () => {
+      clearDisconnectTimer()
       setConnectionStatus('connected')
     })
 
     stream.addEventListener('notification', (event) => {
+      clearDisconnectTimer()
+      setConnectionStatus('connected')
       const notification = normalizeNotification(JSON.parse(event.data))
       setNotifications((current) => mergeNotification(current, notification))
       setUnreadCount((current) => current + 1)
@@ -73,11 +85,36 @@ export function NotificationsProvider({ children }) {
     })
 
     stream.onerror = () => {
-      setConnectionStatus('disconnected')
+      clearDisconnectTimer()
+
+      if (document.visibilityState === 'hidden') {
+        return
+      }
+
+      setConnectionStatus('connecting')
+      disconnectTimerRef.current = window.setTimeout(() => {
+        if (!navigator.onLine || stream.readyState === EventSource.CLOSED) {
+          setConnectionStatus('disconnected')
+          return
+        }
+
+        setConnectionStatus('connecting')
+      }, 8000)
     }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        clearDisconnectTimer()
+        setConnectionStatus(stream.readyState === EventSource.OPEN ? 'connected' : 'connecting')
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
       cancelled = true
+      clearDisconnectTimer()
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
       stream.close()
     }
   }, [isAuthenticated])
