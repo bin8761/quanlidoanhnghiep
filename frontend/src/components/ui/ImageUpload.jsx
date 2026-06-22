@@ -1,23 +1,12 @@
 import React, { useRef, useState } from 'react'
 import { Upload, X, Image as ImageIcon, Loader2, AlertCircle } from 'lucide-react'
 import { assetApi } from '../../api/assets'
-import { API_BASE_URL } from '../../api/client'
+import { resolveMediaUrl } from '../../utils/mediaUrl'
 
 export default function ImageUpload({ label, value, onChange, error }) {
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState('')
   const fileInputRef = useRef(null)
-
-  // Hàm chuyển đổi đường dẫn ảnh tương đối thành tuyệt đối để hiển thị
-  const getFullImageUrl = (url) => {
-    if (!url) return ''
-    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
-      return url
-    }
-    // Ghép host của API (bỏ đoạn '/api') để trỏ đúng thư mục static tĩnh của backend
-    const host = API_BASE_URL.replace('/api', '')
-    return `${host}${url}`
-  }
 
   const handleFileChange = async (event) => {
     const file = event.target.files[0]
@@ -79,7 +68,7 @@ export default function ImageUpload({ label, value, onChange, error }) {
     }
   }
 
-  const displayUrl = getFullImageUrl(value)
+  const displayUrl = resolveMediaUrl(value)
 
   return (
     <div className="flex flex-col gap-1.5 w-full">

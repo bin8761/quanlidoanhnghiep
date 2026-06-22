@@ -14,17 +14,9 @@ import { Link, useParams, Navigate } from 'react-router-dom'
 import StatusBadge from '../../components/ui/StatusBadge'
 import { useEffect, useState } from 'react'
 import { getMaintenanceByAsset, getMyAssets, confirmAssignment } from '../../services/employee.service'
-import { API_BASE_URL } from '../../api/client'
 import SignaturePad from '../../components/ui/SignaturePad'
 import Modal from '../../components/ui/Modal'
-
-const getFullImageUrl = (url) => {
-  if (!url) return ''
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
-    return url
-  }
-  return `${API_BASE_URL.replace('/api', '')}${url}`
-}
+import { resolveMediaUrl } from '../../utils/mediaUrl'
 
 export default function EmployeeAssetDetailPage() {
   const { code } = useParams()
@@ -175,7 +167,7 @@ export default function EmployeeAssetDetailPage() {
             {asset.imageUrl && (
               <div className="flex max-h-[240px] items-center justify-center overflow-hidden border-b border-slate-100 bg-slate-50/20 p-5 dark:border-slate-700 dark:bg-slate-900/20">
                 <img
-                  src={getFullImageUrl(asset.imageUrl)}
+                  src={resolveMediaUrl(asset.imageUrl)}
                   alt={asset.name}
                   className="max-h-[200px] rounded-xl object-contain shadow-soft"
                   onError={(e) => {

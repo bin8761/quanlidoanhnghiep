@@ -1,17 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Camera, Loader2, X, User } from 'lucide-react'
 import { assetApi } from '../../api/assets'
-import { API_BASE_URL } from '../../api/client'
-
-function getFullImageUrl(url) {
-  if (!url) return ''
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
-    return url
-  }
-  // Strip trailing /api from base URL to get the static file host
-  const host = API_BASE_URL.replace(/\/api$/, '')
-  return `${host}${url}`
-}
+import { resolveMediaUrl } from '../../utils/mediaUrl'
 
 /**
  * AvatarUpload
@@ -41,7 +31,7 @@ export default function AvatarUpload({
     setImgError(false)
   }, [value])
 
-  const displayUrl = getFullImageUrl(value)
+  const displayUrl = resolveMediaUrl(value)
 
   // Generate initials from name
   const initials = name

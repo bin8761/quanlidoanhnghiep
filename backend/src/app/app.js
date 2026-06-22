@@ -73,6 +73,7 @@ app.use(express.json({ limit: JSON_PAYLOAD_LIMIT }));
 app.use(express.urlencoded({ extended: true, limit: JSON_PAYLOAD_LIMIT }));
 app.use(requestLogger);
 app.use("/uploads", express.static(path.join(__dirname, "../../uploads")));
+app.use("/api/uploads", express.static(path.join(__dirname, "../../uploads")));
 app.use(routes);
 app.use(errorHandler);
 

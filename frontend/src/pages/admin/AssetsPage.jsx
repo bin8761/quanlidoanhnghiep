@@ -16,9 +16,9 @@ import StatusBadge from '../../components/ui/StatusBadge'
 import Toast from '../../components/ui/Toast'
 import useAutoDismiss from '../../hooks/useAutoDismiss'
 import ImageUpload from '../../components/ui/ImageUpload'
-import { API_BASE_URL } from '../../api/client'
 import ExcelImportModal from '../../components/admin/ExcelImportModal'
 import { ASSET_TEMPLATE, buildAssetImportRow } from '../../utils/excelImport'
+import { resolveMediaUrl } from '../../utils/mediaUrl'
 
 const ASSET_STATUSES = [
   { value: 'AVAILABLE', label: 'Sẵn sàng' },
@@ -50,14 +50,6 @@ function toDateInputValue(value) {
 function formatCurrency(value) {
   if (value === null || typeof value === 'undefined') return 'Chưa cập nhật'
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value))
-}
-
-function getFullImageUrl(url) {
-  if (!url) return ''
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
-    return url
-  }
-  return `${API_BASE_URL.replace('/api', '')}${url}`
 }
 
 export default function AssetsPage() {
@@ -443,7 +435,7 @@ export default function AssetsPage() {
           {viewingAsset.imageUrl && (
             <div className="mb-5 flex justify-center rounded-2xl border border-slate-200/80 bg-slate-50/50 p-3 overflow-hidden max-h-[200px]">
               <img
-                src={getFullImageUrl(viewingAsset.imageUrl)}
+                src={resolveMediaUrl(viewingAsset.imageUrl)}
                 alt={viewingAsset.name}
                 className="max-h-[174px] rounded-xl object-contain shadow-soft"
                 onError={(e) => {

@@ -17,7 +17,6 @@ import {
 import { departmentApi } from '../../api/departments'
 import { employeeApi } from '../../api/employees'
 import { locationApi } from '../../api/locations'
-import { API_BASE_URL } from '../../api/client'
 import { ResourceError, ResourceTableSkeleton } from '../../components/admin/ResourceFeedback'
 import Button from '../../components/ui/Button'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
@@ -34,6 +33,7 @@ import useAutoDismiss from '../../hooks/useAutoDismiss'
 import ExcelImportModal from '../../components/admin/ExcelImportModal'
 import { EMPLOYEE_TEMPLATE, buildEmployeeImportRow } from '../../utils/excelImport'
 import AvatarUpload from '../../components/ui/AvatarUpload'
+import { resolveMediaUrl } from '../../utils/mediaUrl'
 
 const FIELD_LABELS = {
   fullName: 'Họ và tên',
@@ -86,14 +86,6 @@ function getFileTypeFromExtension(filename) {
   return 'OTHER'
 }
 
-function getFullImageUrl(url) {
-  if (!url) return ''
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url
-  // API_BASE_URL = 'http://localhost:5000/api' -> strip '/api' to get base host
-  const baseHost = API_BASE_URL.replace(/\/api$/, '')
-  return `${baseHost}${url}`
-}
-
 function EmployeeAvatar({ avatarUrl, fullName }) {
   const [imgError, setImgError] = useState(false)
   useEffect(() => {
@@ -103,7 +95,7 @@ function EmployeeAvatar({ avatarUrl, fullName }) {
   if (avatarUrl && !imgError) {
     return (
       <img
-        src={getFullImageUrl(avatarUrl)}
+        src={resolveMediaUrl(avatarUrl)}
         alt={fullName}
         className="size-8 shrink-0 rounded-full object-cover border border-slate-200"
         onError={() => setImgError(true)}
