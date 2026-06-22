@@ -239,7 +239,12 @@ function createEmployeesService({ repository = employeesRepository, deptReposito
         }
       }
 
-      const updated = await repository.update(id, data);
+      let updated = await repository.update(id, data);
+
+      if (typeof data.status !== "undefined" && data.status !== employee.status) {
+        await repository.updateLinkedUserStatusByEmployeeId(id, data.status === "ACTIVE");
+        updated = await repository.findById(id);
+      }
 
       // Save logs if update was successful
       if (authenticatedUser && logsToCreate.length > 0) {

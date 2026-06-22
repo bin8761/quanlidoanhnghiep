@@ -32,6 +32,10 @@ function createInactiveAccountError() {
   });
 }
 
+function isEmployeeRecordActive(employeeRecord) {
+  return employeeRecord?.status ? employeeRecord.status === "ACTIVE" : true;
+}
+
 function createUnauthorizedError() {
   return new AppError({
     message: "Unauthorized",
@@ -234,7 +238,7 @@ function createAuthService({
         email: employeeRecord.email,
         passwordHash,
         role: ROLES.USER,
-        isActive: true,
+        isActive: isEmployeeRecordActive(employeeRecord),
         mustChangePassword: false,
       });
 
@@ -258,6 +262,10 @@ function createAuthService({
       }
 
       if (!userRecord.isActive) {
+        throw createInactiveAccountError();
+      }
+
+      if (!isEmployeeRecordActive(userRecord.employee)) {
         throw createInactiveAccountError();
       }
 
@@ -852,7 +860,7 @@ function createAuthService({
         email: employeeRecord.email,
         passwordHash,
         role: ROLES.USER,
-        isActive: true,
+        isActive: isEmployeeRecordActive(employeeRecord),
         mustChangePassword: true,
       });
 

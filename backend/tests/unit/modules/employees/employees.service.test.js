@@ -15,7 +15,9 @@ describe("employees.service", () => {
       delete: jest.fn(),
       countAssignments: jest.fn(),
       hasUserAccount: jest.fn(),
+      updateLinkedUserStatusByEmployeeId: jest.fn(),
       isEmployeeLinkedToUser: jest.fn(),
+      createProfileLog: jest.fn(),
       getNextEmployeeCode: jest.fn(),
       ...repositoryOverrides,
     };
@@ -194,6 +196,40 @@ describe("employees.service", () => {
       }),
     ]);
     expect(repository.create).toHaveBeenCalledTimes(1);
+  });
+
+  test("updateEmployee syncs linked user status when employee is deactivated", async () => {
+    const currentEmployee = {
+      id: EMPLOYEE_ID,
+      fullName: "John Doe",
+      email: "john@company.com",
+      status: "ACTIVE",
+    };
+    const updatedEmployee = { ...currentEmployee, status: "INACTIVE" };
+    const refreshedEmployee = {
+      ...updatedEmployee,
+      user: { isActive: false },
+    };
+    const { employeesService, repository } = loadEmployeesService({
+      repositoryOverrides: {
+        findById: jest.fn()
+          .mockResolvedValueOnce(currentEmployee)
+          .mockResolvedValueOnce(refreshedEmployee),
+        findByEmail: jest.fn().mockResolvedValue(null),
+        update: jest.fn().mockResolvedValue(updatedEmployee),
+        updateLinkedUserStatusByEmployeeId: jest.fn().mockResolvedValue({ count: 1 }),
+      },
+    });
+
+    const result = await employeesService.updateEmployee(
+      EMPLOYEE_ID,
+      { status: "INACTIVE" },
+      { role: "ADMIN", userId: USER_ID },
+    );
+
+    expect(repository.update).toHaveBeenCalledWith(EMPLOYEE_ID, { status: "INACTIVE" });
+    expect(repository.updateLinkedUserStatusByEmployeeId).toHaveBeenCalledWith(EMPLOYEE_ID, false);
+    expect(result).toEqual(refreshedEmployee);
   });
 
   test("deleteEmployee throws validation error if employee has a user account", async () => {

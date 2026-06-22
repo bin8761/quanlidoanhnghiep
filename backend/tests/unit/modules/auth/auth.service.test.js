@@ -268,6 +268,34 @@ describe('auth.service', () => {
     expect(tokenUtility.signAccessToken).not.toHaveBeenCalled();
   });
 
+  test('login rejects when linked employee is inactive', async () => {
+    const { authService, repository, tokenUtility } = loadAuthService({
+      repositoryOverrides: {
+        findUserByEmail: jest.fn().mockResolvedValue({
+          id: USER_ID,
+          email: 'user@example.com',
+          role: 'USER',
+          isActive: true,
+          passwordHash: 'hashed-password',
+          employee: {
+            id: EMPLOYEE_ID,
+            status: 'INACTIVE',
+          },
+        }),
+        updateLastLoginAt: jest.fn(),
+      },
+      passwordUtilOverrides: {
+        verifyPassword: jest.fn().mockResolvedValue(true),
+      },
+    });
+
+    await expect(authService.login('user@example.com', 'Password123')).rejects.toMatchObject({
+      errorCode: 'AUTH_ACCOUNT_INACTIVE',
+    });
+    expect(repository.updateLastLoginAt).not.toHaveBeenCalled();
+    expect(tokenUtility.signAccessToken).not.toHaveBeenCalled();
+  });
+
   test('changePassword rejects when current password does not match', async () => {
     const { authService, repository, passwordUtility } = loadAuthService({
       repositoryOverrides: {

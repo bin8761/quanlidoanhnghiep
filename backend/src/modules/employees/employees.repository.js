@@ -205,6 +205,13 @@ function createEmployeesRepository(prismaClient) {
       return Boolean(user);
     },
 
+    async updateLinkedUserStatusByEmployeeId(employeeId, isActive) {
+      return activePrisma.user.updateMany({
+        where: { employeeId },
+        data: { isActive },
+      });
+    },
+
     async isEmployeeLinkedToUser(employeeId, userId) {
       const user = await activePrisma.user.findUnique({
         where: { employeeId },
