@@ -1,5 +1,7 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
 const TOKEN_KEY = 'eam_access_token'
+const USER_KEY = 'eam_current_user'
+const INACTIVE_ACCOUNT_ERROR_CODE = 'AUTH_ACCOUNT_INACTIVE'
 
 export class ApiError extends Error {
   constructor(message, options = {}) {
@@ -21,6 +23,17 @@ export function setAccessToken(token) {
     localStorage.setItem(TOKEN_KEY, token)
   } else {
     localStorage.removeItem(TOKEN_KEY)
+  }
+}
+
+function clearSession() {
+  setAccessToken(null)
+  localStorage.removeItem(USER_KEY)
+}
+
+function redirectToLogin() {
+  if (window.location.pathname !== '/login') {
+    window.location.href = '/login'
   }
 }
 
@@ -55,11 +68,16 @@ async function request(path, options = {}) {
 
   if (!response.ok) {
     const isLoginRequest = path === '/auth/login'
+    const isInactiveAccount = payload?.errorCode === INACTIVE_ACCOUNT_ERROR_CODE
 
-    if (response.status === 401 && token && !isLoginRequest) {
-      setAccessToken(null)
-      localStorage.removeItem('eam_current_user')
-      window.location.href = '/login'
+    if (isInactiveAccount && token) {
+      clearSession()
+      if (!isLoginRequest) {
+        redirectToLogin()
+      }
+    } else if (response.status === 401 && token && !isLoginRequest) {
+      clearSession()
+      redirectToLogin()
     }
     throw new ApiError(payload?.message || 'Yêu cầu không thành công', {
       status: response.status,

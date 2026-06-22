@@ -241,7 +241,7 @@ function createEmployeesService({ repository = employeesRepository, deptReposito
 
       let updated = await repository.update(id, data);
 
-      if (typeof data.status !== "undefined" && data.status !== employee.status) {
+      if (typeof data.status !== "undefined") {
         await repository.updateLinkedUserStatusByEmployeeId(id, data.status === "ACTIVE");
         updated = await repository.findById(id);
       }
