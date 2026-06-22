@@ -102,6 +102,7 @@ describe('auth.service', () => {
       role: 'USER',
       isActive: true,
       mustChangePassword: false,
+      employee: null,
     };
     const { authService, repository, passwordUtility } = loadAuthService({
       repositoryOverrides: {
@@ -174,6 +175,12 @@ describe('auth.service', () => {
     const updatedUser = {
       ...foundUser,
       lastLoginAt: new Date('2026-06-03T00:00:00.000Z'),
+      employee: {
+        id: EMPLOYEE_ID,
+        employeeCode: 'EMP001',
+        fullName: 'Nguyen Huu Dat',
+        avatarUrl: '/uploads/avatar.webp',
+      },
     };
     const { authService, repository, passwordUtility, tokenUtility } = loadAuthService({
       repositoryOverrides: {
@@ -207,6 +214,12 @@ describe('auth.service', () => {
         employeeId: undefined,
         mustChangePassword: false,
         isActive: true,
+        employee: {
+          id: EMPLOYEE_ID,
+          employeeCode: 'EMP001',
+          fullName: 'Nguyen Huu Dat',
+          avatarUrl: '/uploads/avatar.webp',
+        },
       },
     });
   });
