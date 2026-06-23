@@ -36,8 +36,8 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState({
-    email: 'admin@company.local',
-    password: 'Admin123',
+    email: '',
+    password: '',
   })
 
   function updateField(event) {
@@ -170,16 +170,12 @@ export default function LoginPage() {
     <main className="min-h-screen bg-slate-950 lg:grid lg:grid-cols-[minmax(420px,44%)_1fr]">
       <section className="relative z-10 flex min-h-screen flex-col justify-center overflow-hidden bg-[#f8fbf9] px-5 py-8 sm:px-10 lg:px-[clamp(48px,6vw,96px)]">
         <div className="relative mx-auto w-full max-w-[470px] animate-fade-up">
-          <div className="mb-12 flex items-center gap-3 sm:mb-16">
-            <span className="grid size-11 place-items-center rounded-2xl bg-brand-700 text-white shadow-lg shadow-brand-700/20">
-              <ShieldCheck size={23} />
-            </span>
-            <span>
-              <strong className="block text-sm font-extrabold text-slate-900">
-                EAM Workspace
-              </strong>
-              <span className="text-xs text-slate-500">Enterprise Asset Management</span>
-            </span>
+          <div className="mb-12 flex items-center sm:mb-16">
+            <img
+              className="h-14 w-auto max-w-[280px] object-contain drop-shadow-sm sm:h-16"
+              src="/brand/eam-logo-wordmark.png"
+              alt="EAM Workspace"
+            />
           </div>
 
           <div className="mb-8">
@@ -204,7 +200,7 @@ export default function LoginPage() {
               autoComplete="email"
               value={form.email}
               onChange={updateField}
-              placeholder="admin@company.local"
+              placeholder="Nhập email công ty của bạn"
               required
             />
 

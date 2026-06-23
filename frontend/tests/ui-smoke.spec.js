@@ -45,6 +45,8 @@ function collectConsoleErrors(page) {
 
 async function loginAsAdmin(page) {
   await page.goto('/login')
+  await page.getByLabel('Email công ty').fill('admin@company.local')
+  await page.getByLabel('Mật khẩu').fill('Admin123')
   await page.getByRole('button', { name: 'Đăng nhập hệ thống' }).click()
   await expect(page).toHaveURL(/\/admin\/dashboard$/)
 }
@@ -116,6 +118,8 @@ test('desktop login and dashboard render without console errors', async ({ page 
   await page.goto('/login')
   await expect(page.getByRole('heading', { name: 'Chào mừng trở lại' })).toBeVisible()
   await expect(page.getByLabel('Email công ty')).toBeVisible()
+  await page.getByLabel('Email công ty').fill('admin@company.local')
+  await page.getByLabel('Mật khẩu').fill('Admin123')
   await page.getByRole('button', { name: 'Đăng nhập hệ thống' }).click()
   await expect(page).toHaveURL(/\/admin\/dashboard$/)
   await expect(page.getByRole('heading', { name: /Chào buổi (sáng|chiều|tối), Quản trị viên/ })).toBeVisible()
@@ -266,6 +270,8 @@ test('mobile login, dashboard and sidebar remain usable', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/login')
   await expect(page.getByRole('heading', { name: 'Chào mừng trở lại' })).toBeVisible()
+  await page.getByLabel('Email công ty').fill('admin@company.local')
+  await page.getByLabel('Mật khẩu').fill('Admin123')
   await page.getByRole('button', { name: 'Đăng nhập hệ thống' }).click()
   await expect(page).toHaveURL(/\/admin\/dashboard$/)
 

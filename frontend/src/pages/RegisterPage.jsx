@@ -5,7 +5,6 @@ import {
   Eye,
   EyeOff,
   IdCard,
-  ShieldCheck,
   UserPlus,
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -108,8 +107,12 @@ export default function RegisterPage() {
 
         <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-premium">
           <header className="border-b border-slate-100 bg-slate-950 px-6 py-7 text-white sm:px-8">
-            <span className="mb-5 grid size-11 place-items-center rounded-2xl bg-brand-500 shadow-lg shadow-brand-500/20">
-              <ShieldCheck size={22} />
+            <span className="mb-5 grid size-12 place-items-center overflow-hidden rounded-2xl bg-white shadow-lg shadow-brand-500/20">
+              <img
+                className="size-10 object-contain"
+                src="/brand/eam-logo-icon.png"
+                alt="EAM Workspace"
+              />
             </span>
             <h1 className="text-2xl font-extrabold sm:text-3xl">Đăng ký tài khoản</h1>
             <p className="mt-2 max-w-lg text-sm leading-6 text-white/60">

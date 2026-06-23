@@ -57,9 +57,11 @@ export default function AdminLayout() {
               <Menu size={19} />
             </button>
             <div className="min-w-0">
-              <p className="hidden text-[10px] font-bold tracking-wide text-slate-400 uppercase dark:text-slate-500 sm:block">
-                EAM Workspace
-              </p>
+              <img
+                className="hidden h-4 w-auto max-w-[140px] object-contain sm:block"
+                src="/brand/eam-logo-wordmark.png"
+                alt="EAM Workspace"
+              />
               <h1 className="truncate text-base font-bold text-slate-900 dark:text-slate-100 sm:text-lg">{title}</h1>
             </div>
           </div>

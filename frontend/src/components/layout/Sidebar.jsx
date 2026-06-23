@@ -16,7 +16,6 @@ import {
   PackageCheck,
   Settings,
   ShieldAlert,
-  ShieldCheck,
   UsersRound,
   Wrench,
   X,
@@ -168,8 +167,12 @@ export default function Sidebar({ open, onClose }) {
       }`}
     >
       <div className="flex h-16 shrink-0 items-center gap-3 border-b border-white/8 px-4">
-        <span className="grid size-10 place-items-center rounded-[12px] border border-white/10 bg-white text-brand-800 shadow-lg shadow-black/10">
-          <ShieldCheck size={21} />
+        <span className="grid size-10 place-items-center overflow-hidden rounded-[12px] border border-white/10 bg-white shadow-lg shadow-black/10">
+          <img
+            className="size-8 object-contain"
+            src="/brand/eam-logo-icon.png"
+            alt="EAM Workspace"
+          />
         </span>
         <span className="min-w-0">
           <strong className="block truncate text-[13px] font-extrabold">EAM Workspace</strong>
