@@ -1,3 +1,5 @@
+import { useLanguage } from '../../hooks/useLanguage'
+
 const statusTone = {
   AVAILABLE: 'border-emerald-200 bg-emerald-50 text-emerald-700',
   ACTIVE: 'border-emerald-200 bg-emerald-50 text-emerald-700',
@@ -47,6 +49,7 @@ const statusLabel = {
 }
 
 export default function StatusBadge({ status }) {
+  const { t } = useLanguage()
   const normalizedStatus = String(status || '').toUpperCase()
   const tone = statusTone[normalizedStatus] || 'border-slate-200 bg-slate-50 text-slate-600'
   const label = statusLabel[normalizedStatus] || normalizedStatus.replaceAll('_', ' ')
@@ -56,7 +59,7 @@ export default function StatusBadge({ status }) {
       className={`inline-flex min-h-6 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold ${tone}`}
     >
       <span className="size-1.5 rounded-full bg-current opacity-70" />
-      {label}
+      {t(label)}
     </span>
   )
 }
