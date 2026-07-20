@@ -3,9 +3,11 @@ CONTINUITY.md
 
 node_modules
 backend/.env
+backend/uploads/
+deploy-artifacts/
 
 # macOS
 .DS_Store
 
 # Temporary scratch files
-scratch/
+scratch/

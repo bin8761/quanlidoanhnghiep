@@ -29,6 +29,21 @@ const benefits = [
   'Báo cáo trạng thái theo thời gian thực',
 ]
 
+const demoAccounts = [
+  {
+    role: 'Quản trị viên',
+    description: 'Quản trị tài sản và nhân viên',
+    email: 'admin@company.local',
+    password: 'Admin123',
+  },
+  {
+    role: 'Nhân viên',
+    description: 'Cổng thông tin nhân viên',
+    email: 'active.employee@company.local',
+    password: 'Active1234',
+  },
+]
+
 export default function LoginPage() {
   const navigate = useNavigate()
   const { login } = useAuth()
@@ -45,6 +60,16 @@ export default function LoginPage() {
       setError('')
     }
     setForm((current) => ({ ...current, [event.target.name]: event.target.value }))
+  }
+
+  function fillDemoAccount(account) {
+    if (error) {
+      setError('')
+    }
+    setForm({
+      email: account.email,
+      password: account.password,
+    })
   }
 
   async function handleSubmit(event) {
@@ -193,6 +218,44 @@ export default function LoginPage() {
           </div>
 
           <form className="grid gap-5" onSubmit={handleSubmit}>
+            <section className="rounded-2xl border border-brand-100 bg-brand-50/70 p-4 shadow-sm">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-sm font-extrabold text-slate-900">Tài khoản demo</h2>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    Bấm chọn một tài khoản để tự động điền thông tin đăng nhập.
+                  </p>
+                </div>
+                <span className="hidden rounded-full border border-brand-200 bg-white px-2.5 py-1 text-[10px] font-bold text-brand-700 sm:inline-flex">
+                  Demo ready
+                </span>
+              </div>
+
+              <div className="grid gap-2">
+                {demoAccounts.map((account) => (
+                  <button
+                    key={account.email}
+                    type="button"
+                    className="group flex items-center justify-between gap-3 rounded-xl border border-white bg-white/85 px-3 py-2.5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-brand-200 hover:bg-white hover:shadow-md focus:outline-none focus:ring-4 focus:ring-brand-500/10"
+                    onClick={() => fillDemoAccount(account)}
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-xs font-extrabold text-slate-900">{account.role}</span>
+                      <span className="mt-0.5 block truncate text-[11px] font-semibold text-slate-600">
+                        {account.description}
+                      </span>
+                      <span className="mt-0.5 block truncate text-[11px] font-medium text-slate-500">
+                        {account.email} / {account.password}
+                      </span>
+                    </span>
+                    <span className="shrink-0 rounded-full bg-brand-600 px-2.5 py-1 text-[10px] font-bold text-white transition group-hover:bg-brand-700">
+                      Điền
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </section>
+
             <FormField
               label="Email công ty"
               name="email"
