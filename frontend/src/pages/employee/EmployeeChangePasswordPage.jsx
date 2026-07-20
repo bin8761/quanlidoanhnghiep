@@ -12,6 +12,7 @@ import {
   verifyForgotPasswordOtp,
   resetPassword,
 } from '../../services/auth.service'
+import { useLanguage } from '../../hooks/useLanguage'
 
 const INITIAL_FORM = { currentPassword: '', newPassword: '', confirmPassword: '' }
 
@@ -48,6 +49,7 @@ function PasswordInput({ id, name, value, placeholder, autoComplete, onChange })
 
 export default function EmployeeChangePasswordPage() {
   const { user, updateCurrentUser } = useAuth()
+  const { t } = useLanguage()
   
   // Tab state
   const [activeTab, setActiveTab] = useState('password') // 'password' | 'otp'
@@ -270,7 +272,7 @@ export default function EmployeeChangePasswordPage() {
                         disabled={cooldown > 0 || isSubmitting}
                       >
                         <Mail size={16} />
-                        {cooldown > 0 ? `${cooldown}s` : otpSent ? 'Gửi lại mã' : 'Gửi mã'}
+                        {cooldown > 0 ? `${cooldown}s` : otpSent ? t('Gửi lại mã') : t('Gửi mã')}
                       </Button>
                     </div>
 

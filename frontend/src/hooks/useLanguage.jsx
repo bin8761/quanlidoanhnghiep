@@ -730,6 +730,7 @@ const fallbackDictionary = {
   "Vui lòng nhập mã OTP để tiếp tục.": "Please enter the OTP to continue.",
   "Gửi lại mã OTP": "Resend OTP",
   "Gửi lại mã": "Resend Code",
+  "Gửi mã": "Send Code",
   "Quay lại": "Back",
   "Xác nhận mã": "Verify Code",
 
