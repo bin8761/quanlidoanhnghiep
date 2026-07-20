@@ -5,7 +5,7 @@ export function resolveMediaUrl(url) {
   if (/^(https?:|data:|blob:)/i.test(url)) return url
 
   if (url.startsWith('/uploads/')) {
-    if (API_BASE_URL === '/api' || API_BASE_URL.endsWith('/api')) {
+    if (API_BASE_URL.startsWith('/')) {
       return url
     }
 

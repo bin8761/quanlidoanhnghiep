@@ -28,6 +28,8 @@ export function createNotificationsStream() {
   if (API_BASE_URL.startsWith('/')) return null
 
   const url = new URL(`${API_BASE_URL}/notifications/stream`, window.location.origin)
+  if (url.hostname.endsWith('.execute-api.ap-southeast-1.amazonaws.com')) return null
+
   url.searchParams.set('token', token)
 
   return new EventSource(url.toString())
