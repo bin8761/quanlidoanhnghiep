@@ -7,6 +7,7 @@ import PageHeader from '../../components/ui/PageHeader'
 import { createRequest, getMyAssets, getMyRequests, cancelRequest, rateRequest } from '../../services/employee.service'
 import { faqApi } from '../../api/faqs'
 import Modal from '../../components/ui/Modal'
+import { useLanguage } from '../../hooks/useLanguage'
 
 const STATUS_TONE = {
   PENDING: 'border-amber-200 bg-amber-50 text-amber-700',
@@ -298,6 +299,7 @@ function RatingForm({ id, onSuccess }) {
 }
 
 export default function EmployeeRequestsPage() {
+  const { t, locale } = useLanguage()
   const [searchParams, setSearchParams] = useSearchParams()
   const [requests, setRequests] = useState([])
   const [formOpen, setFormOpen] = useState(false)
@@ -338,15 +340,15 @@ export default function EmployeeRequestsPage() {
     if (matchedKeywords.length === 0) return []
 
     return faqs.filter(faq => {
-      const q = faq.question.toLowerCase()
-      const a = faq.answer.toLowerCase()
-      const c = faq.category.toLowerCase()
+      const q = `${faq.question} ${locale === 'en' ? t(faq.question) : ''}`.toLowerCase()
+      const a = `${faq.answer} ${locale === 'en' ? t(faq.answer) : ''}`.toLowerCase()
+      const c = `${faq.category} ${locale === 'en' ? t(faq.category) : ''}`.toLowerCase()
       return matchedKeywords.some(kw => {
         const syns = keywordMap[kw]
         return syns.some(syn => q.includes(syn) || a.includes(syn) || c.includes(syn))
       })
     }).slice(0, 3)
-  }, [form.description, faqs])
+  }, [form.description, faqs, locale, t])
 
   async function handleCancel(requestId) {
     if (!confirm('Bạn có chắc chắn muốn hủy yêu cầu hỗ trợ này?')) return
@@ -526,7 +528,7 @@ export default function EmployeeRequestsPage() {
                       onClick={() => setSelectedFaq(faq)}
                       className="w-full text-left bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-2.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-emerald-500/50 hover:text-emerald-700 dark:hover:text-emerald-400 transition"
                     >
-                      {faq.question}
+                      {t(faq.question)}
                     </button>
                   ))}
                 </div>
@@ -714,13 +716,13 @@ export default function EmployeeRequestsPage() {
 
       {selectedFaq && (
         <Modal
-          title={selectedFaq.question}
-          description={`Danh mục: ${selectedFaq.category}`}
+          title={t(selectedFaq.question)}
+          description={`${t('Danh mục')}: ${t(selectedFaq.category)}`}
           onClose={() => setSelectedFaq(null)}
         >
           <div className="space-y-4">
             <div className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800/80">
-              {selectedFaq.answer}
+              {t(selectedFaq.answer)}
             </div>
             
             <div className="flex flex-col sm:flex-row items-center justify-between border-t border-slate-100 pt-4 gap-3 dark:border-slate-800">

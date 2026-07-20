@@ -121,11 +121,19 @@ export default function SettingsPage() {
   }
 
   // Filter FAQs based on query
-  const filteredFaqs = faqs.filter(faq => 
-    faq.question.toLowerCase().includes(faqSearch.toLowerCase()) ||
-    faq.answer.toLowerCase().includes(faqSearch.toLowerCase()) ||
-    faq.category.toLowerCase().includes(faqSearch.toLowerCase())
-  )
+  const filteredFaqs = faqs.filter(faq => {
+    const query = faqSearch.toLowerCase()
+    const searchableText = [
+      faq.question,
+      faq.answer,
+      faq.category,
+      locale === 'en' ? t(faq.question) : '',
+      locale === 'en' ? t(faq.answer) : '',
+      locale === 'en' ? t(faq.category) : '',
+    ].join(' ').toLowerCase()
+
+    return searchableText.includes(query)
+  })
 
   return (
     <div className="animate-fade-up mx-auto max-w-6xl">
@@ -316,14 +324,14 @@ export default function SettingsPage() {
                           className="w-full flex items-center justify-between text-left focus:outline-none"
                         >
                           <span className="text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-brand-600 transition">
-                            [{faq.category}] {faq.question}
+                            [{t(faq.category)}] {t(faq.question)}
                           </span>
                           {isExpanded ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
                         </button>
                         {isExpanded && (
                           <div className="mt-2 pl-2 border-l-2 border-brand-500">
                             <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed whitespace-pre-line">
-                              {faq.answer}
+                              {t(faq.answer)}
                             </p>
                           </div>
                         )}

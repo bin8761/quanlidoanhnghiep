@@ -4,6 +4,7 @@ import { HelpCircle, Search, ChevronDown, ChevronUp, Send, BookOpen, Layers, Lap
 import { faqApi } from '../../api/faqs'
 import PageHeader from '../../components/ui/PageHeader'
 import Button from '../../components/ui/Button'
+import { useLanguage } from '../../hooks/useLanguage'
 
 const CATEGORY_ICONS = {
   'Tài sản': Laptop,
@@ -16,6 +17,7 @@ const CATEGORY_ICONS = {
 }
 
 export default function EmployeeFaqPage() {
+  const { t, locale } = useLanguage()
   const [faqs, setFaqs] = useState([])
   const [categories, setCategories] = useState([])
   const [selectedCategory, setSelectedCategory] = useState('')
@@ -63,13 +65,18 @@ export default function EmployeeFaqPage() {
       const query = searchQuery.trim().toLowerCase()
       if (!query) return matchesCategory
 
-      const matchesText =
-        faq.question.toLowerCase().includes(query) ||
-        faq.answer.toLowerCase().includes(query) ||
-        faq.category.toLowerCase().includes(query)
+      const searchableText = [
+        faq.question,
+        faq.answer,
+        faq.category,
+        locale === 'en' ? t(faq.question) : '',
+        locale === 'en' ? t(faq.answer) : '',
+        locale === 'en' ? t(faq.category) : '',
+      ].join(' ').toLowerCase()
+      const matchesText = searchableText.includes(query)
       return matchesCategory && matchesText
     })
-  }, [faqs, selectedCategory, searchQuery])
+  }, [faqs, locale, selectedCategory, searchQuery, t])
 
   if (isLoading) {
     return <div className="grid min-h-72 place-items-center text-slate-600 dark:text-slate-300">Đang tải tài liệu hướng dẫn...</div>
@@ -143,7 +150,7 @@ export default function EmployeeFaqPage() {
                 }`}
             >
               <Icon size={14} />
-              {cat}
+              {t(cat)}
             </button>
           )
         })}
@@ -172,10 +179,10 @@ export default function EmployeeFaqPage() {
                   </span>
                   <div>
                     <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-0.5">
-                      {faq.category}
+                      {t(faq.category)}
                     </span>
                     <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                      {faq.question}
+                      {t(faq.question)}
                     </h3>
                   </div>
                 </div>
@@ -187,7 +194,7 @@ export default function EmployeeFaqPage() {
               {isExpanded && (
                 <div className="px-5 pb-5 pt-1 border-t border-slate-50 dark:border-slate-800/50 animate-fade-down">
                   <div className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap bg-slate-50/50 dark:bg-slate-900/40 p-4 rounded-xl border border-slate-100/50 dark:border-slate-800/80">
-                    {faq.answer}
+                    {t(faq.answer)}
                   </div>
                 </div>
               )}
