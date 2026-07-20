@@ -33,6 +33,7 @@ import { VIETNAMESE_ETHNICITIES, NATIONALITIES } from '../../data/vietnam-static
 import useAutoDismiss from '../../hooks/useAutoDismiss'
 import { employeeApi } from '../../api/employees'
 import { Link } from 'react-router-dom'
+import { useLanguage } from '../../hooks/useLanguage'
 
 const FIELD_LABELS = {
   fullName: 'Họ và tên',
@@ -80,6 +81,7 @@ function toInputDateString(isoString) {
 
 export default function EmployeeProfilePage() {
   const { user, updateCurrentUser } = useAuth()
+  const { t, locale } = useLanguage()
   const [profile, setProfile] = useState(null)
   const [attachments, setAttachments] = useState([])
   const [logs, setLogs] = useState([])
@@ -124,6 +126,7 @@ export default function EmployeeProfilePage() {
   const [isUploading, setIsUploading] = useState(false)
 
   useAutoDismiss(toast, setToast)
+  const formatLogValue = (value) => value ? t(value) : <span className="text-slate-400 italic">{t('Trống')}</span>
 
   const loadProfileData = async () => {
     if (!user?.employeeId) {
@@ -971,13 +974,13 @@ export default function EmployeeProfilePage() {
                 />
                 <FormField
                   as="select"
-                  label="Giới tính"
+                  label={t('Giới tính')}
                   name="gender"
                   value={personalForm.gender}
                   options={[
-                    { value: 'Nam', label: 'Nam' },
-                    { value: 'Nữ', label: 'Nữ' },
-                    { value: 'Khác', label: 'Khác' }
+                    { value: 'Nam', label: t('Nam') },
+                    { value: 'Nữ', label: t('Nữ') },
+                    { value: 'Khác', label: t('Khác') }
                   ]}
                   disabled={!profile.allowProfileUpdate || isSaving}
                   onChange={e => setPersonalForm(c => ({ ...c, gender: e.target.value }))}
@@ -1059,24 +1062,24 @@ export default function EmployeeProfilePage() {
               </div>
 
               <div className="space-y-4">
-                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider border-b pb-2">Người liên hệ khẩn cấp</h4>
+                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider border-b pb-2">{t('Người liên hệ khẩn cấp')}</h4>
                 <div className="grid gap-5 sm:grid-cols-3">
                   <FormField
-                    label="Họ tên người liên hệ"
+                    label={t('Họ tên người liên hệ')}
                     name="emergencyName"
                     value={personalForm.emergencyName}
                     disabled={!profile.allowProfileUpdate || isSaving}
                     onChange={e => setPersonalForm(c => ({ ...c, emergencyName: e.target.value }))}
                   />
                   <FormField
-                    label="Số điện thoại liên hệ"
+                    label={t('Số điện thoại liên hệ')}
                     name="emergencyPhone"
                     value={personalForm.emergencyPhone}
                     disabled={!profile.allowProfileUpdate || isSaving}
                     onChange={e => setPersonalForm(c => ({ ...c, emergencyPhone: e.target.value }))}
                   />
                   <FormField
-                    label="Mối quan hệ"
+                    label={t('Mối quan hệ')}
                     name="emergencyRelation"
                     value={personalForm.emergencyRelation}
                     disabled={!profile.allowProfileUpdate || isSaving}
@@ -1089,7 +1092,7 @@ export default function EmployeeProfilePage() {
                 <div className="flex justify-end pt-2">
                   <Button type="submit" disabled={isSaving}>
                     {isSaving && <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />}
-                    Lưu thay đổi
+                    {t('Lưu thay đổi')}
                   </Button>
                 </div>
               )}
@@ -1249,7 +1252,9 @@ export default function EmployeeProfilePage() {
 
               {/* Attachments List */}
               <div className="space-y-3">
-                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider border-b pb-2">Tài liệu đã đính kèm ({attachments.length})</h4>
+                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider border-b pb-2">
+                  {t('Tài liệu đã đính kèm')} ({attachments.length})
+                </h4>
                 {attachments.length === 0 ? (
                   <p className="text-xs text-slate-400 italic py-4 text-center">Chưa có tài liệu đính kèm nào được tải lên.</p>
                 ) : (
@@ -1266,7 +1271,7 @@ export default function EmployeeProfilePage() {
                               {file.fileType}
                             </span>
                             <span className="ml-2 text-[10px] text-slate-400 block sm:inline">
-                              Tải lên: {formatDate(file.uploadedAt)}
+                              {t('Tải lên')}: {formatDate(file.uploadedAt)}
                             </span>
                           </div>
                         </div>
@@ -1276,7 +1281,7 @@ export default function EmployeeProfilePage() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="grid size-8 place-items-center rounded-lg text-slate-400 hover:bg-slate-50 hover:text-slate-800 transition"
-                            title="Tải xuống tài liệu"
+                            title={t('Tải xuống tài liệu')}
                           >
                             <Download size={15} />
                           </a>
@@ -1285,7 +1290,7 @@ export default function EmployeeProfilePage() {
                               type="button"
                               className="grid size-8 place-items-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-700 transition"
                               onClick={() => handleDeleteAttachment(file.id)}
-                              title="Xóa tài liệu"
+                              title={t('Xóa tài liệu')}
                             >
                               <Trash2 size={15} />
                             </button>
@@ -1302,7 +1307,7 @@ export default function EmployeeProfilePage() {
           {/* TAB 5: Logs */}
           {activeTab === 'logs' && (
             <div className="space-y-4">
-              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider border-b pb-2">Nhật ký thay đổi hồ sơ</h4>
+              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider border-b pb-2">{t('Nhật ký thay đổi hồ sơ')}</h4>
               {logs.length === 0 ? (
                 <p className="text-xs text-slate-400 italic py-4 text-center">Chưa có nhật ký thay đổi nào được ghi nhận.</p>
               ) : (
@@ -1310,11 +1315,11 @@ export default function EmployeeProfilePage() {
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
                       <tr className="bg-slate-50 text-slate-500 font-bold border-b border-slate-100">
-                        <th className="p-3">Thời gian</th>
-                        <th className="p-3">Người thực hiện</th>
-                        <th className="p-3">Trường thay đổi</th>
-                        <th className="p-3">Giá trị cũ</th>
-                        <th className="p-3">Giá trị mới</th>
+                        <th className="p-3">{t('Thời gian')}</th>
+                        <th className="p-3">{t('Người thực hiện')}</th>
+                        <th className="p-3">{t('Trường thay đổi')}</th>
+                        <th className="p-3">{t('Giá trị cũ')}</th>
+                        <th className="p-3">{t('Giá trị mới')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -1328,18 +1333,18 @@ export default function EmployeeProfilePage() {
                         return (
                           <tr key={log.id} className="hover:bg-slate-50/50">
                             <td className="p-3 whitespace-nowrap text-slate-400 font-medium">
-                              {new Intl.DateTimeFormat('vi-VN', {
+                              {new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'vi-VN', {
                                 dateStyle: 'short',
                                 timeStyle: 'short'
                               }).format(new Date(log.changedAt))}
                             </td>
                             <td className="p-3 font-semibold">{actorName}</td>
-                            <td className="p-3 font-bold text-brand-700">{fieldLabel}</td>
+                            <td className="p-3 font-bold text-brand-700">{t(fieldLabel)}</td>
                             <td className="p-3 break-all max-w-[200px]" title={log.oldValue}>
-                              {log.oldValue || <span className="text-slate-400 italic">Trống</span>}
+                              {formatLogValue(log.oldValue)}
                             </td>
                             <td className="p-3 break-all max-w-[200px]" title={log.newValue}>
-                              {log.newValue || <span className="text-slate-400 italic">Trống</span>}
+                              {formatLogValue(log.newValue)}
                             </td>
                           </tr>
                         )
