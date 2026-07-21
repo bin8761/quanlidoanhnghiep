@@ -85,7 +85,7 @@ function Metric({ icon: Icon, label, value, tone }) {
 }
 
 export default function MaintenancePage() {
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const [searchParams, setSearchParams] = useSearchParams()
   const [requests, setRequests] = useState([])
   const [assets, setAssets] = useState([])
@@ -302,19 +302,19 @@ export default function MaintenancePage() {
   }
 
   const columns = [
-    { key: 'type', label: 'Loại', render: (_value, row) => REQUEST_TYPE_LABELS[row.type] || row.type },
+    { key: 'type', label: t('Loại'), render: (_value, row) => t(REQUEST_TYPE_LABELS[row.type] || row.type) },
     {
       key: 'asset',
-      label: 'Tài sản',
-      render: (asset) => asset ? <div><strong className="block text-slate-900">{asset.assetCode}</strong><span className="text-xs text-slate-500">{asset.name}</span></div> : <span className="text-xs text-slate-400 italic">Không liên kết</span>,
+      label: t('Tài sản'),
+      render: (asset) => asset ? <div><strong className="block text-slate-900">{asset.assetCode}</strong><span className="text-xs text-slate-500">{asset.name}</span></div> : <span className="text-xs text-slate-400 italic">{t('Không liên kết')}</span>,
     },
-    { key: 'requester', label: 'Người yêu cầu', render: (requester) => requester?.fullName || 'Chưa xác định' },
-    { key: 'priority', label: 'Ưu tiên', render: (value) => <span className="text-xs font-bold text-slate-700">{PRIORITY_LABELS[value] || value}</span> },
-    { key: 'description', label: 'Nội dung' },
-    { key: 'status', label: 'Trạng thái', render: (value) => <StatusBadge status={value} /> },
+    { key: 'requester', label: t('Người yêu cầu'), render: (requester) => requester?.fullName || t('Chưa xác định') },
+    { key: 'priority', label: t('Ưu tiên'), render: (value) => <span className="text-xs font-bold text-slate-700">{t(PRIORITY_LABELS[value] || value)}</span> },
+    { key: 'description', label: t('Nội dung'), render: (value) => t(value) },
+    { key: 'status', label: t('Trạng thái'), render: (value) => <StatusBadge status={value} /> },
     {
       key: 'actions',
-      label: 'Thao tác',
+      label: t('Thao tác'),
       render: (_value, request) => (
         <div className="flex items-center gap-1">
           <button className="grid size-9 place-items-center rounded-xl text-slate-400 transition hover:bg-brand-50 hover:text-brand-700" type="button" title="Chi tiết" onClick={() => (setSelected(request), setModal('detail'))}><Eye size={16} /></button>
@@ -366,7 +366,7 @@ export default function MaintenancePage() {
       )}
 
       {modal === 'status' && selected && (
-        <Modal title={`Cập nhật ${REQUEST_TYPE_LABELS[selected.type] || selected.type}`} description={selected.description} onClose={closeModal}>
+        <Modal title={`${t('Cập nhật')} ${t(REQUEST_TYPE_LABELS[selected.type] || selected.type)}`} description={t(selected.description)} onClose={closeModal}>
           <form className="grid gap-5" onSubmit={handleStatus}>
             <FormField as="select" label="Trạng thái" name="status" value={statusForm.status} options={STATUS_OPTIONS.slice(1)} onChange={updateField(setStatusForm)} />
             <FormField as="textarea" label="Kết quả / lý do" name="resolution" value={statusForm.resolution} error={formErrors.resolution} maxLength={2000} onChange={updateField(setStatusForm)} />
@@ -377,7 +377,7 @@ export default function MaintenancePage() {
       )}
 
       {modal === 'fulfill' && selected && (
-        <Modal title={`Hoàn tất ${REQUEST_TYPE_LABELS[selected.type] || selected.type}`} description={selected.description} onClose={closeModal}>
+        <Modal title={`${t('Hoàn tất')} ${t(REQUEST_TYPE_LABELS[selected.type] || selected.type)}`} description={t(selected.description)} onClose={closeModal}>
           <form className="grid gap-5" onSubmit={handleFulfill}>
             {REPAIR_TYPES.includes(selected.type) && (
               <>
@@ -413,7 +413,7 @@ export default function MaintenancePage() {
       )}
 
       {modal === 'detail' && selected && (
-        <Modal title={`Chi tiết ${REQUEST_TYPE_LABELS[selected.type] || selected.type}`} description={selected.description} onClose={closeModal}>
+        <Modal title={`${t('Chi tiết')} ${t(REQUEST_TYPE_LABELS[selected.type] || selected.type)}`} description={t(selected.description)} onClose={closeModal}>
           <dl className="grid gap-3 text-sm sm:grid-cols-2">
             {[
               ['Người yêu cầu', selected.requester?.fullName],
@@ -425,15 +425,15 @@ export default function MaintenancePage() {
               REPAIR_TYPES.includes(selected.type) && ['Chi phí', formatMoney(selected.repairCost)],
             ].filter(Boolean).map(([label, value]) => (
               <div className="rounded-xl bg-slate-50 p-4 dark:bg-slate-900/40" key={label}>
-                <dt className="text-xs font-semibold text-slate-400">{label}</dt>
-                <dd className="mt-1 font-bold text-slate-800">{value || 'Chưa cập nhật'}</dd>
+                <dt className="text-xs font-semibold text-slate-400">{t(label)}</dt>
+                <dd className="mt-1 font-bold text-slate-800">{value ? t(value) : t('Chưa cập nhật')}</dd>
               </div>
             ))}
           </dl>
-          {selected.resolution && <p className="mt-4 rounded-xl border border-slate-200 p-4 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">{selected.resolution}</p>}
+          {selected.resolution && <p className="mt-4 rounded-xl border border-slate-200 p-4 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">{t(selected.resolution)}</p>}
           {selected.status === 'COMPLETED' && selected.ratedAt && (
             <div className="mt-4 rounded-xl border border-slate-200 bg-amber-50/35 p-4 dark:border-slate-700 dark:bg-amber-950/10">
-              <span className="text-[10px] font-bold text-slate-400 block uppercase mb-1">Đánh giá từ người dùng</span>
+              <span className="text-[10px] font-bold text-slate-400 block uppercase mb-1">{t('Đánh giá từ người dùng')}</span>
               <div className="flex items-center gap-1.5 mb-2">
                 <div className="flex items-center">
                   {[1, 2, 3, 4, 5].map((star) => (
@@ -449,16 +449,16 @@ export default function MaintenancePage() {
                   ))}
                 </div>
                 <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  {selected.rating === 5 ? 'Rất hài lòng' : selected.rating === 4 ? 'Hài lòng' : selected.rating === 3 ? 'Bình thường' : selected.rating === 2 ? 'Không hài lòng' : 'Rất không hài lòng'}
+                  {t(selected.rating === 5 ? 'Rất hài lòng' : selected.rating === 4 ? 'Hài lòng' : selected.rating === 3 ? 'Bình thường' : selected.rating === 2 ? 'Không hài lòng' : 'Rất không hài lòng')}
                 </span>
               </div>
               {selected.feedback && (
                 <p className="text-xs text-slate-600 dark:text-slate-400 italic">
-                  "{selected.feedback}"
+                  "{t(selected.feedback)}"
                 </p>
               )}
               <p className="mt-1 text-[10px] text-slate-400">
-                Đánh giá lúc: {new Date(selected.ratedAt).toLocaleString('vi-VN')}
+                {t('Đánh giá lúc')}: {new Date(selected.ratedAt).toLocaleString(locale === 'en' ? 'en-US' : 'vi-VN')}
               </p>
             </div>
           )}
@@ -466,7 +466,7 @@ export default function MaintenancePage() {
             <ol className="mt-4 space-y-2">
               {selected.events.map((event) => (
                 <li className="rounded-lg border border-slate-100 px-3 py-2 text-xs text-slate-600 dark:border-slate-700 dark:text-slate-300" key={event.id}>
-                  <strong className="text-slate-800">{event.type}</strong> · {formatDate(event.createdAt)} · {event.message}
+                  <strong className="text-slate-800">{t(event.type)}</strong> · {formatDate(event.createdAt)} · {t(event.message)}
                 </li>
               ))}
             </ol>

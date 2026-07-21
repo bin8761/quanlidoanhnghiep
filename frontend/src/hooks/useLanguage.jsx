@@ -211,6 +211,41 @@ const fallbackDictionary = {
   "Đánh dấu tất cả đã đọc": "Mark all as read",
   "Tất cả đã đọc": "All read",
   "Chưa có thông báo.": "No notifications yet.",
+  "Có tệp": "Has file",
+  "Không có": "None",
+  "Đính kèm": "Attachment",
+  "Tệp đính kèm": "Attachment",
+  "Mở / tải xuống": "Open / download",
+  "Thời gian gửi": "Submitted Time",
+  "Nội dung góp ý": "Feedback Content",
+  "Chưa hoàn thành": "Not Completed",
+  "Đã ký nhận": "Signed",
+  "Xem chữ ký bàn giao": "View handover signature",
+  "Xem chữ ký xác nhận": "View confirmation signature",
+  "Đánh giá lúc": "Rated at",
+  "Rất hài lòng": "Very satisfied",
+  "Hài lòng": "Satisfied",
+  "Không hài lòng": "Unsatisfied",
+  "Rất không hài lòng": "Very unsatisfied",
+  "CREATED": "Created",
+  "APPROVED": "Approved",
+  "ASSIGNED": "Assigned",
+  "STATUS_CHANGED": "Status Changed",
+  "ASSET_STATUS_CHANGED": "Asset Status Changed",
+  "ASSIGNMENT_CREATED": "Assignment Created",
+  "ASSIGNMENT_RETURNED": "Assignment Returned",
+  "ASSIGNMENT_TRANSFERRED": "Assignment Transferred",
+  "COMPLETED": "Completed",
+  "REJECTED": "Rejected",
+  "CANCELLED": "Cancelled",
+  "Support request created.": "Support request created.",
+  "Asset marked as broken after incident report.": "Asset marked as broken after incident report.",
+  "Asset moved to maintenance.": "Asset moved to maintenance.",
+  "Support request status changed to": "Support request status changed to",
+  "Asset status changed to": "Asset status changed to",
+  "Support request fulfilled and completed.": "Support request fulfilled and completed.",
+  "Yêu cầu hỗ trợ đã được đánh giá dịch vụ:": "Support request service was rated:",
+  "/5 sao.": "/5 stars.",
   "Đi tới chức năng": "Go to Feature",
   "Tìm nhanh một khu vực trong không gian quản trị.": "Quickly find an area in the administration space.",
   "Nhập tên chức năng...": "Enter feature name...",
@@ -685,6 +720,9 @@ const fallbackDictionary = {
   "Chuyển từ": "Transfer from",
   "sang người sử dụng mới.": "to a new assignee.",
   "Xóa tài liệu này?": "Delete this document?",
+  "Xóa câu hỏi FAQ": "Delete FAQ Question",
+  "Xác nhận": "Confirm",
+  "Thao tác này không thể hoàn tác. Hãy kiểm tra kỹ trước khi tiếp tục.": "This action cannot be undone. Please review carefully before continuing.",
   "Bạn có chắc chắn muốn xóa câu hỏi FAQ này không? Hành động này không thể hoàn tác.": "Are you sure you want to delete this FAQ? This action cannot be undone.",
   "VD: Làm cách nào để đổi mật khẩu?": "Example: How do I change my password?",
   "Ghim ở": "Pinned at",
@@ -1404,6 +1442,9 @@ export function LanguageProvider({ children }) {
     }
     if (locale === 'en' && fallbackDictionary[key]) {
       return fallbackDictionary[key]
+    }
+    if (locale === 'en') {
+      return translateUiString(key)
     }
     return translations['vi'][key] || key
   }, [locale])

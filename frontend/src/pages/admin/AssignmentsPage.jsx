@@ -360,7 +360,7 @@ export default function AssignmentsPage() {
         return (
           <div className="grid gap-1">
             <StatusBadge status={badgeStatus} />
-            <span className="text-[10px] font-semibold text-slate-400">{subLabel}</span>
+            <span className="text-[10px] font-semibold text-slate-400">{t(subLabel)}</span>
             {assignment.confirmedAt && (
               <button
                 type="button"
@@ -369,9 +369,9 @@ export default function AssignmentsPage() {
                   setModal('view-signature')
                 }}
                 className="inline-flex items-center gap-1 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700 hover:bg-emerald-100 transition w-fit text-left cursor-pointer"
-                title="Xem chữ ký bàn giao"
+                title={t('Xem chữ ký bàn giao')}
               >
-                ✓ Đã ký nhận
+                ✓ {t('Đã ký nhận')}
               </button>
             )}
           </div>
@@ -387,7 +387,7 @@ export default function AssignmentsPage() {
             <button
               className="grid size-9 place-items-center rounded-xl text-slate-400 transition hover:bg-emerald-50 hover:text-emerald-700"
               type="button"
-              title="Xem chữ ký xác nhận"
+              title={t('Xem chữ ký xác nhận')}
               onClick={() => {
                 setSelectedAssignment(assignment)
                 setModal('view-signature')
@@ -416,7 +416,7 @@ export default function AssignmentsPage() {
               </button>
             </>
           ) : (
-            <span className="text-xs text-slate-400">Đã hoàn tất</span>
+            <span className="text-xs text-slate-400">{t('Đã hoàn tất')}</span>
           )}
         </div>
       ),

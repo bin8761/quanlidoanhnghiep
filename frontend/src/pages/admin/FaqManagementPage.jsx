@@ -301,7 +301,7 @@ export default function FaqManagementPage() {
           title="Xóa câu hỏi FAQ"
           description="Bạn có chắc chắn muốn xóa câu hỏi FAQ này không? Hành động này không thể hoàn tác."
           onConfirm={handleDelete}
-          onCancel={() => setDeleteId(null)}
+          onClose={() => setDeleteId(null)}
         />
       )}
     </div>

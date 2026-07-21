@@ -8,8 +8,10 @@ import DataTable from '../../components/ui/DataTable'
 import { toast } from 'react-toastify'
 import { MessageSquare, Eye, FileText, RefreshCw } from 'lucide-react'
 import { matchesSearch } from '../../utils/search'
+import { useLanguage } from '../../hooks/useLanguage'
 
 export default function FeedbackPortalPage() {
+  const { t, locale } = useLanguage()
   const [feedbacks, setFeedbacks] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -71,63 +73,63 @@ export default function FeedbackPortalPage() {
   }
 
   const columns = [
-    { key: 'title', label: 'Tiêu đề' },
+    { key: 'title', label: t('Tiêu đề'), render: (value) => t(value) },
     { 
       key: 'user', 
-      label: 'Người gửi', 
+      label: t('Người gửi'), 
       render: (value) => value?.email || 'N/A'
     },
     { 
       key: 'category', 
-      label: 'Phân loại',
+      label: t('Phân loại'),
       render: (value) => {
         const types = { BUG: 'Lỗi hệ thống', FEATURE: 'Đề xuất tính năng', UI_UX: 'Giao diện & Trải nghiệm', OTHER: 'Góp ý khác' }
-        return types[value] || value
+        return t(types[value] || value)
       }
     },
     {
       key: 'priority',
-      label: 'Độ ưu tiên',
+      label: t('Độ ưu tiên'),
       render: (value) => {
         const colors = { HIGH: 'bg-red-50 text-red-700', MEDIUM: 'bg-amber-50 text-amber-700', LOW: 'bg-slate-100 text-slate-600' }
         const text = { HIGH: 'Cao', MEDIUM: 'Trung bình', LOW: 'Thấp' }
-        return <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${colors[value]}`}>{text[value] || value}</span>
+        return <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${colors[value]}`}>{t(text[value] || value)}</span>
       }
     },
     {
       key: 'status',
-      label: 'Trạng thái',
+      label: t('Trạng thái'),
       render: (value) => {
         const colors = { COMPLETED: 'bg-emerald-50 text-emerald-700', PROCESSING: 'bg-blue-50 text-blue-700', PENDING: 'bg-amber-50 text-amber-700', REJECTED: 'bg-red-50 text-red-700' }
         const text = { COMPLETED: 'Đã xử lý', PROCESSING: 'Đang xử lý', PENDING: 'Chờ xử lý', REJECTED: 'Từ chối' }
-        return <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${colors[value]}`}>{text[value] || value}</span>
+        return <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${colors[value]}`}>{t(text[value] || value)}</span>
       }
     },
     {
       key: 'createdAt',
-      label: 'Ngày gửi',
-      render: (value) => new Date(value).toLocaleString('vi-VN')
+      label: t('Ngày gửi'),
+      render: (value) => new Date(value).toLocaleString(locale === 'en' ? 'en-US' : 'vi-VN')
     },
     {
       key: 'fileUrl',
-      label: 'Đính kèm',
+      label: t('Đính kèm'),
       render: (value) => value ? (
         <span className="inline-flex items-center gap-1 rounded-lg bg-brand-50 px-2 py-1 text-[10px] font-bold text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
-          <FileText size={12} /> Có tệp
+          <FileText size={12} /> {t('Có tệp')}
         </span>
       ) : (
-        <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500">Không có</span>
+        <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500">{t('Không có')}</span>
       )
     },
     {
       key: 'actions',
-      label: 'Hành động',
+      label: t('Hành động'),
       render: (_, row) => (
         <button
           onClick={() => handleOpenDetail(row)}
           className="flex items-center gap-1 px-2.5 py-1.5 border border-slate-200 hover:border-brand-500 hover:bg-brand-50 hover:text-brand-850 rounded-lg text-[10px] font-bold transition"
         >
-          <Eye size={12} /> Xem chi tiết
+          <Eye size={12} /> {t('Xem chi tiết')}
         </button>
       )
     }
@@ -178,37 +180,37 @@ export default function FeedbackPortalPage() {
       {/* Detail & Status Edit Modal */}
       {selectedFeedback && (
         <Modal
-          title="Chi tiết góp ý & phản hồi"
-          description="Xem chi tiết nội dung và cập nhật tiến độ xử lý góp ý."
+          title={t('Chi tiết góp ý & phản hồi')}
+          description={t('Xem chi tiết nội dung và cập nhật tiến độ xử lý góp ý.')}
           onClose={() => setSelectedFeedback(null)}
         >
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4 text-xs">
               <div>
-                <span className="text-slate-400 font-bold block">Người gửi:</span>
+                <span className="text-slate-400 font-bold block">{t('Người gửi')}:</span>
                 <span className="text-slate-700 font-semibold">{selectedFeedback.user?.email || 'N/A'}</span>
               </div>
               <div>
-                <span className="text-slate-400 font-bold block">Thời gian gửi:</span>
-                <span className="text-slate-700 font-semibold">{new Date(selectedFeedback.createdAt).toLocaleString('vi-VN')}</span>
+                <span className="text-slate-400 font-bold block">{t('Thời gian gửi')}:</span>
+                <span className="text-slate-700 font-semibold">{new Date(selectedFeedback.createdAt).toLocaleString(locale === 'en' ? 'en-US' : 'vi-VN')}</span>
               </div>
             </div>
 
             <div className="text-xs">
-              <span className="text-slate-400 font-bold block">Tiêu đề:</span>
-              <span className="text-slate-800 font-bold text-sm">{selectedFeedback.title}</span>
+              <span className="text-slate-400 font-bold block">{t('Tiêu đề')}:</span>
+              <span className="text-slate-800 font-bold text-sm">{t(selectedFeedback.title)}</span>
             </div>
 
             <div className="text-xs">
-              <span className="text-slate-400 font-bold block">Nội dung góp ý:</span>
+              <span className="text-slate-400 font-bold block">{t('Nội dung góp ý')}:</span>
               <div className="bg-slate-50 border border-slate-100 rounded-xl p-3.5 mt-1 text-slate-700 whitespace-pre-line leading-relaxed">
-                {selectedFeedback.content}
+                {t(selectedFeedback.content)}
               </div>
             </div>
 
             {selectedFeedback.fileUrl && (
               <div className="text-xs">
-                <span className="text-slate-400 font-bold block dark:text-slate-500">Tệp đính kèm:</span>
+                <span className="text-slate-400 font-bold block dark:text-slate-500">{t('Tệp đính kèm')}:</span>
                 <a
                   href={getFeedbackFileUrl(selectedFeedback.fileUrl)}
                   target="_blank"
@@ -217,7 +219,7 @@ export default function FeedbackPortalPage() {
                 >
                   <FileText className="shrink-0" size={14} />
                   <span className="truncate">{getFeedbackFileName(selectedFeedback.fileUrl)}</span>
-                  <span className="shrink-0 text-[10px] font-semibold text-slate-400">Mở / tải xuống</span>
+                  <span className="shrink-0 text-[10px] font-semibold text-slate-400">{t('Mở / tải xuống')}</span>
                 </a>
               </div>
             )}
